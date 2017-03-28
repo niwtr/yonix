@@ -1,0 +1,173 @@
+* 中断和第一个系统调用
+** initcode
+第一个系统调用由initcode.S里的代码所启动。
+#+BEGIN_SRC asm
+# exec(init, argv)
+.globl start
+start:
+  pushl $argv
+  pushl $init
+  pushl $0  // where caller pc would be
+  movl $SYS_exec, %eax
+  int $T_SYSCALL
+#+END_SRC
+
+这里首先把两个参数压栈（exec所需的），然后把系统调用号存在%eax里。
+*注意* %eax在系统调用的执行过程里是专门用来存系统调用号的。
+然后以 =T_SYSCALL= （64号中断）进入内核态。
+*注意* int指令是进入内核态的指令。它会产生一系列的操作并执行进入中断描述符表的中断处理函数入口。
+不同中断的中断处理函数入口是不一样的。
+** alltraps
+随后，进入了alltraps.S里的alltraps过程里。这个过程负责填充“中断帧”（trapframe），中断帧负责保存中断前的内核信息，
+以便中断结束后内核恢复信息。这里，alltraps只是压入了一些剩余的寄存器信息。在这之前，CPU会负责压入更多的信息，有
+%eflags、%cs和%eip；如果在用户态，CPU还要压入%esp和%ss。
+TODO 这这些个都是干嘛的。。。
+TODO 还有一些内容漏下了。
+
+此时%esp指向刚刚建立好了的trapframe。alltraps把这个指针压到栈里面，作为trap的参数。之后调用trap过程。
+** trap
+进入了trap.c里的trap过程，并且trap过程接收到了参数tf。OK，trap过程检测到它是一个系统调用（ =T_SYSCALL= ）。它负责把trapframe挂到进程的tf位上，
+然后进入syscall过程。
+TODO trapno又是什么时候设置的？
+** syscall
+#+BEGIN_SRC c
+...
+  int num;
+  num = proc->tf->eax;
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    proc->tf->eax = syscalls[num]();
+...
+
+#+END_SRC
+接着转到syscall.c里面的syscall进程。syscall是一个转发器，它按照系统调用号（从eax里取出来）然后转发给 =sys_exec= 过程。
+这个过程的定义是在 =sys_exec= 里。它最终会调用exec过程exec过程在exec.c里定义。
+
+** 总结
+这是第一个系统调用的执行过程。以后所有系统调用都会由相似的代码：
+#+BEGIN_SRC c
+int $T_SYSCALL
+#+END_SRC
+所触发。
+其他类型的中断则是由硬件或者异常触发，这些中断可以发生在任何的时刻。中断发生时，则是从alltraps开始执行，由trap指派给不同的操作。
+
+
+
+* 提供给用户的系统调用接口API
+提供给用户的系统调用过程都由usys.S中的宏展开得到的。
+#+begin_src asm
+#define SYSCALL(name) \
+  .globl name; \
+  name: \
+    movl $SYS_ ## name, %eax; \
+    int $T_SYSCALL; \
+    ret
+
+SYSCALL(fork)
+SYSCALL(exit)
+SYSCALL(wait)
+SYSCALL(pipe)
+SYSCALL(read)
+...
+#+end_src
+可见这些宏是起的相似的作用。
+一定要区分几个概念： =SYS_exec= ， =sys_exec= ， 和 =exec= 。
+1. =SYS_exec= 是系统调用号，它是一个常量，在syscall.h里定义。
+#+begin_src c
+#define SYS_read    5
+#define SYS_kill    6
+#define SYS_exec    7
+#define SYS_fstat   8
+#define SYS_chdir   9
+#+end_src
+2. =sys_exec= 是syscall依据系统调用号所转发到的操作系统内核函数。
+3. =exec= 是提供给用户的系统调用API。它由上面所说的SYSCALL宏展开所生成。
+#+begin_src asm
+.globl exec;
+exec:
+movl SYS_exec %eax;
+int $T_SYSCALL
+ret
+#+end_src
+4. =exec= 同时又是系统调用的exec函数的C实现。它见于exec.c文件里。
+
+调用API的过程是这样的：用户调用exec系统调用接口，syscall给指派给 =sys_exec= ，这个函数负责把参数准备好。
+然后最终，在这个函数里，内部实现exec被调用。
+
+** TODO 我们自己实现的时候请把提供给user的接口和内部实现函数的名字分开。
+
+* IDT中断描述符表
+x86体系结构允许有256个不同的中断。描述如下：
+| 0-31      | 32-63     | 64     |    64+ |
+|-----------+-----------+--------+--------|
+| Software  | Hardware  | System | Others |
+| Exception | Exception | Call   |        | 
+
+IDT中的每个表项都是一个大小为64比特的门描述符结构体，它的定义在mmu.h里。
+#+begin_src c
+#define SETGATE(gate, istrap, sel, off, d)                \
+{                                                         \
+  (gate).off_15_0 = (uint)(off) & 0xffff;                \
+  (gate).cs = (sel);                                      \
+  (gate).args = 0;                                        \
+  (gate).rsv1 = 0;                                        \
+  (gate).type = (istrap) ? STS_TG32 : STS_IG32;           \
+  (gate).s = 0;                                           \
+  (gate).dpl = (d);                                       \
+  (gate).p = 1;                                           \
+  (gate).off_31_16 = (uint)(off) >> 16;                  \
+}
+#+end_src
+
+中断描述符表的定义在trap.c里。它的初始化过程也在trap.c里，在main函数（main.c）里被调用。
+#+begin_src c
+  for(i = 0; i < 256; i++)
+    SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
+  SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
+#+end_src
+
+
+中断描述符表定义了中断的中断处理程序入口。每个程序的中断处理程序是不同的。
+此外还有一个标志位区分了到底是异常（trap）还是中断(interrupt)。
+如果是中断，则将会把CPU的 =FL_IF= 位清零，这意味着处理该中断的时候不会接受其他的中断。
+如果是异常/陷阱，则不会清零，意味着在处理该中断到时候还接受其他中断。
+SYSCALL必须设置为异常/陷阱模式，因为系统调用可能出错。出错的可能性有好多种，比如发生了运行时/程序错误。
+这将导致其他的软件异常/硬件异常被触发。
+而其他的中断则设置为interrupt模式，这意味着不会发生递归中断。
+
+** TODO 你说 =FL_IF= 位到底是怎么运作的？
+每个门描述符有一个特权等级位（dpl）。x86体系结构分为0~3一共四种特权等级，我们这里只会用到两种，分别是0或者3。其中0是代表
+最高的等级，我们称之为内核模式。3被定义为 =DPL_USER= ，它被称为用户模式。
+在所有的中断向量中，只有系统调用（第64号）的dpl被设置为3，其他的全都是0，全都是内核特权。
+特权等级可以避免用户使用int指令故意（显式地）调用中断。因为只有SYSCALL才能在用户态被调用。这造成了一种强劲的隔离。
+*注意* int指令指软件中断。
+
+* int指令
+
+** TODO write this
+.draft
+如果CPU在用户模式运行，会从任务段描述符表里面加载新的%esp和%ss，进行一次栈切换以替代用户的栈。因为用户的栈可能会被恶意损毁。
+把用户的栈切换为内核栈。
+如果CPU是在内核模式运行，它不会做这个步骤。
+* 关于系统调用的参数提取
+参数提取是一个很有意思的事情，因为它是从栈上提取的参数。提供给用户的系统调用API都是汇编代码，当调用它们的时候，传递的参数会被
+压进 *用户栈* 里面。注意一定是用户区的栈！
+
+然后，syscall过程会把用户的请求指派到相应的以 =sys_= 开头的过程里。有意思的是，这些过程都是一些无参函数。那么参数是如何传递的呢？
+事实上，这些以 =sys_= 开头的过程的主要作用就是用来传递参数的。他们负责的就是从用户栈里面解析出参数（再强调一遍是用户栈。），然后把
+参数以一般C语言的样子传递给不带 =sys_= 前缀的对应函数，即系统调用的真正C语言实现里。那么这就很清楚了。我们在这些过程里要做的事情，
+就是把参数挨个取出来。
+但是事实上，我们需要做大量的边界检查，以确定 *参数确实在用户栈里* ，而不会跑到内核内存区里面。我们要保证内核是干净整洁的。
+一些函数如argint、argstr、argptr都是为了确定参数的正确性而设置的。这些函数会确定参数地址的正确性，然后把参数取回来。
+如果任一地址不正确，都会返回-1，紧接着这些函数也会返回-1作为调用失败的标志。
+#+begin_src c
+int
+argint(int n, int *ip)
+{
+  return fetchint(proc->tf->esp + 4 + 4*n, ip);
+}
+#+end_src
+比如这里是argint函数，它负责把第n个参数解释成int并取回来。esp保存了系统调用结束后的返回地址这个地址以上就是参数的区域。
+** TODO 于是这个esp是什么时候设置的？
+
+
+

@@ -3,8 +3,8 @@
 #include "def.h"
 #include "yotypes.h"
 #include "mmu.h"
-
-
+#include "params.h"
+#include "spinlock.h"
 /* below: borrowed from xv6 */
 // interrupt descriptor table
 // Interrupt descriptor table (shared by all CPUs).
@@ -21,7 +21,8 @@ struct gatedesc idt[TV_ENTRIES]; //为所有CPU共享的中断描述符表。
 
 /* 中断描述符表指向的中断处理函数的入口点。这些入口点由perl脚本来产生。 */
 extern uint vectors[];
-struct splinlock tickslock;
+struct spinlock tickslock;
+
 uint ticks;
 
 void tvinit(void){
@@ -42,8 +43,11 @@ void tvinit(void){
 void trap (struct trapframe * tf)
 {
   if (tf->trapno == T_SYSCALL){
+
+    
     if(proc->p_killed)
       exit();
+
     else{
       proc->p_tf=tf;
       syscall(); // entering syscall;

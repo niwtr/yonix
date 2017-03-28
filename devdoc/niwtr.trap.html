@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-03-28 二 21:37 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title></title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="牛天睿" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline6">1. 中断和第一个系统调用</a>
+<ul>
+<li><a href="#orgheadline1">1.1. initcode</a></li>
+<li><a href="#orgheadline2">1.2. alltraps</a></li>
+<li><a href="#orgheadline3">1.3. trap</a></li>
+<li><a href="#orgheadline4">1.4. syscall</a></li>
+<li><a href="#orgheadline5">1.5. 总结</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline8">2. 提供给用户的系统调用接口API</a>
+<ul>
+<li><a href="#orgheadline7">2.1. <span class="todo TODO">TODO</span> 我们自己实现的时候请把提供给user的接口和内部实现函数的名字分开。</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline10">3. IDT中断描述符表</a>
+<ul>
+<li><a href="#orgheadline9">3.1. <span class="todo TODO">TODO</span> 你说 <code>FL_IF</code> 位到底是怎么运作的？</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline12">4. int指令</a>
+<ul>
+<li><a href="#orgheadline11">4.1. <span class="todo TODO">TODO</span> write this</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline14">5. 关于系统调用的参数提取</a>
+<ul>
+<li><a href="#orgheadline13">5.1. <span class="todo TODO">TODO</span> 于是这个esp是什么时候设置的？</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgheadline6" class="outline-2">
+<h2 id="orgheadline6"><span class="section-number-2">1</span> 中断和第一个系统调用</h2>
+<div class="outline-text-2" id="text-1">
+</div><div id="outline-container-orgheadline1" class="outline-3">
+<h3 id="orgheadline1"><span class="section-number-3">1.1</span> initcode</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+第一个系统调用由initcode.S里的代码所启动。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-asm"># exec<span style="color: #ff00ff;">(</span>init, argv<span style="color: #ff00ff;">)</span>
+<span style="color: #0000FF;">.globl</span> start
+<span style="color: #006699;">start</span>:
+  <span style="color: #0000FF;">pushl</span> $argv
+  <span style="color: #0000FF;">pushl</span> $init
+  <span style="color: #0000FF;">pushl</span> $0  <span style="color: #8D8D84;">// </span><span style="color: #8D8D84; font-style: italic;">where caller pc would be</span>
+  <span style="color: #0000FF;">movl</span> $SYS_exec, <span style="color: #BA36A5;">%eax</span>
+  <span style="color: #0000FF;">int</span> $T_SYSCALL
+</pre>
+</div>
+
+<p>
+这里首先把两个参数压栈（exec所需的），然后把系统调用号存在%eax里。
+<b>注意</b> %eax在系统调用的执行过程里是专门用来存系统调用号的。
+然后以 <code>T_SYSCALL</code> （64号中断）进入内核态。
+<b>注意</b> int指令是进入内核态的指令。它会产生一系列的操作并执行进入中断描述符表的中断处理函数入口。
+不同中断的中断处理函数入口是不一样的。
+</p>
+</div>
+</div>
+<div id="outline-container-orgheadline2" class="outline-3">
+<h3 id="orgheadline2"><span class="section-number-3">1.2</span> alltraps</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+随后，进入了alltraps.S里的alltraps过程里。这个过程负责填充“中断帧”（trapframe），中断帧负责保存中断前的内核信息，
+以便中断结束后内核恢复信息。这里，alltraps只是压入了一些剩余的寄存器信息。在这之前，CPU会负责压入更多的信息，有
+%eflags、%cs和%eip；如果在用户态，CPU还要压入%esp和%ss。
+TODO 这这些个都是干嘛的。。。
+TODO 还有一些内容漏下了。
+</p>
+
+<p>
+此时%esp指向刚刚建立好了的trapframe。alltraps把这个指针压到栈里面，作为trap的参数。之后调用trap过程。
+</p>
+</div>
+</div>
+<div id="outline-container-orgheadline3" class="outline-3">
+<h3 id="orgheadline3"><span class="section-number-3">1.3</span> trap</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+进入了trap.c里的trap过程，并且trap过程接收到了参数tf。OK，trap过程检测到它是一个系统调用（ <code>T_SYSCALL</code> ）。它负责把trapframe挂到进程的tf位上，
+然后进入syscall过程。
+TODO trapno又是什么时候设置的？
+</p>
+</div>
+</div>
+<div id="outline-container-orgheadline4" class="outline-3">
+<h3 id="orgheadline4"><span class="section-number-3">1.4</span> syscall</h3>
+<div class="outline-text-3" id="text-1-4">
+<div class="org-src-container">
+
+<pre class="src src-c">...
+  <span style="color: #6434A3;">int</span> num;
+  num = proc-&gt;tf-&gt;eax;
+  <span style="color: #0000FF;">if</span><span style="color: #ff00ff;">(</span>num &gt; <span style="color: #D0372D;">0</span> &amp;&amp; num &lt; NELEM<span style="color: keyboardFocusIndicatorColor;">(</span>syscalls<span style="color: keyboardFocusIndicatorColor;">)</span> &amp;&amp; syscalls<span style="color: keyboardFocusIndicatorColor;">[</span>num<span style="color: keyboardFocusIndicatorColor;">]</span><span style="color: #ff00ff;">)</span> <span style="color: #ff00ff;">{</span>
+    proc-&gt;tf-&gt;eax = syscalls<span style="color: keyboardFocusIndicatorColor;">[</span>num<span style="color: keyboardFocusIndicatorColor;">]()</span>;
+...
+</pre>
+</div>
+<p>
+接着转到syscall.c里面的syscall进程。syscall是一个转发器，它按照系统调用号（从eax里取出来）然后转发给 <code>sys_exec</code> 过程。
+这个过程的定义是在 <code>sys_exec</code> 里。它最终会调用exec过程exec过程在exec.c里定义。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline5" class="outline-3">
+<h3 id="orgheadline5"><span class="section-number-3">1.5</span> 总结</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+这是第一个系统调用的执行过程。以后所有系统调用都会由相似的代码：
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #6434A3;">int</span> $T_SYSCALL
+</pre>
+</div>
+<p>
+所触发。
+其他类型的中断则是由硬件或者异常触发，这些中断可以发生在任何的时刻。中断发生时，则是从alltraps开始执行，由trap指派给不同的操作。
+</p>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-orgheadline8" class="outline-2">
+<h2 id="orgheadline8"><span class="section-number-2">2</span> 提供给用户的系统调用接口API</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+提供给用户的系统调用过程都由usys.S中的宏展开得到的。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #808080;">#define</span> <span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span><span style="color: #BA36A5;">name</span><span style="color: #ff00ff;">)</span> \
+  <span style="color: #0000FF;">.globl</span> name<span style="color: #8D8D84;">; </span><span style="color: #8D8D84; font-style: italic;">\</span>
+  <span style="color: #0000FF;">name</span>: \
+    <span style="color: #0000FF;">movl</span> $SYS_ ## name, <span style="color: #BA36A5;">%eax</span><span style="color: #8D8D84;">; </span><span style="color: #8D8D84; font-style: italic;">\</span>
+    <span style="color: #0000FF;">int</span> $T_SYSCALL<span style="color: #8D8D84;">; </span><span style="color: #8D8D84; font-style: italic;">\</span>
+    <span style="color: #0000FF;">ret</span>
+
+<span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span>fork<span style="color: #ff00ff;">)</span>
+<span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span>exit<span style="color: #ff00ff;">)</span>
+<span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span>wait<span style="color: #ff00ff;">)</span>
+<span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span>pipe<span style="color: #ff00ff;">)</span>
+<span style="color: #006699;">SYSCALL</span><span style="color: #ff00ff;">(</span>read<span style="color: #ff00ff;">)</span>
+...
+</pre>
+</div>
+<p>
+可见这些宏是起的相似的作用。
+一定要区分几个概念： <code>SYS_exec</code> ， <code>sys_exec</code> ， 和 <code>exec</code> 。
+</p>
+<ol class="org-ol">
+<li><code>SYS_exec</code> 是系统调用号，它是一个常量，在syscall.h里定义。</li>
+</ol>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #808080;">#define</span> <span style="color: #BA36A5;">SYS_read</span>    <span style="color: #D0372D;">5</span>
+<span style="color: #808080;">#define</span> <span style="color: #BA36A5;">SYS_kill</span>    <span style="color: #D0372D;">6</span>
+<span style="color: #808080;">#define</span> <span style="color: #BA36A5;">SYS_exec</span>    <span style="color: #D0372D;">7</span>
+<span style="color: #808080;">#define</span> <span style="color: #BA36A5;">SYS_fstat</span>   <span style="color: #D0372D;">8</span>
+<span style="color: #808080;">#define</span> <span style="color: #BA36A5;">SYS_chdir</span>   <span style="color: #D0372D;">9</span>
+</pre>
+</div>
+<ol class="org-ol">
+<li><code>sys_exec</code> 是syscall依据系统调用号所转发到的操作系统内核函数。</li>
+<li><code>exec</code> 是提供给用户的系统调用API。它由上面所说的SYSCALL宏展开所生成。</li>
+</ol>
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #0000FF;">.globl</span> exec<span style="color: #8D8D84;">;</span>
+<span style="color: #006699;">exec</span>:
+<span style="color: #006699;">movl</span> <span style="color: #0000FF;">SYS</span>_exec <span style="color: #BA36A5;">%eax</span><span style="color: #8D8D84;">;</span>
+<span style="color: #006699;">int</span> <span style="color: #0000FF;">$T</span>_SYSCALL
+<span style="color: #006699;">ret</span>
+</pre>
+</div>
+<ol class="org-ol">
+<li><code>exec</code> 同时又是系统调用的exec函数的C实现。它见于exec.c文件里。</li>
+</ol>
+
+<p>
+调用API的过程是这样的：用户调用exec系统调用接口，syscall给指派给 <code>sys_exec</code> ，这个函数负责把参数准备好。
+然后最终，在这个函数里，内部实现exec被调用。
+</p>
+</div>
+
+<div id="outline-container-orgheadline7" class="outline-3">
+<h3 id="orgheadline7"><span class="section-number-3">2.1</span> <span class="todo TODO">TODO</span> 我们自己实现的时候请把提供给user的接口和内部实现函数的名字分开。</h3>
+</div>
+</div>
+
+<div id="outline-container-orgheadline10" class="outline-2">
+<h2 id="orgheadline10"><span class="section-number-2">3</span> IDT中断描述符表</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+x86体系结构允许有256个不同的中断。描述如下：
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">0-31</th>
+<th scope="col" class="org-left">32-63</th>
+<th scope="col" class="org-left">64</th>
+<th scope="col" class="org-left">64+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Software</td>
+<td class="org-left">Hardware</td>
+<td class="org-left">System</td>
+<td class="org-left">Others</td>
+</tr>
+
+<tr>
+<td class="org-left">Exception</td>
+<td class="org-left">Exception</td>
+<td class="org-left">Call</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+IDT中的每个表项都是一个大小为64比特的门描述符结构体，它的定义在mmu.h里。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #808080;">#define</span> <span style="color: #006699;">SETGATE</span><span style="color: #ff00ff;">(</span><span style="color: #BA36A5;">gate</span>, <span style="color: #BA36A5;">istrap</span>, <span style="color: #BA36A5;">sel</span>, <span style="color: #BA36A5;">off</span>, <span style="color: #BA36A5;">d</span><span style="color: #ff00ff;">)</span>                \
+<span style="color: #ff00ff;">{</span>                                                         \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.off_15_0 = <span style="color: keyboardFocusIndicatorColor;">(</span>uint<span style="color: keyboardFocusIndicatorColor;">)(</span>off<span style="color: keyboardFocusIndicatorColor;">)</span> &amp; <span style="color: #D0372D;">0xffff</span>;                \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.cs = <span style="color: keyboardFocusIndicatorColor;">(</span>sel<span style="color: keyboardFocusIndicatorColor;">)</span>;                                      \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.args = <span style="color: #D0372D;">0</span>;                                        \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.rsv1 = <span style="color: #D0372D;">0</span>;                                        \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.type = <span style="color: keyboardFocusIndicatorColor;">(</span>istrap<span style="color: keyboardFocusIndicatorColor;">)</span> ? STS_TG32 : STS_IG32;           \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.s = <span style="color: #D0372D;">0</span>;                                           \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.dpl = <span style="color: keyboardFocusIndicatorColor;">(</span>d<span style="color: keyboardFocusIndicatorColor;">)</span>;                                       \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.p = <span style="color: #D0372D;">1</span>;                                           \
+  <span style="color: keyboardFocusIndicatorColor;">(</span>gate<span style="color: keyboardFocusIndicatorColor;">)</span>.off_31_16 = <span style="color: keyboardFocusIndicatorColor;">(</span>uint<span style="color: keyboardFocusIndicatorColor;">)(</span>off<span style="color: keyboardFocusIndicatorColor;">)</span> &gt;&gt; <span style="color: #D0372D;">16</span>;                  \
+<span style="color: #ff00ff;">}</span>
+</pre>
+</div>
+
+<p>
+中断描述符表的定义在trap.c里。它的初始化过程也在trap.c里，在main函数（main.c）里被调用。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #0000FF;">for</span><span style="color: #ff00ff;">(</span>i = <span style="color: #D0372D;">0</span>; i &lt; <span style="color: #D0372D;">256</span>; i++<span style="color: #ff00ff;">)</span>
+  SETGATE<span style="color: #ff00ff;">(</span>idt<span style="color: keyboardFocusIndicatorColor;">[</span>i<span style="color: keyboardFocusIndicatorColor;">]</span>, <span style="color: #D0372D;">0</span>, SEG_KCODE&lt;&lt;<span style="color: #D0372D;">3</span>, vectors<span style="color: keyboardFocusIndicatorColor;">[</span>i<span style="color: keyboardFocusIndicatorColor;">]</span>, <span style="color: #D0372D;">0</span><span style="color: #ff00ff;">)</span>;
+SETGATE<span style="color: #ff00ff;">(</span>idt<span style="color: keyboardFocusIndicatorColor;">[</span>T_SYSCALL<span style="color: keyboardFocusIndicatorColor;">]</span>, <span style="color: #D0372D;">1</span>, SEG_KCODE&lt;&lt;<span style="color: #D0372D;">3</span>, vectors<span style="color: keyboardFocusIndicatorColor;">[</span>T_SYSCALL<span style="color: keyboardFocusIndicatorColor;">]</span>, DPL_USER<span style="color: #ff00ff;">)</span>;
+</pre>
+</div>
+
+
+<p>
+中断描述符表定义了中断的中断处理程序入口。每个程序的中断处理程序是不同的。
+此外还有一个标志位区分了到底是异常（trap）还是中断(interrupt)。
+如果是中断，则将会把CPU的 <code>FL_IF</code> 位清零，这意味着处理该中断的时候不会接受其他的中断。
+如果是异常/陷阱，则不会清零，意味着在处理该中断到时候还接受其他中断。
+SYSCALL必须设置为异常/陷阱模式，因为系统调用可能出错。出错的可能性有好多种，比如发生了运行时/程序错误。
+这将导致其他的软件异常/硬件异常被触发。
+而其他的中断则设置为interrupt模式，这意味着不会发生递归中断。
+</p>
+</div>
+
+<div id="outline-container-orgheadline9" class="outline-3">
+<h3 id="orgheadline9"><span class="section-number-3">3.1</span> <span class="todo TODO">TODO</span> 你说 <code>FL_IF</code> 位到底是怎么运作的？</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+每个门描述符有一个特权等级位（dpl）。x86体系结构分为0~3一共四种特权等级，我们这里只会用到两种，分别是0或者3。其中0是代表
+最高的等级，我们称之为内核模式。3被定义为 <code>DPL_USER</code> ，它被称为用户模式。
+在所有的中断向量中，只有系统调用（第64号）的dpl被设置为3，其他的全都是0，全都是内核特权。
+特权等级可以避免用户使用int指令故意（显式地）调用中断。因为只有SYSCALL才能在用户态被调用。这造成了一种强劲的隔离。
+<b>注意</b> int指令指软件中断。
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline12" class="outline-2">
+<h2 id="orgheadline12"><span class="section-number-2">4</span> int指令</h2>
+<div class="outline-text-2" id="text-4">
+</div><div id="outline-container-orgheadline11" class="outline-3">
+<h3 id="orgheadline11"><span class="section-number-3">4.1</span> <span class="todo TODO">TODO</span> write this</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+.draft
+如果CPU在用户模式运行，会从任务段描述符表里面加载新的%esp和%ss，进行一次栈切换以替代用户的栈。因为用户的栈可能会被恶意损毁。
+把用户的栈切换为内核栈。
+如果CPU是在内核模式运行，它不会做这个步骤。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgheadline14" class="outline-2">
+<h2 id="orgheadline14"><span class="section-number-2">5</span> 关于系统调用的参数提取</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+参数提取是一个很有意思的事情，因为它是从栈上提取的参数。提供给用户的系统调用API都是汇编代码，当调用它们的时候，传递的参数会被
+压进 <b>用户栈</b> 里面。注意一定是用户区的栈！
+</p>
+
+<p>
+然后，syscall过程会把用户的请求指派到相应的以 <code>sys_</code> 开头的过程里。有意思的是，这些过程都是一些无参函数。那么参数是如何传递的呢？
+事实上，这些以 <code>sys_</code> 开头的过程的主要作用就是用来传递参数的。他们负责的就是从用户栈里面解析出参数（再强调一遍是用户栈。），然后把
+参数以一般C语言的样子传递给不带 <code>sys_</code> 前缀的对应函数，即系统调用的真正C语言实现里。那么这就很清楚了。我们在这些过程里要做的事情，
+就是把参数挨个取出来。
+但是事实上，我们需要做大量的边界检查，以确定 <b>参数确实在用户栈里</b> ，而不会跑到内核内存区里面。我们要保证内核是干净整洁的。
+一些函数如argint、argstr、argptr都是为了确定参数的正确性而设置的。这些函数会确定参数地址的正确性，然后把参数取回来。
+如果任一地址不正确，都会返回-1，紧接着这些函数也会返回-1作为调用失败的标志。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #6434A3;">int</span>
+<span style="color: #006699;">argint</span><span style="color: #ff00ff;">(</span><span style="color: #6434A3;">int</span> <span style="color: #BA36A5;">n</span>, <span style="color: #6434A3;">int</span> *<span style="color: #BA36A5;">ip</span><span style="color: #ff00ff;">)</span>
+<span style="color: #ff00ff;">{</span>
+  <span style="color: #0000FF;">return</span> fetchint<span style="color: keyboardFocusIndicatorColor;">(</span>proc-&gt;tf-&gt;esp + <span style="color: #D0372D;">4</span> + <span style="color: #D0372D;">4</span>*n, ip<span style="color: keyboardFocusIndicatorColor;">)</span>;
+<span style="color: #ff00ff;">}</span>
+</pre>
+</div>
+<p>
+比如这里是argint函数，它负责把第n个参数解释成int并取回来。esp保存了系统调用结束后的返回地址这个地址以上就是参数的区域。
+</p>
+</div>
+<div id="outline-container-orgheadline13" class="outline-3">
+<h3 id="orgheadline13"><span class="section-number-3">5.1</span> <span class="todo TODO">TODO</span> 于是这个esp是什么时候设置的？</h3>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: 牛天睿</p>
+<p class="date">Created: 2017-03-28 二 21:37</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
