@@ -1,14 +1,7 @@
 #include "process.h"
 #include "lock.h"
 
-//进程表结构
-struct protab {
-	struct spinlock lock;		//互斥锁
-	struct proc proc[PROC_NUM]; //进程队列
-};
-
 int nextpid = 1;
-protab ptable;
 
 //fork其余进程
 extern void frk_ret(void);
@@ -129,7 +122,7 @@ int fork(void)
 
 	//修改新建子进程的状态，为保证互斥，使用锁
 	acquirelock(&ptable.lock);
-	np->p_stat = SRUN;
+	np->p_stat = READY;
 	releaselock(&ptable.lock);
 
 	//将子进程的pid返回给父进程
@@ -140,66 +133,4 @@ int fork(void)
 void procinit(void)
 {
 	initlock(&ptable.lock, "ptable");
-}
-
-//semaphore_wait
-//slk为调用者所持有的锁，以保证其他进程无法调用signal
-//为什么会有两个锁？？
-void sem_wait(void *w_queue, struct spinlock *slk)
-{
-	if (proc == 0)
-		painc("sleep:process is not exit!");
-	if (slk == 0)
-		painc("sleep:the caller don't have lock!");
-
-	//进程存在，且调用它的函数持有锁slk
-	//若slk!=&ptable.lock,则当进程持有ptable.lock后，便可安全释放slk
-	//因为signal函数需在持有锁的情况下才能执行
-	if (slk != &ptable.lock)
-	{	
-		acquirelock(&ptable.lock);
-		releaselock(slk);
-	}
-	//若slk==&ptable.lock
-	//此时若要求持有 ptable.lock 然后又把它作为 slk 释放的时候会出现死锁。
-	//所以不执行上述if条件里的语句
-
-	//使进程进入休眠状态
-	proc->p_chan = w_queue;
-	proc->p_stat = SSLEEPING;
-	//调用shed(),从用户态切换到cpu调度器状态
-	sched();
-
-	//清零？？
-	proc->p_chan = 0;
-
-	//针对两个锁不想等的情况：换回之前的锁
-	if (slk != &ptable.lock)
-	{
-		releaselock(&ptable.lock);
-		acquirelock(slk);
-	}
-}
-
-
-//semaphore_broadcast
-//唤醒所有处于睡眠状态的进程
-void sem_broadcast(void *w_queue)
-{
-	acquirelock(&ptable.lock);
-	wakeup(w_queue);
-	releaselock(&ptable.lock);
-}
-
-//内部函数
-static void wakeup(void *w_queue)
-{
-	struct proc *pro;
-
-	//遍历进程表，唤醒所有进程
-	for (pro = ptable.proc; pro < &ptable.proc[PROC_NUM]; pro++)//可不可以是pro<PROC_NUM??
-	{
-		if (pro->p_stat == SSLEEPING && pro->p_chan == w_queue)
-			pro->p_stat = SRUN;
-	}
 }

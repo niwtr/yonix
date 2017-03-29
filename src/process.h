@@ -32,7 +32,7 @@ enum procstat {
 	SEMBRYO, // TODO wit?唤醒
 	SWAIT, //waiting.
 	SSLEEPING, // sleep in high priority
-	RUNNABLE, // idle? TODO check
+	READY, // ready
 	SRUN, // running.
 	SZOMB // zombie.
 };
@@ -58,6 +58,7 @@ struct cpu {
 	volatile uint started;       // Has the CPU started?
 	int ncli;                    // Depth of pushcli nesting.
 	int intena;                  // Were interrupts enabled before pushcli?
+								 // 在调用强制不允许中断发生函数之前是否允许中断？？
 
 								 // Cpu-local storage variables; see below
 	struct cpu *cpu;
@@ -107,3 +108,10 @@ extern struct cpu cpus[NCPU]; 先处理单线程问题
 extern struct cpu *cpu asm("%gs:0");       // &cpus[cpunum()]
 extern struct proc *proc asm("%gs:4");     // cpus[cpunum()].proc
 
+										   //进程表结构
+struct protab {
+	struct spinlock lock;		//互斥锁
+	struct proc proc[PROC_NUM]; //进程队列
+};
+
+extern protab ptable;
