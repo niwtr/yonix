@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-03-29 Wed 14:41 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title></title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="牛天睿" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline1">1. swtch</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1"><span class="section-number-2">1</span> swtch</h2>
+<div class="outline-text-2" id="text-1">
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #ba2f59; font-weight: bold;">void</span> <span style="color: #6c3163; font-weight: bold;">swtch</span><span style="color: #ff00ff;">(</span><span style="color: #3a81c3; font-weight: bold;">struct</span> <span style="color: #ba2f59; font-weight: bold;">context</span> ** <span style="color: #715ab1;">old</span> , <span style="color: #3a81c3; font-weight: bold;">struct</span> <span style="color: #ba2f59; font-weight: bold;">context</span> * <span style="color: #715ab1;">new</span><span style="color: #ff00ff;">)</span>;
+</pre>
+</div>
+
+<p>
+swtch负责上下文切换。它要做的事情有：
+</p>
+<ol class="org-ol">
+<li>把上下文信息（ebp、ebx、esi、edi、eip、esp）保存在old指向的上下文结构体里。</li>
+<li>从new里面恢复寄存器（上下文）。</li>
+</ol>
+
+
+<div class="org-src-container">
+
+<pre class="src src-asm">  # Save old callee-save registers
+  # eip&#22312;&#21738;&#37324;&#65311;&#8212;&#8212;eip&#22312;&#20351;&#29992;call&#35843;&#29992;swtch&#30340;&#26102;&#20505;&#23601;&#20445;&#23384;&#22312;&#26632;&#20013;<span style="color: #715ab1;">%ebp&#20043;&#19978;&#30340;&#20301;&#32622;&#19978;&#20102;</span>
+
+
+  # Switch stacks
+
+  <span style="color: #3a81c3; font-weight: bold;">movl</span> <span style="color: #715ab1;">%edx</span>, <span style="color: #715ab1;">%esp</span> # new-&gt;stack&#37325;&#32622;&#26632;
+
+  # Load new callee-save registers
+  <span style="color: #3a81c3; font-weight: bold;">popl</span> <span style="color: #715ab1;">%edi</span>
+  <span style="color: #3a81c3; font-weight: bold;">popl</span> <span style="color: #715ab1;">%esi</span>
+  <span style="color: #3a81c3; font-weight: bold;">popl</span> <span style="color: #715ab1;">%ebx</span>
+  <span style="color: #3a81c3; font-weight: bold;">popl</span> <span style="color: #715ab1;">%ebp</span>
+  <span style="color: #3a81c3; font-weight: bold;">ret</span> # pop <span style="color: #715ab1;">%eip</span>
+<span style="color: #6c3163; font-weight: bold;">rc</span> <span style="color: #3a81c3; font-weight: bold;">asm</span>
+</pre>
+</div>
+
+<p>
+首先它从栈里面弹出两个参数到eax和edx。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #3a81c3; font-weight: bold;">.globl</span> swtch
+<span style="color: #6c3163; font-weight: bold;">swtch</span>:
+  <span style="color: #3a81c3; font-weight: bold;">movl</span> 4<span style="color: #ff00ff;">(</span><span style="color: #715ab1;">%esp</span><span style="color: #ff00ff;">)</span>, <span style="color: #715ab1;">%eax</span> # old
+  <span style="color: #3a81c3; font-weight: bold;">movl</span> 8<span style="color: #ff00ff;">(</span><span style="color: #715ab1;">%esp</span><span style="color: #ff00ff;">)</span>, <span style="color: #715ab1;">%edx</span> # new
+</pre>
+</div>
+
+<p>
+把所有的一堆寄存器压栈。这里有ebp、ebx、esi、edi，但是没有eip。实际上eip早在caller
+调用swtch的时候就已经把它压栈了，因此它现在刚好处在ebp之下的位置。该过程由
+call指令自动完成。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #6c3163; font-weight: bold;">pushl</span> <span style="color: #3a81c3; font-weight: bold;">%ebp</span>
+<span style="color: #6c3163; font-weight: bold;">pushl</span> <span style="color: #3a81c3; font-weight: bold;">%ebx</span>
+<span style="color: #6c3163; font-weight: bold;">pushl</span> <span style="color: #3a81c3; font-weight: bold;">%esi</span>
+<span style="color: #6c3163; font-weight: bold;">pushl</span> <span style="color: #3a81c3; font-weight: bold;">%edi</span>
+</pre>
+</div>
+
+<p>
+随后，它把栈指针赋给eax所指向的参数地址。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #6c3163; font-weight: bold;">movl</span> <span style="color: #3a81c3; font-weight: bold;">%esp</span>, <span style="color: #ff00ff;">(</span><span style="color: #715ab1;">%eax</span><span style="color: #ff00ff;">)</span> # &#25226;esp&#20445;&#23384;&#12290;
+</pre>
+</div>
+
+<p>
+现在格局如下：
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c">+-----------------------+                      +-----------------------+             
+|          eax          |                      |          edx          |             
++-------+---------------+                      +---+-------------------+             
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        v                                          |                                 
+ +------------+                                    |                                 
+ |    esp     |                                    |                                 
+ +------------+---&gt;+------------------------+      +-------&gt;------------------------+
+                   |          edi           |              |        edi<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          esi           |              |        esi<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          ebx           |              |        ebx<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          ebp           |              |        ebp<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          eip           |              |        eip<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+</pre>
+</div>
+
+<p>
+在最后，重置栈指针，把所有寄存器的值按序弹出——注意栈的IO次序是反着的，所以这里需要倒过来pop。
+在最后，一句 <code>ret</code> 就相当于popl %eip， 它可以把程序计数器eip的值从栈里弹出。这就是上下文切换——swtch的全部了。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: 牛天睿</p>
+<p class="date">Created: 2017-03-29 Wed 14:41</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

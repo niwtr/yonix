@@ -72,6 +72,7 @@ SYSCALL(read)
 可见这些宏是起的相似的作用。
 一定要区分几个概念： =SYS_exec= ， =sys_exec= ， 和 =exec= 。
 1. =SYS_exec= 是系统调用号，它是一个常量，在syscall.h里定义。
+
 #+begin_src c
 #define SYS_read    5
 #define SYS_kill    6
@@ -79,6 +80,7 @@ SYSCALL(read)
 #define SYS_fstat   8
 #define SYS_chdir   9
 #+end_src
+
 2. =sys_exec= 是syscall依据系统调用号所转发到的操作系统内核函数。
 3. =exec= 是提供给用户的系统调用API。它由上面所说的SYSCALL宏展开所生成。
 #+begin_src asm

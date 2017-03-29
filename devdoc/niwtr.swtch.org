@@ -1,0 +1,89 @@
+* swtch
+#+begin_src c
+void swtch(struct context ** old , struct context * new);
+#+end_src
+
+swtch负责上下文切换。它要做的事情有：
+1. 把上下文信息（ebp、ebx、esi、edi、eip、esp）保存在old指向的上下文结构体里。
+2. 从new里面恢复寄存器（上下文）。
+
+
+#+begin_src asm
+  # Save old callee-save registers
+  # eip在哪里？——eip在使用call调用swtch的时候就保存在栈中%ebp之上的位置上了
+ 
+
+  # Switch stacks
+
+  movl %edx, %esp # new->stack重置栈
+
+  # Load new callee-save registers
+  popl %edi
+  popl %esi
+  popl %ebx
+  popl %ebp
+  ret # pop %eip
+rc asm
+#+end_src
+
+首先它从栈里面弹出两个参数到eax和edx。
+
+#+begin_src asm
+.globl swtch
+swtch:
+  movl 4(%esp), %eax # old
+  movl 8(%esp), %edx # new
+#+end_src
+
+把所有的一堆寄存器压栈。这里有ebp、ebx、esi、edi，但是没有eip。实际上eip早在caller
+调用swtch的时候就已经把它压栈了，因此它现在刚好处在ebp之下的位置。该过程由
+call指令自动完成。
+
+#+begin_src asm
+  pushl %ebp
+  pushl %ebx
+  pushl %esi
+  pushl %edi
+#+end_src
+
+随后，它把栈指针赋给eax所指向的参数地址。
+#+begin_src asm
+movl %esp, (%eax) # 把esp保存。
+#+end_src
+
+现在格局如下：
+#+BEGIN_SRC c
+                                                                                       
+  +-----------------------+                      +-----------------------+             
+  |          eax          |                      |          edx          |             
+  +-------+---------------+                      +---+-------------------+             
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          |                                          |                                 
+          v                                          |                                 
+   +------------+                                    |                                 
+   |    esp     |                                    |                                 
+   +------------+--->+------------------------+      +------->------------------------+
+                     |          edi           |              |        edi(new)        |
+                     +------------------------+              +------------------------+
+                     |          esi           |              |        esi(new)        |
+                     +------------------------+              +------------------------+
+                     |          ebx           |              |        ebx(new)        |
+                     +------------------------+              +------------------------+
+                     |          ebp           |              |        ebp(new)        |
+                     +------------------------+              +------------------------+
+                     |          eip           |              |        eip(new)        |
+                     +------------------------+              +------------------------+
+                  
+#+end_src
+
+在最后，重置栈指针，把所有寄存器的值按序弹出——注意栈的IO次序是反着的，所以这里需要倒过来pop。
+在最后，一句 =ret= 就相当于popl %eip， 它可以把程序计数器eip的值从栈里弹出。这就是上下文切换——swtch的全部了。
+
+
+
