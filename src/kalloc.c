@@ -6,7 +6,7 @@
 #include "memlayout.h"
 
 
-//空闲内存页链表
+//空闲内存页链表，占用空间满足小于页面大小4kb
 struct fpage {
 	struct fpage *next;
 };
@@ -23,33 +23,58 @@ struct {
 //释放一定范围内内存页
 void freerange(void *vstart, void *vend)
 {
-
+	char *p;
+	p = (char *)PGROUNDUP((uint)vstart);	//页面向上对齐，保护数据
+	for(; p < (char *)vend; p += PGSIZE)
+		kfree(p);
 }
 
 
-//使用entrypgdir页表时，初始化内存
+//使用entrypgdir页表时，初始化内存,不加锁
 void kinit1(void *vstart, void *vend)
 {
-
+	freerange(vstart, vend);
 }
 
 
-//使用完整页表时，初始化内存
+//使用完整页表时，初始化内存，加锁
 void kinit2(void *vstart, void *vend)
 {
-
+	freerange(vstart, vend);
 }
 
 
 //释放某个内存页
 void kfree(char *vaddr)
 {
+	// 内存页基地址不是页数整数倍，或者不在有效区域
+	if((uint)vaddr % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+		panic("kfree");
 
+	// 多核时申请锁
+
+	// 使用了强制类型转换，结构体地址即等于空闲页地址
+	struct fpage *f;
+	f = (struct fpage*)vaddr;
+
+	f->next = kmem.freelist;
+	kmem.freelist = f;
+
+	// 多核时释放锁
 }
 
 
-//申请一页内存
+//申请一页内存,失败返回NULL
 char* kalloc()
 {
+	// 多核时申请锁
 
+	struct fpage *f;
+	f = kmem.freelist;
+	if(f)
+		kmem.freelist = f->next;
+
+	// 多核时释放锁
+	
+	return f;
 }
