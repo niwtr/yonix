@@ -26,25 +26,42 @@ struct context {
 	uint eip;		//每次cpu执行都要先读取eip寄存器的值，然后定位eip指向的内存地址，并且读取汇编指令，最后执行
 };
 
-//进程可能处的各种状态 
-enum procstat {
-	SUNUSED, // unused.
-	SEMBRYO, // TODO wit?唤醒
-	SWAIT, //waiting.
-	SSLEEPING, // sleep in high priority
-	READY, // ready
-	SRUN, // running.
-	SZOMB // zombie.
-};
+//进程可能处的各种状态
 
+#define __STAT_LOV__
+X(SUNUSED)                                \
+X(SEMBRYO)                                \
+X(SWAIT)                                  \
+X(SSLEEPING)                              \
+X(READY)                                  \
+X(SRUN)                                   \
+X(SZOMB)
+
+enum procstat {
+#define X(name) name,
+  __STAT_LOV__
+#undef X
+};
+#define __FLAG_LOV__
+X(SLOAD)\
+X(SSYS)\
+X(SLOCK)\
+X(SSWAP)\
+X(STRC)\
+X(SWTED)
 /* WARNING flag borrowed from v6 */
 enum procflag {
+#define X(name) name,
+  __FLAG_LOV__
+#undef X
+  /*
 	SLOAD, // in core.
 	SSYS,  //scheduling proc 负责调度的进程
 	SLOCK, //proc cannot be swapped.
 	SSWAP, //proc is being swapped out.
 	STRC,  //proc is being traced. TODO 什么叫trace？
 	SWTED // another tracing flag. TODO wit?
+  */
 };
 
 // Per-CPU state
@@ -90,7 +107,7 @@ struct proc {
 	struct file * p_of[P_NOFILE]; //opened files.
 	struct inode * p_cdir; // current directory
 
-	char name[16]; //proc name (for debugging) TODO remove if not necessary
+	char p_name[16]; //proc name (for debugging) TODO remove if not necessary
 
 				   // for scheduling, borrowed from v6.
 				   // p_pri = f(p_nice, p_time, p_pu)
@@ -101,7 +118,7 @@ struct proc {
 };
 
 
-extern struct cpu cpus[NCPU]; 先处理单线程问题
+extern struct cpu cpus[NCPU];// 先处理单线程问题
 
 //指示当前时刻的CPU状态、进程状态的指针
 //
@@ -115,3 +132,6 @@ struct protab {
 };
 
 extern protab ptable;
+#define search_through_ptablef(name)                            \
+  struct proc * name;                                           \
+  for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++)
