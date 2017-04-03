@@ -21,15 +21,15 @@ struct {
 //注：以下过程输入均为虚拟内存地址
 
 //释放一定范围内内存页
-void freerange(void *vstart, void *vend)
+void freerange(vaddr_t vstart, vaddr_t vend)
 {
-	char *p;
-	p = (char *)PGROUNDUP((uint)vstart);	//页面向上对齐，保护数据
-	for(; p < (char *)vend; p += PGSIZE)
+	vaddr_t p;
+	p = (vaddr_t)PGROUNDUP((uint)vstart);	//页面向上对齐，保护数据
+	for(; p < (vaddr_t)vend; p += PGSIZE)
 		kfree(p);
 }
 
-
+/*
 //使用entrypgdir页表时，初始化内存,不加锁
 void kinit1(void *vstart, void *vend)
 {
@@ -42,10 +42,10 @@ void kinit2(void *vstart, void *vend)
 {
 	freerange(vstart, vend);
 }
-
+*/
 
 //释放某个内存页
-void kfree(char *vaddr)
+void kfree(vaddr_t vaddr)
 {
 	// 内存页基地址不是页数整数倍，或者不在有效区域
 	if((uint)vaddr % PGSIZE || v < end || V2P(v) >= PHYSTOP)
@@ -65,7 +65,7 @@ void kfree(char *vaddr)
 
 
 //申请一页内存,失败返回NULL
-char* kalloc()
+vaddr_t kalloc()
 {
 	// 多核时申请锁
 
