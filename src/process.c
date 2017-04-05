@@ -3,10 +3,10 @@
 
 int nextpid = 1;
 
-//fork其余进程
-extern void frk_ret(void);
-//trap其余进程
-extern void trp_ret(void);
+//fork return
+extern void forkret(void);
+//trap return
+extern void trapret(void);
 
 //从空闲进程中找到一个进程
 static struct proc* procalloc(void)
@@ -16,7 +16,7 @@ static struct proc* procalloc(void)
 	char * sp;
 
 	//找到内存中处于SUNUSED状态的进程
-  search_through_ptablef(p)
+    search_through_ptablef(p)
 	{
 		//如果找到了，则将其状态改为SEMBRYO
 		//且增加进程的pid值
@@ -126,14 +126,14 @@ int fork(void)
 	struct proc *np;
 
 	//为进程分配内核空间
-	np = allocproc();
+	np = procalloc();
 	if (np == 0)
 	{
 		return -1;
 	}
 
 	//将父进程的状态拷贝一份 vm.c
-  //TODO add api
+    //TODO add api
 	np->p_cdir = copyuvm(, proc->sz);
 	if (np->p_cdir == 0)	//虚存分配失败，则释放进程所占内存空间？？
 	{
@@ -186,7 +186,7 @@ void exit(void){
 
   // close all opened files.
   int fd;
-  for(fd=0;fd< NOFILE;fd++){
+  for(fd=0;fd< P_NOFILE;fd++){
     if(proc->p_of[fd]){
       fileclose(proc->p_of[fd]);
       proc->p_of[fd]=0;
@@ -282,4 +282,76 @@ void dbg_procdump(void)
 
 
 
+//第一个用户级进程
+void userinit(void)
+{
+	struct proc *p;
+	extern char biInitcodeStart[], biInitcodeSz[];//这是干嘛的？
+	p = procalloc();	//在页表中分配一个proc,并初始化进程状态 SUNUSED->SEMBRYO
+						//第一个用户进程
+	initcode = p;
+	//为其分配虚拟内存页表 获取一个新的二级页表，并包含内核所有映射
+	p->p_page = setupkvm();
+	if (!p->p_page)
+		panic("userinit: setupkvm failed!");
+
+	//初始化用户进程虚拟地址空间
+	inituvm(p->p_cdir, biInitcodeStart, (int)biInitcodeSz);
+
+	//trapframe的设置
+	memset(p->tf, 0, sizeof(*p->tf));
+	p->tf->cs = (SEG_UCODE << 3) | DPL_USER;//%cs 寄存器保存着一个段选择器， 指向段 SEG_UCODE 并处于特权级 DPL_USER（即在用户模式而非内核模式）
+	p->tf->ds = (SEG_UDATA << 3) | DPL_USER;//ds,es,ss段选择器指向段 SEG_UDATA 并处于特权级 DPL_USER
+	p->tf->es = p->tf->ds;
+	p->tf->ss = p->tf->ds;
+	p->tf->eflags = FL_IF;// FL_IF 位被设置为允许硬件中断
+	p->tf->esp = PGSIZE;//设为进程的最大有效虚拟内存
+	p->tf->eip = 0;  // beginning of initcode.S指向初始化代码的入口点，即地址0
+
+	p->p_size = PGSIZE;
+	safestrcpy(p->name, "initcode", sizeof(p->name));
+	//进程所在目录为根目录“/”
+	p->p_cdir = namei("/");
+	//将进程状态设置为READY
+	p->p_stat = READY;
+}
+
+//wait——等待子进程执行完毕exit,并返回其进程ID号
+int wait(void)
+{
+	int pid;		//子进程pid
+	bool isparent = false;	//判断该进程是否是父进程
+
+	while (true)
+	{
+		//遍历进程列表，找到当前进程是否有子进程
+		search_through_ptablef(p)
+		{
+			if (p->parent == proc)
+			{
+				isparent = true;
+				//若该子进程是一个僵尸进程——子进程已经结束，但父进程因为太忙而没有等待它。。。。
+				//一个进程在调用exit命令结束自己的生命的时候，其实它并没有真正的被销毁，
+				//而是留下一个称为僵尸进程（Zombie）的数据结构（系统调用exit，它的作用是 使进程退出，
+				//但也仅仅限于将一个正常的进程变成一个僵尸进程，并不能将其完全销毁）
+				if (p->p_stat == SZOMB)
+				{
+					//处理该进程信息
+					pid = p->p_pid;
+					kfree(p->p_kstack);	//释放内核栈
+					freevm(p->p_page);	//释放虚拟内存
+					p->p_pid = 0;
+					p->p_prt = 0;		//父进程设为0
+					p->name[0] = 0;
+					p->p_killed = 0;
+					p->p_stat = 0;
+					p->p_stat = SUNUSED;
+					return pid;
+				}
+				//若找到一个不是僵尸进程的子进程，则父进程休眠，等待子进程变为僵尸进程
+				sleep(proc);
+			}
+		}
+	}
+}
 
