@@ -1,60 +1,60 @@
-/*ÎÄ¼şÏµÍ³´ÅÅÌ½á¹¹
-µÚ0¿é£ºbootl ÎÄ¼şÏµÍ³²»Ê¹ÓÃ
-µÚ1¿é£º³¬¼¶¿é£¬´æ´¢Ò»Ğ©ĞÅÏ¢
-µÚ2-n¿é£ºi½Úµã¿é£¬¿ÕÏĞ¿é£¬Êı¾İ¿é */
+/*æ–‡ä»¶ç³»ç»Ÿç£ç›˜ç»“æ„
+ç¬¬0å—ï¼šbootl æ–‡ä»¶ç³»ç»Ÿä¸ä½¿ç”¨
+ç¬¬1å—ï¼šè¶…çº§å—ï¼Œå­˜å‚¨ä¸€äº›ä¿¡æ¯
+ç¬¬2-nå—ï¼šièŠ‚ç‚¹å—ï¼Œç©ºé—²å—ï¼Œæ•°æ®å— */
 
-#define BSIZE 512  // ¿é´óĞ¡
-#define NDIRECT 12 //Ö±½Ó´æ´¢Êı¾İ¿éÊıÄ¿ 
-#define NINDIRECT (BSIZE / sizeof(uint))//¼ä½Ó´æ´¢Êı¾İ¿éÊıÄ¿ Ò»°ãÎªsizeof(uint)£¿£¿£¿ 
-#define MAXFILE (NDIRECT + NINDIRECT)//Êı¾İ¿é×î´ó´æ´¢Á¿ 
+#define BSIZE 512  // å—å¤§å°
+#define NDIRECT 12 //ç›´æ¥å­˜å‚¨æ•°æ®å—æ•°ç›® 
+#define NINDIRECT (BSIZE / sizeof(uint))//é—´æ¥å­˜å‚¨æ•°æ®å—æ•°ç›® ä¸€èˆ¬ä¸ºsizeof(uint)ï¼Ÿï¼Ÿï¼Ÿ 
+#define MAXFILE (NDIRECT + NINDIRECT)//æ•°æ®å—æœ€å¤§å­˜å‚¨é‡ 
   
-/*³¬¼¶¿éÊı¾İ½á¹¹*/ 
+/*è¶…çº§å—æ•°æ®ç»“æ„*/ 
 struct supblock{
-	uint size;//ÎÄ¼şÏµÍ³×Ü¿éÊı 
-	unit sdata;//Êı¾İ¿é×Ü¿éÊı 
-	unit sinode;//i½Úµã×Ü¿éÊı
-	unit slog;//ÈÕÖ¾¿éÊı 
+	uint size;//æ–‡ä»¶ç³»ç»Ÿæ€»å—æ•° 
+	unit sdata;//æ•°æ®å—æ€»å—æ•° 
+	unit sinode;//ièŠ‚ç‚¹æ€»å—æ•°
+	unit slog;//æ—¥å¿—å—æ•° 
 }; 
 
-/*´ÅÅÌÉÏµÄi½Úµã¿é½á¹¹*/
+/*ç£ç›˜ä¸Šçš„ièŠ‚ç‚¹å—ç»“æ„*/
 struct dinode{
-	short type;//ÎÄ¼şÀàĞÍ
+	short type;//æ–‡ä»¶ç±»å‹
 	short major;// Major device number (T_DEV only)
 	short minor;// Minor device number (T_DEV only)
-	short nlink;//Ö¸Ïò¸Ãi½ÚµãµÄÄ¿Â¼Ïî 
-	uint fsize;//ÎÄ¼ş´óĞ¡ 
-	uint addrs[NINDTRECT+1];//Êı¾İ¿éµØÖ· 
+	short nlink;//æŒ‡å‘è¯¥ièŠ‚ç‚¹çš„ç›®å½•é¡¹ 
+	uint fsize;//æ–‡ä»¶å¤§å° 
+	uint addrs[NINDTRECT+1];//æ•°æ®å—åœ°å€ 
 }; 
 
-#define IPB (BSIZE / sizeof(struct dinode))  //Ã¿¿é¶àÉÙ¸öi½Úµã 
-#define IBLOCK(i) ((i) / IPB + 2)  //µÚi¸öi½ÚµãËùÔÚµÄ¿é 
-#define BPB (BSIZE*8)    //Ã¿¸öÎ»Í¼¿é¿ÉÓÃ¹ÜÀíµÄ´óĞ¡  
-#define BBLOCK(b, ninodes) (b/BPB + (ninodes)/IPB + 3)  //µÚi¸ö¿éËùÔÚµÄÎ»Í¼¿é 
-#define DIRSIZE 14  //Ä¿Â¼½áµã¶ÔÓ¦ÎÄ¼şÊı
+#define IPB (BSIZE / sizeof(struct dinode))  //æ¯å—å¤šå°‘ä¸ªièŠ‚ç‚¹ 
+#define IBLOCK(i) ((i) / IPB + 2)  //ç¬¬iä¸ªièŠ‚ç‚¹æ‰€åœ¨çš„å— 
+#define BPB (BSIZE*8)    //æ¯ä¸ªä½å›¾å—å¯ç”¨ç®¡ç†çš„å¤§å°  
+#define BBLOCK(b, ninodes) (b/BPB + (ninodes)/IPB + 3)  //ç¬¬iä¸ªå—æ‰€åœ¨çš„ä½å›¾å— 
+#define DIRSIZE 14  //ç›®å½•ç»“ç‚¹å¯¹åº”æ–‡ä»¶æ•°
   
-/*Ä¿Â¼ÎÄ¼ş½á¹¹*/ 
+/*ç›®å½•æ–‡ä»¶ç»“æ„*/ 
 struct dirent {  
-  ushort inum;  // i½ÚµãºÅ 
-  char fname[DIRSIZE]; //ÎÄ¼şÃû×Ö  
+  ushort inum;  // ièŠ‚ç‚¹å· 
+  char fname[DIRSIZE]; //æ–‡ä»¶åå­—  
 };  
 
 
-/*ÄÚºËi½áµã*/
+/*å†…æ ¸iç»“ç‚¹*/
 struct inode{
-	uint dev; //Éè±¸ºÅ 
-	uint inum; //i½ÚµãºÅ
-	int ref; //Ö¸Ïò¸Ãi½ÚµãµÄÖ¸Õë
-	int flag ; //×´Ì¬£¨Õ¼ÓÃ£¬¿ÕÏĞ£© 
+	uint dev; //è®¾å¤‡å· 
+	uint inum; //ièŠ‚ç‚¹å·
+	int ref; //æŒ‡å‘è¯¥ièŠ‚ç‚¹çš„æŒ‡é’ˆ
+	int flag ; //çŠ¶æ€ï¼ˆå ç”¨ï¼Œç©ºé—²ï¼‰ 
 	
-	short type;//ÎÄ¼şÀàĞÍ
+	short type;//æ–‡ä»¶ç±»å‹
 	short major;// Major device number (T_DEV only)
 	short minor;// Minor device number (T_DEV only)
-	short nlink;//Ö¸Ïò¸Ãi½ÚµãµÄÄ¿Â¼Ïî 
-	uint fsize;//ÎÄ¼ş´óĞ¡ 
-	uint addrs[NINDTRECT+1];//Êı¾İ¿éµØÖ· 
+	short nlink;//æŒ‡å‘è¯¥ièŠ‚ç‚¹çš„ç›®å½•é¡¹ 
+	uint fsize;//æ–‡ä»¶å¤§å° 
+	uint addrs[NINDTRECT+1];//æ•°æ®å—åœ°å€ 
 }; 
 /
-/*ÎÄ¼ş½á¹¹*/ 
+/*æ–‡ä»¶ç»“æ„*/ 
 struct file{
 	enum{fd,dfpipe,fdinode}type;
 	int ref;
@@ -65,27 +65,21 @@ struct file{
 }; 
 
 
-/*¿é»º³åÇøÓÃË«ÏòÁ´±íĞÎÊ½´æ´¢»º³åÇø */
-#include"spinlock.h" 
+/*å—ç¼“å†²åŒºç”¨åŒå‘é“¾è¡¨å½¢å¼å­˜å‚¨ç¼“å†²åŒº */
 struct buf{
-	int flags;//×´Ì¬ 
-	uint dev;//Éè±¸ 
-	uint sector;//?? 
-	struct buf *pre; //ÖÃ»»Ò³Á´±í 
+	int flags;//çŠ¶æ€ 
+	uint dev;//è®¾å¤‡å· 
+	uint sector;//å—ç¼–å·	
+        struct buf *pre; //ç½®æ¢é¡µé“¾è¡¨ 
 	struct buf *next; 
-	struct buf *qnext; //´ÅÅÌÁ´±í 
+	struct buf *qnext; //ç£ç›˜é“¾è¡¨ 
 	uchar data[512]; 
 };
 
-struct bufcache{
-	struct spinlock lock;
-	struct buf cahce[NBUF];
-	struct buf head;
-};
-
-#define b_busy  0x1 //¹¤×÷×´Ì¬ 
-#define b_valid 0X2 //´ÅÅÌÊı¾İÓĞĞ§ 
-#define b_dirty 0x4 //Êı¾İĞèÒªĞ´»á´ÅÅÌ 
+#define NBUF 14//åŒå‘é“¾è¡¨æ•° 
+#define b_busy  0x1 //å·¥ä½œçŠ¶æ€ 
+#define b_valid 0X2 //ç£ç›˜æ•°æ®æœ‰æ•ˆ 
+#define b_dirty 0x4 //æ•°æ®éœ€è¦å†™ä¼šç£ç›˜ 
 
 #define o_rdonly 0x000
 #define o_wdonly 0x001
@@ -97,10 +91,10 @@ struct bufcache{
 #define TDEV 3
 
 struct start{
-	short type;// ÎÄ¼şÀàĞÍ 
-	int dev; // ÎÄ¼şÏµÍ³´ÅÅÌÉè±¸ 
-	uint ino; // i½ÚµãÊıÄ¿ 
-	short nlink; //Á¬½ÓÎÄ¼ş´ÎÊı 
-	uint size; //ÎÄ¼ş´óĞ¡ 
+	short type;// æ–‡ä»¶ç±»å‹ 
+	int dev; // æ–‡ä»¶ç³»ç»Ÿç£ç›˜è®¾å¤‡ 
+	uint ino; // ièŠ‚ç‚¹æ•°ç›® 
+	short nlink; //è¿æ¥æ–‡ä»¶æ¬¡æ•° 
+	uint size; //æ–‡ä»¶å¤§å° 
 };
 
