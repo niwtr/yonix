@@ -5,7 +5,6 @@ _*
 *.asm
 *.sym
 *.img
-vectors.S
 bootblock
 entryother
 initcode
@@ -14,3 +13,12 @@ kernel
 kernelmemfs
 mkfs
 .gdbinit
+.bochsrc
+.cvsignore
+.dir-locals.el
+.gdbinit.tmpl
+gdbutil
+GPATH
+GRTAGS
+GTAGS
+symlink.patch
