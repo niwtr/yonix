@@ -19,10 +19,9 @@ start:
 不同中断的中断处理函数入口是不一样的。
 ** alltraps
 随后，进入了alltraps.S里的alltraps过程里。这个过程负责填充“中断帧”（trapframe），中断帧负责保存中断前的内核信息，
-以便中断结束后内核恢复信息。这里，alltraps只是压入了一些剩余的寄存器信息。在这之前，CPU会负责压入更多的信息，有
-%eflags、%cs和%eip；如果在用户态，CPU还要压入%esp和%ss。
-TODO 这这些个都是干嘛的。。。
-TODO 还有一些内容漏下了。
+以便中断结束后内核恢复信息。这里，alltraps只是压入了一些剩余的寄存器信息。在这之前，CPU会负责压入更多的信息（这些工作由int指令完成），有
+%eflags、%cs和%eip；如果在用户态，CPU还要压入%esp和%ss。CPU将会进行一次栈切换，把用户栈切换为核心栈，这样做可以防止用户栈被恶意损毁。
+
 
 此时%esp指向刚刚建立好了的trapframe。alltraps把这个指针压到栈里面，作为trap的参数。之后调用trap过程。
 ** trap
@@ -40,7 +39,7 @@ TODO trapno又是什么时候设置的？
 
 #+END_SRC
 接着转到syscall.c里面的syscall进程。syscall是一个转发器，它按照系统调用号（从eax里取出来）然后转发给 =sys_exec= 过程。
-这个过程的定义是在 =sys_exec= 里。它最终会调用exec过程exec过程在exec.c里定义。
+这个过程的定义是在 =sys_exec= 里。它最终会调用exec过程。exec过程在exec.c里定义。
 
 ** 总结
 这是第一个系统调用的执行过程。以后所有系统调用都会由相似的代码：
@@ -70,9 +69,9 @@ SYSCALL(read)
 ...
 #+end_src
 可见这些宏是起的相似的作用。
-一定要区分几个概念： =SYS_exec= ， =sys_exec= ， 和 =exec= 。
-1. =SYS_exec= 是系统调用号，它是一个常量，在syscall.h里定义。
+一定要区分几个概念： =SYS_exec= ， =sys_exec= ， =exec= 和 =exec= 。
 
+1- =SYS_exec= 是系统调用号，它是一个常量，在syscall.h里定义。
 #+begin_src c
 #define SYS_read    5
 #define SYS_kill    6
@@ -80,9 +79,8 @@ SYSCALL(read)
 #define SYS_fstat   8
 #define SYS_chdir   9
 #+end_src
-
-2. =sys_exec= 是syscall依据系统调用号所转发到的操作系统内核函数。
-3. =exec= 是提供给用户的系统调用API。它由上面所说的SYSCALL宏展开所生成。
+2- =sys_exec= 是syscall依据系统调用号所转发到的操作系统内核函数。
+3- =exec= 是提供给用户的系统调用API。它由上面所说的SYSCALL宏展开所生成。
 #+begin_src asm
 .globl exec;
 exec:
@@ -90,7 +88,7 @@ movl SYS_exec %eax;
 int $T_SYSCALL
 ret
 #+end_src
-4. =exec= 同时又是系统调用的exec函数的C实现。它见于exec.c文件里。
+4- =exec= 同时又是系统调用的exec函数的C实现。它见于exec.c文件里。
 
 调用API的过程是这样的：用户调用exec系统调用接口，syscall给指派给 =sys_exec= ，这个函数负责把参数准备好。
 然后最终，在这个函数里，内部实现exec被调用。
@@ -169,7 +167,5 @@ argint(int n, int *ip)
 }
 #+end_src
 比如这里是argint函数，它负责把第n个参数解释成int并取回来。esp保存了系统调用结束后的返回地址这个地址以上就是参数的区域。
-** TODO 于是这个esp是什么时候设置的？
-
 
 
