@@ -96,19 +96,12 @@ uproc1的用户态上下文->uproc1的内核态上下文->scheduelr的上下文-
 
 我们分步骤来考虑。假设当前系统正在执行一个用户进程proc1。
 
-1. 来了一个时钟中断，于是CPU负责把proc1程序运行的上下文压栈，构成trapframe的前半部分。这时候，CPU已经进入内核态。转入中断处理程序alltraps。
-（在此之前，进入中断描述符表的对应位置，把trapno和errno压栈，也构成trapframe的一部分。）alltraps负责填入trapframe的另一些部分，
-于是trapframe就做好了。
+1. 来了一个时钟中断，于是CPU负责把proc1程序运行的上下文压栈，构成trapframe的前半部分。这时候，CPU已经进入内核态。转入中断处理程序alltraps。（在此之前，进入中断描述符表的对应位置，把trapno和errno压栈，也构成trapframe的一部分。）alltraps负责填入trapframe的另一些部分，于是trapframe就做好了。
 2. alltraps把trapframe作为参数调用trap。trap按照trapno指派到 =giveup_cpu= 函数。这一步就像是执行一个系统调用一样。
 3.  =giveup_cpu= 调用transform函数，进而调用 =swtch= 过程。
-4. =swtch= 过程会保存当前所运行程序的上下文。注意！因为早已经进入内核态了，因此这里所说的“当前所运行程序”是指proc1的内核进程。proc1的内核进程刚好
-运行在transform函数处。保存proc1内核上下文之后，swtch还负责恢复scheduler的上下文，使得scheduler能够查找下一个READY态的进程。
-5. scheduer找到了下一个READY态的进程proc2，它进行了关键的步骤——偷梁换柱。它调用了 =swtchuvm()= ，把当前的虚拟内存页表设置为进程proc2的页表。
-proc2的虚拟内存里保存着proc2的内核栈（kstack）和用户数据。正是因为这一步，才让接下来调用swtch时传入的指针 =p->p_ctxt= 变得有效。
-于是触发swtch，swtch负责保存scheduler的上下文，同时恢复proc2的 *内核态* 上下文。
-6. 回复了 *proc2* 的内核态上下文。注意proc2上次也是因为时钟中断而被迫放弃CPU的，它所经历的事情是和proc1一样的，所以proc2的内核上下文仍然是在transform函数里的
-——正在swtch调用的下一行。于是，沿着调用链，proc2的内核进程从transform历经 =transform->giveup_cpu->trap->alltraps= 一路返回到alltraps。（由于 =giveup_cpu= 和 =transform= 
-后面并没有什么语句了，所以编译器可能把二者的返回地址优化掉，于是我们可能会看到transform直接返回到了trap。）
+4. =swtch= 过程会保存当前所运行程序的上下文。注意！因为早已经进入内核态了，因此这里所说的“当前所运行程序”是指proc1的内核进程。proc1的内核进程刚好运行在transform函数处。保存proc1内核上下文之后，swtch还负责恢复scheduler的上下文，使得scheduler能够查找下一个READY态的进程。
+5. scheduer找到了下一个READY态的进程proc2，它进行了关键的步骤——偷梁换柱。它调用了 =swtchuvm()= ，把当前的虚拟内存页表设置为进程proc2的页表。proc2的虚拟内存里保存着proc2的内核栈（kstack）和用户数据。正是因为这一步，才让接下来调用swtch时传入的指针 =p->p_ctxt= 变得有效。于是触发swtch，swtch负责保存scheduler的上下文，同时恢复proc2的 *内核态* 上下文。
+6. 恢复了 *proc2* 的内核态上下文。注意proc2上次也是因为时钟中断而被迫放弃CPU的，它所经历的事情是和proc1一样的，所以proc2的内核上下文仍然是在transform函数里的——正在swtch调用的下一行。于是，沿着调用链，proc2的内核进程从transform历经 =transform->giveup_cpu->trap->alltraps= 一路返回到alltraps。（由于 =giveup_cpu= 和 =transform= 后面并没有什么语句了，所以编译器可能把二者的返回地址优化掉，于是我们可能会看到transform直接返回到了trap。）
 7. alltraps执行完毕，由于内核栈的设计，上下文结构体的后面刚好是trapret，因此程序调入trapret继续执行。trapret负责恢复 *proc2的用户态上下文* ，并用iret指令返回proc2的用户态继续执行。
 
 上下文切换的过程如上所述。总的来说，调用链就是：
