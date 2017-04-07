@@ -1,4 +1,4 @@
-/*¿é»º³å²ã*/ 
+/*å—ç¼“å†²å±‚*/ 
 #include "types.h"
 #include "param.h"
 #include "defs.h"
@@ -7,38 +7,38 @@
 
 struct bufcache{
 	struct buf cache[NBUF]; 
-	struct buf head; //×î½üÓÐÊ¹ÓÃµÄ 
+	struct buf head; 
 }bcache;
 
-/*´´½¨Ò»¸öË«ÏòÁ´±í»º³åÇø*/
+/*åˆ›å»ºä¸€ä¸ªåŒå‘é“¾è¡¨ç¼“å†²åŒº*/
 void binit()  
 {
 	struct buf *p; 
    
-    //´´½¨Ö»º¬Í·½áµãµÄË«ÏòÁ´±í 
-	bcache.head.prev = &bcache.head;  
-	bcache.head.next = &bcache.head;
+    //åˆ›å»ºåªå«å¤´ç»“ç‚¹çš„åŒå‘é“¾è¡¨ 
+	bcache.head->pre = &bcache.head;  
+	bcache.head->next = &bcache.head;
 	
     for(p = bcache.cache; p < bcache.cache+NBUF; p++)
     {
     	p->dev=-1;
-    	p->next=bcache.head.next;
+    	p->next=bcache.head->next;
     	p->pre=&bcache.head;
     	 initsleeplock(&p->lock, "buffer");
-		bcache.head.next->pre=p;
-		bcache.head.next=p;
+	bcache.head->next->pre=p;
+	bcache.head->next=p;
     }
 }
 
-/*¸ù¾Ý¿é±àºÅºÍÉè±¸ºÅ»ñÈ¡¿é»º³å¿é½á¹¹*/
+/*æ ¹æ®å—ç¼–å·å’Œè®¾å¤‡å·èŽ·å–å—ç¼“å†²å—ç»“æž„*/
 static struct buf * bufget(uint dev,uint sector)
 {
 	struct buf *p;
 	
 
-	/*»º³å¿é¿ÕÏÐÔòÉèÖÃÎªÃ¦Âµ²¢·µ»Ø£¬Ã¦ÂµÔòË¯ÃßµÈ´ý*/
+	/*ç¼“å†²å—ç©ºé—²åˆ™è®¾ç½®ä¸ºå¿™ç¢Œå¹¶è¿”å›žï¼Œå¿™ç¢Œåˆ™ç¡çœ ç­‰å¾…*/
 	loop:
-	for(p = bcache.cache.next; p!= &bcache.head; p = p->next)
+	for(p = bcache.cache->next; p!= &bcache.head; p = p->next)
 	{
 		if(p.dev == dev && p.sector == sector)
 		{
@@ -48,12 +48,12 @@ static struct buf * bufget(uint dev,uint sector)
 				return p;
 			}
 			acquiresleep(&p->lock);
-			goto loop;//±ÜÃâ¾ºÕùÏÖÏó 
+			goto loop;//é¿å…ç«žäº‰çŽ°è±¡ 
 		}
 	}
 	
-	/*ÎªÉÈÇø·ÖÅä»º³å¿é*/ 
-	for(p = bcache.head.pre; p!= &bcache.head; p = p.pre) 
+	/*ä¸ºæ‰‡åŒºåˆ†é…ç¼“å†²å—*/ 
+	for(p = bcache.head->pre; p!= &bcache.head; p = p->pre) 
 	{
 		if((p->flags & b_busy)==0 && (p->flags & b_dirty)==0)
 		{
@@ -65,10 +65,10 @@ static struct buf * bufget(uint dev,uint sector)
 		}
 	}
 	
-	panic("bufget:no buffers");//»º³åÇøÂú 
+	panic("bufget:no buffers");//ç¼“å†²åŒºæ»¡ 
 } 
 
-/*´Ó´ÅÅÌÈ¡×ßÒ»¿é¶ÁÈë»º³åÇø*/ 
+/*ä»Žç£ç›˜å–èµ°ä¸€å—è¯»å…¥ç¼“å†²åŒº*/ 
 struct buf * bufread(uint dev,uint sector)
 {
 	struct buf *p;
@@ -76,41 +76,43 @@ struct buf * bufread(uint dev,uint sector)
 	p=bufget(dev,sector);
 	if(!(p->flags & b_valid))
 	{
-		iderw(p); //ÎÞÐ§ÇøÓò½«Êý¾Ý¶ÁÈëÄÚºË 
+		iderw(p); //æ— æ•ˆåŒºåŸŸå°†æ•°æ®è¯»å…¥å†…æ ¸ 
 	}
 	return p;
 }
 
-/*½«»º³åÇøÄÚÈÝÐ´µ½´ÅÅÌ*/
+/*å°†ç¼“å†²åŒºå†…å®¹å†™åˆ°ç£ç›˜*/
 void bufwrite(struct buf *p)
 {
 	if(!(p->flags & b_busy))
 	{
-		panic("bwrite");
+		panic("bwrite error");
 	} 
-	p->flags = (p->flags | b_busy);//×´Ì¬ÉèÖÃÎªb_busy 
+	p->flags = (p->flags | b_busy);//çŠ¶æ€è®¾ç½®ä¸ºb_busy 
 	idrew(p);	
 } 
 
-/*ÊÍ·Å»º³å¿éÒÔ¼°¿éÖÃ»»LRU*/
+/*é‡Šæ”¾ç¼“å†²å—ä»¥åŠå—ç½®æ¢LRU*/
 void bufrelse(struct buf *p)
 {
 	if(!(p->flags & b_busy))
 	{
-		panic("brelse");
+		panic("brelse error");
 	} 
-	
-	releasesleep(&p->lock);
-	
-	//ÒÆ¶¯»º³åÇø °´×î½ü±»Ê¹ÓÃÇé¿öÅÅÐò 
+		
+	//ç§»åŠ¨ç¼“å†²åŒº æŒ‰æœ€è¿‘è¢«ä½¿ç”¨æƒ…å†µæŽ’åº 
+	//ä»Žé˜Ÿåˆ—å–å‡ºpèŠ‚ç‚¹
 	p->next->pre = p->pre;
 	p->pre->next = p->next;
-    p->next = bcache.head.next;
-    p->pre = &bcache.head;
-    bcache.head.next->pre = p;
-    bcache.head.next = p; 
+	//å°†pèŠ‚ç‚¹æ’å…¥é“¾è¡¨å¤´ 
+     	p->next = bcache.head->next;
+    	p->pre = &bcache.head;
+    	bcache.head->next->pre = p;
+    	bcache.head->next = p; 
 
-    p->flags = (p->flags & ~b_busy);	
+    	p->flags = (p->flags & ~b_busy);	
+    
+    	releasesleep(&p->lock);
 }
 }
  
