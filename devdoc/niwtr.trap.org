@@ -17,6 +17,8 @@ start:
 然后以 =T_SYSCALL= （64号中断）进入内核态。
 *注意* int指令是进入内核态的指令。它会产生一系列的操作并执行进入中断描述符表的中断处理函数入口。
 不同中断的中断处理函数入口是不一样的。
+** vectors.S
+硬件遵循vectors.S所导向的中断处理程序入口，先把trapno和errorno（可能没有）压栈，然后跳转到alltraps。
 ** alltraps
 随后，进入了alltraps.S里的alltraps过程里。这个过程负责填充“中断帧”（trapframe），中断帧负责保存中断前的内核信息，
 以便中断结束后内核恢复信息。这里，alltraps只是压入了一些剩余的寄存器信息。在这之前，CPU会负责压入更多的信息（这些工作由int指令完成），有
@@ -24,10 +26,13 @@ start:
 
 
 此时%esp指向刚刚建立好了的trapframe。alltraps把这个指针压到栈里面，作为trap的参数。之后调用trap过程。
+
 ** trap
 进入了trap.c里的trap过程，并且trap过程接收到了参数tf。OK，trap过程检测到它是一个系统调用（ =T_SYSCALL= ）。它负责把trapframe挂到进程的tf位上，
 然后进入syscall过程。
-TODO trapno又是什么时候设置的？
+
+
+
 ** syscall
 #+BEGIN_SRC c
 ...
@@ -40,6 +45,115 @@ TODO trapno又是什么时候设置的？
 #+END_SRC
 接着转到syscall.c里面的syscall进程。syscall是一个转发器，它按照系统调用号（从eax里取出来）然后转发给 =sys_exec= 过程。
 这个过程的定义是在 =sys_exec= 里。它最终会调用exec过程。exec过程在exec.c里定义。
+** alltraps 
+syscall所指派的系统调用C函数返回以后，继续回到alltraps的最后一行。 在这一行里，alltraps弹出栈上的参数。
+#+begin_src asm
+addl $4 %esp
+#+end_src
+这一步是把栈指针向上移动4个int大小。这一步的目的是略过trapframe的前四个槽。
+
+然后转向trapret继续执行。
+
+回顾trapframe的结构：
+#+begin_src c
+struct trapframe {
+  // registers as pushed by pusha
+  uint edi;
+  uint esi;
+  uint ebp;
+  uint oesp;      // useless & ignored
+  
+  uint ebx;
+  uint edx;
+  uint ecx;
+  uint eax;
+
+  // rest of trap frame
+  ushort gs;
+  ushort padding1;
+  ushort fs;
+  ushort padding2;
+  ushort es;
+  ushort padding3;
+  ushort ds;
+  ushort padding4;
+
+
+
+
+  uint trapno;
+
+  // below here defined by x86 hardware
+  uint err;
+
+
+
+
+  uint eip;
+  ushort cs;
+  ushort padding5;
+  uint eflags;
+
+  // below here only when crossing rings, such as from user to kernel
+  uint esp;
+  ushort ss;
+  ushort padding6;
+};
+#+end_src
+当alltraps弹出四个int之后，现在的栈指针正在指向%ebx，刚好是x86的四个算术寄存器。
+
+
+** trapret
+trapret负责从trapframe里恢复寄存器信息。这种操作类似于swtch这样的上下文切换。
+
+#+begin_src c
+  popal
+  popl %gs
+  popl %fs
+  popl %es
+  popl %ds
+  addl $0x8, %esp  # 跳过trapno 和 errcode两个数据
+  iret # 弹出%cs %eip %flags %esp %ss。
+#+end_src
+由于当期%esp正好指向四个算术寄存器，因此先用popal恢复算术寄存器。紧接着按照次序恢复四个地址寄存器。然后紧接着快进八个字节，
+略过了trapno和err（errcode），调用iret返回用户态。iret负责恢复%cs %eip %flags %esp %ss。
+
+其中包括%eip寄存器。把一切事物弹出以后，用户程序就会从%eip所指示的指令处继续执行。
+** what next? 
+程序将会从CPU此时的%eip寄存器处继续执行。
+
+对于一般系统调用来说，这里的%eip就是当初由CPU执行int指令的时候压入的，它指示的恰是用户程序的下一条指令。
+
+对于新fork出来的进程（刚刚被CPU给schedule到）来说，这里的%eip被设置成父进程的%eip。
+#+begin_src c
+//process.c
+...
+	//若以上操作都顺利进行，将父进程的各种信息复制一份到子进程上
+	np->p_size = proc->p_size; //设置进程的镜像大小。
+	np->p_prt = proc;          //把父进程设置为当前调用者。
+	*(np->p_tf) = *(proc->p_tf);//设置trapframe。
+
+	//清空寄存器eax的值 以便fork后返回给子进程的值为0
+	np->p_tf->eax = 0;
+...
+#+end_src
+
+对于第一个用户程序（由userinit函数所发射），它的值在userinit函数里被设置为0，这个虚拟地址指示的就是initcode.S。
+#+begin_src c
+...//trap.c
+p->p_tf->ds = (SEG_UDATA << 3) | DPL_USER;//ds,es,ss段选择器指向段 SEG_UDATA 并处于特权级 DPL_USER
+	p->p_tf->es = p->p_tf->ds;
+	p->p_tf->ss = p->p_tf->ds;
+	p->p_tf->eflags = FL_IF;// FL_IF 位被设置为允许硬件中断
+	p->p_tf->esp = PGSIZE;//设为进程的最大有效虚拟内存
+	p->p_tf->eip = 0;  // beginning of initcode.S指向初始化代码的入口点，即地址0
+ 
+	p->p_size = PGSIZE;
+	safestrcpy(p->p_name, "initcode", sizeof(p->p_name));
+...
+#+end_src
+
+
 
 ** 总结
 这是第一个系统调用的执行过程。以后所有系统调用都会由相似的代码：
@@ -47,6 +161,29 @@ TODO trapno又是什么时候设置的？
 int $T_SYSCALL
 #+END_SRC
 所触发。
+
+于是，一般系统调用的一整套流程就是：
+
+用户态的系统调用API->vectors->alltraps->trap->syscall->系统调用C实现->alltraps->trapret->（tf->eip）转到用户进程的下一条指令继续执行
+
+fork调用的流程是：
+
+fork API->vectors->alltraps->trap->syscall->forkC实现->alltraps->trapret->用户进程的下一条指令继续执行
+
+——这就是最普通的系统调用。
+
+由fork产生的新进程：
+
+（被CPU给schedule到了）->（ =p_ctxt= ->eip）forkret->trapret->(tf->eip)转到用户进程（即父进程）的下一条指令继续执行。
+
+第一个用户级进程的创建：
+
+userinit把tf->eip设置为0（initcode.S），同时userinit里面的allocproc过程把 =p_ctxt= ->eip设置为forkret。
+
+第一个用户级进程：
+
+（被CPU给schedule到了）->（ =p_ctxt= ->eip）forkret->trapret->(tf->eip)initcode.S。
+
 其他类型的中断则是由硬件或者异常触发，这些中断可以发生在任何的时刻。中断发生时，则是从alltraps开始执行，由trap指派给不同的操作。
 
 
@@ -93,7 +230,8 @@ ret
 调用API的过程是这样的：用户调用exec系统调用接口，syscall给指派给 =sys_exec= ，这个函数负责把参数准备好。
 然后最终，在这个函数里，内部实现exec被调用。
 
-** TODO 我们自己实现的时候请把提供给user的接口和内部实现函数的名字分开。
+** TODO
+我们自己实现的时候请把提供给user的接口和内部实现函数的名字分开。
 
 * IDT中断描述符表
 x86体系结构允许有256个不同的中断。描述如下：
@@ -134,13 +272,6 @@ SYSCALL必须设置为异常/陷阱模式，因为系统调用可能出错。出
 这将导致其他的软件异常/硬件异常被触发。
 而其他的中断则设置为interrupt模式，这意味着不会发生递归中断。
 
-** TODO 你说 =FL_IF= 位到底是怎么运作的？
-每个门描述符有一个特权等级位（dpl）。x86体系结构分为0~3一共四种特权等级，我们这里只会用到两种，分别是0或者3。其中0是代表
-最高的等级，我们称之为内核模式。3被定义为 =DPL_USER= ，它被称为用户模式。
-在所有的中断向量中，只有系统调用（第64号）的dpl被设置为3，其他的全都是0，全都是内核特权。
-特权等级可以避免用户使用int指令故意（显式地）调用中断。因为只有SYSCALL才能在用户态被调用。这造成了一种强劲的隔离。
-*注意* int指令指软件中断。
-
 * int指令
 
 ** TODO write this
@@ -161,9 +292,9 @@ SYSCALL必须设置为异常/陷阱模式，因为系统调用可能出错。出
 如果任一地址不正确，都会返回-1，紧接着这些函数也会返回-1作为调用失败的标志。
 #+begin_src c
 int
-argint(int n, int *ip)
+sysc_argint(int n, int *ip)
 {
-  return fetchint(proc->tf->esp + 4 + 4*n, ip);
+  return _sysc_getint(proc->tf->esp + 4 + 4*n, ip);
 }
 #+end_src
 比如这里是argint函数，它负责把第n个参数解释成int并取回来。esp保存了系统调用结束后的返回地址这个地址以上就是参数的区域。
