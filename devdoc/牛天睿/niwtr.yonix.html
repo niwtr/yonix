@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-04-14 Fri 21:31 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title></title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="牛天睿" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="styles/readtheorg/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="styles/readtheorg/js/readtheorg.js"></script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline1">1. 关于我们的工作</a></li>
+<li><a href="#orgheadline2">2. 我的工作总结</a></li>
+<li><a href="#orgheadline3">3. 感想</a></li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1"><span class="section-number-2">1</span> 关于我们的工作</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+我现在代表我们的“yonix小组”（或者说，“操作系统第13小组”）来对本组的工作做一个简单的总结。
+</p>
+
+<p>
+按照本组的组织形式，我们采取“组内再分小组”的方法，让两两组员互相协作，同时又互有交集。分工图示如下：
+</p>
+
+
+<div class="figure">
+<p><img src="OurOS.png" alt="OurOS.png" width="400px" />
+</p>
+</div>
+
+
+<p>
+我们决定使用xv6操作系统为蓝本，用类似于“<a href="http://baike.baidu.com/link?url=WqIm4Go8701Vyse4zEHMCqt9rm8YRWW_f72ca0ee-2K7ZDr_Hh40CpTQbTikPfzVC8nQFkrZvzPgPeg_neAUYOLtk7w_XFPtSOjsH3qEyeu">寄生蜂</a> 幼虫孵化”的方法来发展自己的操作系统。意思是，我们在工作初期要在xv6这个现有平台上“植入”
+我们自己实现的部分，用xv6提供的平台测试，随着我们自己实现的部分越来越多，原有的教材操作系统将会变成我们自己的操作系统。这就像是寄生蜂幼虫的孵化一样，
+寄生蜂会把卵产在寄主昆虫的体内，幼虫成长时将会逐步蚕食寄主，直到把寄主吃光的时刻孵化成成虫。
+</p>
+
+<p>
+我认为采用这种开发的形式是有必要的，原因有好多种：
+</p>
+<ol class="org-ol">
+<li>提供给我们的时间不是很够。我希望经过这次大作业，（至少）我们组的组员能够把上学期学的“操作系统概念”里学到的知识落实，而不是简单地编写一个程序。</li>
+<li>如果采用完全分离的方式，在最后联合调试的时候将会遇到很大的困难。这是可以预见的，以实现内存管理的小组为例，如果只是在一个假的环境以下独立编写、调试程序，编写的程序将会十分脆弱，或者根本无法调试——如何在不启动一个操作系统仿真环境的的前提下验证操作系统内存的分配？这些困难累积起来，最后的联合测试将是一个难题。</li>
+<li>xv6提供了一整套的“可hack”的环境。从系统的引导到调试，xv6都有完美的支持。它甚至支持远程调用gdb进行调试。并且，它与我们的目标基本一致——麻雀虽小，五脏俱全。一个简单的教学用操作系统，却提供了多CPU支持等现代技术。同时它还是一个完备的操作系统，可以运行直接运行elf可执行程序，并且可以实现“用户态、核心态”这些操作系统保护模式。</li>
+<li>xv6还提供了一本优秀的讲义教材。虽然我们没有机会到mit去听课，但是从教材中仍然能够参透其中的道理。我也有听闻，其他有不少的小组也采用其他种类的教材，但经过研究我并不认为这些书很适合我们。有些书籍是有点偏门的，比如着力于如何构建一个图形化界面，而不是把重点放在CPU调度等关键步骤上。</li>
+<li>效率。有一个可以直接调试的基础平台，那么人在编写完代码之后就不用停下来等待联合测试，只要保证自己的代码在测试平台上能跑起来就可以了。这样可以极大减少两两小组之间的互相制约依赖，进而加快开发速度。</li>
+<li>在优秀作品上hack本身就是一种非常好的学习方式。直接在代码级别上进行修改，然后再调试，可以认识到 <b>别人为什么需要这么做而我们不可以</b> ；同时也可以认识到 <b>别人的不足，进而我们可以改进</b> 。这本身是一种反思的过程。你将会看到，在我们每个人的工作当中无时不刻渗透着这种灵魂。先反思，后创造，这是学习的最好方式。</li>
+</ol>
+
+<p>
+基于这种学习思想，在工作初期每个人都已经有了不少的成果。每个人的工作都已经放在了各自的文档里。在这里我简要做一个进度上的概括。
+</p>
+
+<ol class="org-ol">
+<li>CPU调度和进程相关： <i>我</i> 和 <i>李凌璇</i> 同学已经对操作系统有关进程的一系列流程有较深的了解。从进程数据结构到中断、上下文切换，直到系统调用，我们都可以说非常熟悉。我们已经基于自己的理解实现了最简单的RR调度，并在xv6上调试成功。在刚刚过去的这一段时间内，我们的分工各有不同，我更关注的是这一系列工作的实现机理（有些硬件相关），李同学则更加关注于CPU调度算法。目前，李同学已经做出一个静态的CPU调度算法的演示程序，并实现了红黑树数据结构。</li>
+<li>内存相关： <i>刘含</i> 同学已经完成了内存映射相关的内容，并对xv6系统的分页机制有很深的了解。同时他也认识到了xv6在分页机制上的诸多不足，他将会着力于借鉴其他操作系统的实现来弥补这些不足。刘同学还在内存的初期配置上有所研究。这就充分说明了我们对本次作业的基本视点——我们要从裸机起，从系统的初始化开始，从零逐步构建出一个完整的操作系统。</li>
+<li>文件系统相关： <i>周中元</i> 和 <i>祝翎桓</i> 同学负责研究这一段内容。他们已经对xv6的文件系统组织架构有了全面的了解，但他们目前的工作还不够细致，有些细节内容还尚不清楚。接下来他们将会着力于从细致出发，放低心态，自底向上完善出整个文件系统。</li>
+<li>工具和用户接口相关： <i>余镇杰</i> 研究了键盘驱动的内容，但有些吃力。我们接下来会让他来负责工具函数和用户接口（shell等）相关的内容。</li>
+</ol>
+
+<p>
+总的来说，进程和内存这两部分的内容已经有了可喜的进展，我们的工作雏形开始越来越明确。文件系统的大体框架开始确定，但是仍没有细节实现。总体上说组内的工作节奏还是偏慢的，因此我希望大家能够尽量紧张起来，加快工作节奏，做出一个完美的解决方案。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2"><span class="section-number-2">2</span> 我的工作总结</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+我的工作总结整理在了两个文档里：
+</p>
+
+<p>
+<a href="niwtr.trap.html">trap工作文档</a>
+</p>
+
+<p>
+<a href="niwtr.swtch.html">swtch工作文档</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3"><span class="section-number-2">3</span> 感想</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+在过去，操作系统对我来说还只是一个黑盒。虽然我也知道操作系统也只不过是一个普通的程序，我也不能理解：到底如何做才能让一个程序能够处理上下文切换、中断这些工作？
+不少人跟我说，这些操作都是和硬件有一定关联的，它意味着许许多多的汇编代码。
+</p>
+
+<p>
+作为智能专业学生的我，我也没学过汇编。因此我愈发感觉操作系统的神奇。虽然屡次被申明，操作系统就是一个普通的程序，跟我们日常使用的程序并无二致，但我仍会感到，它是不一样的。
+在过去，我会想象操作系统是一个大的框架，或者提供了一个供其他程序运行其上的场所（playground），其他的用户级程序都是在这个场所的里面运行的。也就是说，其他程序的执行必当接受操作系统的监视。
+于是问题来了：对于单核心CPU而言，同一个时刻CPU只能关注一个进程，那么当这个进程执行的时候，操作系统的代码执行在哪里？
+</p>
+
+<p>
+我们学过上下文切换，也明白一些上下文切换的算法。那么操作系统是在什么时候计算出所有进程的优先级，并决定下一个将要切换的进程？按照我过去的理解，上下文切换就是一个进程的时间片用完之后把CPU
+的使用权交给下一个进程。既然大家都是彼此接连进行的，那么操作系统的进程该什么时候获得CPU？或者说，操作系统的进程会不会饿死（迟迟没有被换进CPU）？
+</p>
+
+<p>
+在“系统调用”这方面，也存在不少的问题。究竟什么叫做用户态，什么叫做核心态？为什么一个进程需要做模式转换？如果说“模式转换”是为了安全性而设，那么这种安全性又是如何保证的？为什么发生了模式转换就可以
+避免出现安全问题？
+</p>
+
+<p>
+学过上学期的“操作系统概念”以后，仍未参透其中的道理。也许想要学的透彻，真的需要自己动手实践。也只有实践，你才能不仅在高层，框架上了解到知识，还能了解到它的实践细节，明白这一切流程究竟是如何安排的。
+我大一的时候从网上偶然看到了“xv6”这个教学用操作系统，有严重松鼠症的我把它下载下来保存在硬盘里，从此它便静静等待有朝一日能重见天日。这学期初我刚在为操作系统实现该参考什么教材的时候，忽然想到，自己硬盘上
+好像有一个好玩的教学操作系统！于是我怀着热切的心情把xv6的压缩包从移动硬盘上拷回来，打开研究。于是奇迹再次发生——它居然可以在我的KUbuntu上编译运行！当看到QEMU的窗口出现的时候，我真是喜出望外，感觉自己
+终于有了一个可以调试的参考教材。
+</p>
+
+<p>
+MIT还附带了一本将近一百页的讲义。这讲义真是有趣——刚开始看的时候感觉简直是一头雾水，英文版看不懂找了一本中文翻译版，竟然也看不懂！里面的多CPU内容更不用说，简直比当初学过的KMP算法都难。（我认为KMP是我学过
+的所有算法里面最难的一个……）于是我看不懂书的时候看代码，看不懂代码的时候又回来看书，反复地猜测代码究竟是想表达什么。（讽刺的是，我竟然还要猜测书里面到底想表达什么！）中间还夹杂着无数次的上网查找资料，学习汇编语言。
+当我反复看了三遍的时候，忽然感觉世界都亮了！真是少有的顿悟感。第一次读书时带的是一种敬畏感，觉得什么都不懂；第二次看的时候就有了点小惊喜，觉得自己能看懂一些内容了；第三次看的时候我已经是带着一种欣赏的感觉去看了，
+觉得书里面每一句话都非常有道理！另外我突然感觉自己很变态——发现自己本来的猜测被真理否认的时候，竟然能产生一种快感……
+</p>
+
+<p>
+刚开始看书的时候，我觉得xv6对于多处理器的支持实在是太复杂了，而且它并不优雅，用的只是“穷人用”自旋锁。我认为这种对于多处理器的支持甚至会阻碍我们为yonix添加新的功能。因此我做了一次关键的决断——先把教材xv6的多处理器支持去掉。
+</p>
+
+<p>
+要在不把它弄坏的情况下去掉多处理器的那一堆东西谈何容易！这个工作花了我一下午加一个晚上的时间，我用了grep这类文本搜索工具，终于把所有文件的自旋锁去掉了。在去掉多处理器支持的时候，我第一次感觉到这个操作系统做的是如此细致，乃至它的
+代码基本上没有可以挑剔的地方。特别是有关进程的部分，那里的锁全都是非对称调用，这让人很难分清先后顺序。——乍一看你甚至会以为这样写代码一定会发生死锁！我还发现，整个系统内存在两种不同的锁，这两种不同的锁各司其职。我们前面说的“自旋锁”
+是一种，它专门处理多处理器的竞争问题，而它的实现代码也包含了开关中断这些硬件相关的指令。后一种叫做“sleeplock”，它是一种软件实现的锁，原理和自旋锁一样，但是它却是通过sleep来实现的，它迫使当前进程睡眠（sleep）在锁上——即等待锁被解开这个事件——而不是“卡死”在锁上（死循环）。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #6434A3;">void</span>
+<span style="color: #006699;">acquiresleep</span><span style="color: #ff00ff;">(</span><span style="color: #0000FF;">struct</span> <span style="color: #6434A3;">sleeplock</span> *<span style="color: #BA36A5;">lk</span><span style="color: #ff00ff;">)</span>
+<span style="color: #ff00ff;">{</span>
+  <span style="color: #0000FF;">while</span> <span style="color: keyboardFocusIndicatorColor;">(</span>lk-&gt;locked<span style="color: keyboardFocusIndicatorColor;">)</span> <span style="color: keyboardFocusIndicatorColor;">{</span>
+    sleep<span style="color: #ee7600;">(</span>lk<span style="color: #ee7600;">)</span>;
+  <span style="color: keyboardFocusIndicatorColor;">}</span>
+  lk-&gt;locked = <span style="color: #D0372D;">1</span>;
+  lk-&gt;pid = proc-&gt;p_pid;
+
+<span style="color: #ff00ff;">}</span>
+<span style="color: #6434A3;">void</span>
+<span style="color: #006699;">releasesleep</span><span style="color: #ff00ff;">(</span><span style="color: #0000FF;">struct</span> <span style="color: #6434A3;">sleeplock</span> *<span style="color: #BA36A5;">lk</span><span style="color: #ff00ff;">)</span>
+<span style="color: #ff00ff;">{</span>
+  lk-&gt;locked = <span style="color: #D0372D;">0</span>;
+  lk-&gt;pid = <span style="color: #D0372D;">0</span>;
+  wakeup<span style="color: keyboardFocusIndicatorColor;">(</span>lk<span style="color: keyboardFocusIndicatorColor;">)</span>;
+<span style="color: #ff00ff;">}</span>
+</pre>
+</div>
+
+<p>
+我发现这是一种软件锁。我发现这种锁是用在文件系统上的，因此它的意图很明显了——就是实现多进程对文件系统的互斥访问。去掉多处理器支持和spinlock以后，任一时刻都只有一个进程在工作，因此并不需要像spinlock那样的开关中断操作，只需要暂时schedule出当前进程，等待锁被解开就可以了。
+因此这里的acquiresleep和releasesleep实际上很像我们操作系统里学过的条件变量。
+</p>
+
+<p>
+诸如此类的恍然大悟，如果我当时没有决定亲自手动把自旋锁和多CPU支持去掉，是绝对不可能发生的。在去掉多处理器支持的途中，伴随着许许多多的大彻大悟过程。 ^_^
+</p>
+
+<p>
+没有了多CPU支持，不仅意味着我们可以省略掉锁的设计，还可以省略掉更多的内容，比如可以去掉高级中断控制器lapic和loapic驱动，仅留一个简单的单核心中断控制器驱动就可以了。这大大简化了我们需要关注的内容，使得我们能有更多的精力放在自己更加关心的内容之上。
+</p>
+
+<p>
+处理掉多CPU支持的过程，也是一种广泛涉猎代码、理清代码依赖关系的过程。有些代码乍一看可以去掉，但去掉之后调试时就通过不了调试，系统就会崩溃。——比如我曾经天真地以为，既然没有了多CPU，那么sleeplock也就不需要了。正是因为有这么一个看似“多余”的过程，我开始对xv6的代码有了全局的了解，
+它甚至可以帮我理清CPU上下文切换的内容。——而且，改成单核以后，调试也变得方便了，因为同一时刻只可能有一个进程在执行。
+</p>
+
+<p>
+xv6带给我更大的惊喜就是，我在上文中提到的各种以前不明白的问题，都已经解决了！比如CPU
+调度，我认识到操作系统的CPU调度并不是从一个进程直接“蹦到”下一个进程，而是由一个进程跳到内核进程，内核进程计算下一个将要schedule的进程以后再由内核进程跳到下一个进程。其中还包含着两次由用户态到核心态的转换。
+</p>
+
+<p>
+另一个问题就是，什么是用户态？什么才是核心态？这是对于我和 <i>小李同学</i> 来说最晦涩、最神秘的问题。而通过阅读xv6的讲义和代码，我现在终于明白，原来二者并没有这么神秘，它只不过是操作系统的一种保护机制。
+</p>
+
+<p>
+每一个进程都有两个栈——用户栈和内核栈。
+</p>
+
+<p>
+当进程运行在用户态的时候，它工作在用户栈。对用户栈的操作由用户进程自己决定，基本上可以说是自由、不受限的。而任何进程在用户态对于内核栈的访问都会被视为非法，因此可以说，内核栈时刻受到核心的保护。——这是通过虚拟内存硬件实现的。
+当一个进程触发了一次自陷（trap）以后，就会进入核心态。核心态的进程将会在 <b>内核栈</b> 上执行 <b>内核代码</b> 。这些代码包括系统调用和 <code>sched</code> 过程等。
+</p>
+
+<p>
+引入了“用户态”和“核心态”之后，操作系统就相当于构造了一种隔离。一方面，由于虚拟内存的保护，用户进程无法污染操作系统内核的内存空间；另一方面，操作系统内核代码在执行的时候只会利用受保护的区域——内核栈，保证即使用户栈被毁坏的情况下正常执行内核代码。
+</p>
+
+<p>
+同时，操作系统还通过规定中断的类型和提供系统调用的方法，限制了用户进程利用操作系统内核的行为。一方面，用户级进程只能通过64号中断陷入核心态，任何显式地使用int指令“陷入”其他中断的行为都会被x86保护模式所检测到，并触发一个 <code>int 13</code> 中断（异常）。另一方面即使用户进程获得了使用核心栈的机会，
+所能进行的操作也非常少，只有几种系统调用而已。因此用户进程基本没有机会去破坏操作系统核心的数据。
+</p>
+
+<p>
+因此 <b>用户态和核心态</b> 这个概念可以大体概括为“两个栈”和“一个中断”。
+</p>
+
+<p>
+对于用户态和核心态的理解，也让我明白了操作系统必须这样设计的缘由。因为操作系统代码不可能和用户进程并行工作——在同一时刻，一个CPU核心只能关注一个进程——因此操作系统必须实现某种保护机制，防止用户进程利用它占有CPU的那段时间破坏操作系统。同时，它也提供了一种受限的环境，这虽然降低了用户级进程的灵活性——
+比如你不能直接通过编写代码要求操作系统提高进程调度优先级以抢占CPU——但为所有用户程序的“和平协作”创造了条件。康德说过：
+</p>
+
+<p>
+“自由不是随心所欲，而是自我主宰。”
+</p>
+
+<p>
+操作系统在为各个进程提供限制的同时，又给予这些进程充分的获得资源的自由。对于这些进程而言，究竟什么才是公平，究竟什么才是最理想的状态？我想，操作系统的设计绝不是简单的工程学难题，它是一种社会学乃至哲学的难题。
+</p>
+
+
+<p>
+另外调试操作系统的过程中，我也发现自己使用工具的能力也提高了。这里面有很多灵感迸发般的想法。
+</p>
+
+<p>
+是这样的，我使用的操作系统是Mac OSX，它不是一种ELF机器，因此在我的系统上编译xv6还需要交叉编译器的支持。不知为何我总是配置不好编译器。于是我只能用我的KUbuntu虚拟机来运行xv6，这就是在虚拟机里再运行一个虚拟机。Linux和OSX的工作环境是不一样的，比如Emacs编辑器的键绑定都不一样。
+因此我需要在我的虚拟机和宿主系统的工作环境中频繁切换。后来我想到了使用ssh“远程”登录虚拟机，用Emacs编辑器远程编写代码，然后在Linux里编译调试。这很棒，我切换工作空间的次数少了一半，但是却有个问题：ssh登录调试总是感觉不“native”。你能明显感觉到不是在本机上进行编码。
+</p>
+
+<p>
+后来我发现了 <a href="https://en.wikipedia.org/wiki/SSHFS">sshfs</a> 这种神奇的东西。它竟然可以把远程磁盘通过ssh挂载到本地！这对我来说简直是神器。于是我每次开机时都会把Linux磁盘挂载到我Home目录的一个子文件夹里，方便Emacs直接读取。这样就像是直接在本机上进行调试了。
+</p>
+
+<p>
+代码编写的问题解决了，但是调试的问题还没解决。我在使用QEMU+GDB调试的时候还是要切换回我的KUbuntu里。这还是让人感觉难受。我一开始想着这事情一定是无解的，因为环境是不一样的。但我在一次休息的时候突然想到，既然Linux的桌面环境是通过X服务器做后端的（哦？Fedora好像改成了Wayland!），而X服务器的传输本质上
+是一种字节流，那么有没有一种传输协议，可以把X服务器的字节流传出来，把Linux的图形化窗口在 <b>另一台</b> 机器上重现呢？
+</p>
+
+<p>
+我想到了VNC。但是，它还不是那么“native”。VNC只是一种远程桌面协议，它呈现的是整个Linux图形化界面，而我只想要QEMU模拟器这一个窗口。
+</p>
+
+<p>
+后来，我真的找到了！原来ssh还真的有传输X字节流这一个选项！我在KUbuntu里开启了X传输服务之后，用Mac OSX的XQuartz服务器来接收，竟然真的实现了在我的OSX平台上显示Linux窗口！
+</p>
+
+<p>
+插一张图来显示我内心的喜悦吧：
+</p>
+
+
+<div class="figure">
+<p><img src="dual.png" alt="dual.png" width="600px" />
+</p>
+</div>
+
+<p>
+这张截图展示了两个Emacs编辑器同时运行的场景——它们分别运行在我的OSX系统和我的Linux虚拟机里，但由于我开启了X服务，它们可以共存在同一个桌面上。
+</p>
+
+<p>
+现在想想都觉得自豪：我们并没有听过MIT的课，全靠自学，啃书，看代码的方式，就看懂了像中断、CPU调度这些最难的内容。仿佛一个美丽新世界就这样打开了，或者偶然间打开了潘多拉的魔盒。无论它是什么，操作系统在我眼中已不再是原先那个黑盒子，它不再有任何神秘了。
+</p>
+
+<p>
+当然也要感谢我的 <i>小李同学</i> ，这些工作是我们一起走过的，她总是在我烦闷的时候安慰我、在我高兴的时候与我一起分享的那个人。^_^
+</p>
+
+<p>
+最后，希望我们最终能做出来一个真正的操作系统，完美地结束这个课程！
+</p>
+
+<p>
+EOF
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: 牛天睿</p>
+<p class="date">Created: 2017-04-14 Fri 21:31</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

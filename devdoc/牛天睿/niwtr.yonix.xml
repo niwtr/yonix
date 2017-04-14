@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"
+	   xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	   xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	   xmlns:dc="http://purl.org/dc/elements/1.1/"
+	   xmlns:atom="http://www.w3.org/2005/Atom"
+	   xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	   xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	   xmlns:georss="http://www.georss.org/georss"
+     xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+     xmlns:media="http://search.yahoo.com/mrss/"><channel>
+  <title></title>
+  <atom:link href="./niwtr.yonix.xml" rel="self" type="application/rss+xml" />
+  <link></link>
+  <description><![CDATA[]]></description>
+  <language>en</language>
+  <pubDate>Fri, 14 Apr 2017 16:30:18 +0800</pubDate>
+  <lastBuildDate>Fri, 14 Apr 2017 16:30:18 +0800</lastBuildDate>
+  <generator>Emacs 25.1 Org-mode 8.3.5</generator>
+  <webMaster>Heranort@Anzalized-NiwTR.local (牛天睿)</webMaster>
+  <image>
+    <url>http://orgmode.org/img/org-mode-unicorn-logo.png</url>
+    <title></title>
+    <link></link>
+  </image>
+
+
+
+  <item>
+    <title>关于我们的工作</title>
+    <link>./niwtr.yonix.html#orgheadline1</link>
+    <author>Heranort@Anzalized-NiwTR.local (牛天睿)</author>
+    <guid isPermaLink="false">./niwtr.yonix.html#orgheadline1</guid>
+    <pubDate>Fri, 14 Apr 2017 16:30:00 +0800</pubDate>
+
+    <description><![CDATA[<p>
+    我现在代表我们的“yonix小组”（或者说，“操作系统第13小组”）来对本组的工作做一个简单的总结。
+    </p>
+
+    <p>
+    按照本组的组织形式，我们采取“组内再分小组”的方法，让两两组员互相协作，同时又互有交集。分工图示如下：
+    </p>
+
+
+    <div class="figure">
+    <p><img src="OurOS.png" alt="OurOS.png" width="400px" />
+    </p>
+    </div>
+
+
+    <p>
+    我们决定使用xv6操作系统为蓝本，用类似于“<a href="http://baike.baidu.com/link?url=WqIm4Go8701Vyse4zEHMCqt9rm8YRWW_f72ca0ee-2K7ZDr_Hh40CpTQbTikPfzVC8nQFkrZvzPgPeg_neAUYOLtk7w_XFPtSOjsH3qEyeu">寄生蜂</a> 幼虫孵化”的方法来发展自己的操作系统。意思是，我们在工作初期要在xv6这个现有平台上“植入”
+    我们自己实现的部分，用xv6提供的平台测试，随着我们自己实现的部分越来越多，原有的教材操作系统将会变成我们自己的操作系统。这就像是寄生蜂幼虫的孵化一样，
+    寄生蜂会把卵产在寄主昆虫的体内，幼虫成长时将会逐步蚕食寄主，直到把寄主吃光的时刻孵化成成虫。
+    </p>
+
+    <p>
+    我认为采用这种开发的形式是有必要的，原因有好多种：
+    </p>
+    <ol class="org-ol">
+    <li>提供给我们的时间不是很够。我希望经过这次大作业，（至少）我们组的组员能够把上学期学的“操作系统概念”里学到的知识落实，而不是简单地编写一个程序。</li>
+    <li>如果采用完全分离的方式，在最后联合调试的时候将会遇到很大的困难。这是可以预见的，以实现内存管理的小组为例，如果只是在一个假的环境以下独立编写、调试程序，编写的程序将会十分脆弱，或者根本无法调试——如何在不启动一个操作系统仿真环境的的前提下验证操作系统内存的分配？这些困难累积起来，最后的联合测试将是一个难题。</li>
+    <li>xv6提供了一整套的“可hack”的环境。从系统的引导到调试，xv6都有完美的支持。它甚至支持远程调用gdb进行调试。并且，它与我们的目标基本一致——麻雀虽小，五脏俱全。一个简单的教学用操作系统，却提供了多CPU支持等现代技术。同时它还是一个完备的操作系统，可以运行直接运行elf可执行程序，并且可以实现“用户态、核心态”这些操作系统保护模式。</li>
+    <li>xv6还提供了一本优秀的讲义教材。虽然我们没有机会到mit去听课，但是从教材中仍然能够参透其中的道理。我也有听闻，其他有不少的小组也采用其他种类的教材，但经过研究我并不认为这些书很适合我们。有些书籍是有点偏门的，比如着力于如何构建一个图形化界面，而不是把重点放在CPU调度等关键步骤上。</li>
+    <li>效率。有一个可以直接调试的基础平台，那么人在编写完代码之后就不用停下来等待联合测试，只要保证自己的代码在测试平台上能跑起来就可以了。这样可以极大减少两两小组之间的互相制约依赖，进而加快开发速度。</li>
+    <li>在优秀作品上hack本身就是一种非常好的学习方式。直接在代码级别上进行修改，然后再调试，可以认识到 <b>别人为什么需要这么做而我们不可以</b> ；同时也可以认识到 <b>别人的不足，进而我们可以改进</b> 。这本身是一种反思的过程。你将会看到，在我们每个人的工作当中无时不刻渗透着这种灵魂。先反思，后创造，这是学习的最好方式。</li>
+    </ol>
+
+    <p>
+    基于这种学习思想，在工作初期每个人都已经有了不少的成果。每个人的工作都已经放在了各自的文档里。在这里我简要做一个进度上的概括。
+    </p>
+
+    <ol class="org-ol">
+    <li>CPU调度和进程相关： <i>我</i> 和 <i>李凌璇</i> 同学已经对操作系统有关进程的一系列流程有较深的了解。从进程数据结构到中断、上下文切换，直到系统调用，我们都可以说非常熟悉。我们已经基于自己的理解实现了最简单的RR调度，并在xv6上调试成功。在刚刚过去的这一段时间内，我们的分工各有不同，我更关注的是这一系列工作的实现机理（有些硬件相关），李同学则更加关注于CPU调度算法。目前，李同学已经做出一个静态的CPU调度算法的演示程序，并实现了红黑树数据结构。</li>
+    <li>内存相关： <i>刘含</i> 同学已经完成了内存映射相关的内容，并对xv6系统的分页机制有很深的了解。同时他也认识到了xv6在分页机制上的诸多不足，他将会着力于借鉴其他操作系统的实现来弥补这些不足。刘同学还在内存的初期配置上有所研究。这就充分说明了我们对本次作业的基本视点——我们要从裸机起，从系统的初始化开始，从零逐步构建出一个完整的操作系统。</li>
+    <li>文件系统相关： <i>周中元</i> 和 <i>祝翎桓</i> 同学负责研究这一段内容。他们已经对xv6的文件系统组织架构有了全面的了解，但他们目前的工作还不够细致，有些细节内容还尚不清楚。接下来他们将会着力于从细致出发，放低心态，自底向上完善出整个文件系统。</li>
+    <li>工具和用户接口相关： <i>余镇杰</i> 研究了键盘驱动的内容，但有些吃力。我们接下来会让他来负责工具函数和用户接口（shell等）相关的内容。</li>
+    </ol>
+
+    <p>
+    总的来说，进程和内存这两部分的内容已经有了可喜的进展，我们的工作雏形开始越来越明确。文件系统的大体框架开始确定，但是仍没有细节实现。总体上说组内的工作节奏还是偏慢的，因此我希望大家能够尽量紧张起来，加快工作节奏，做出一个完美的解决方案。
+    </p>
+    ]]></description>
+  </item>
+
+  <item>
+    <title>我的工作总结</title>
+    <link>./niwtr.yonix.html#orgheadline2</link>
+    <author>Heranort@Anzalized-NiwTR.local (牛天睿)</author>
+    <guid isPermaLink="false">./niwtr.yonix.html#orgheadline2</guid>
+    <pubDate>Fri, 14 Apr 2017 16:30:00 +0800</pubDate>
+
+    <description><![CDATA[<p>
+    我的工作总结整理在了两个文档里：
+    </p>
+
+    <p>
+    <a href="niwtr.trap.html">trap工作文档</a>
+    </p>
+
+    <p>
+    <a href="niwtr.swtch.html">swtch工作文档</a>
+    </p>
+    ]]></description>
+  </item>
+
+  <item>
+    <title>感想</title>
+    <link>./niwtr.yonix.html#orgheadline3</link>
+    <author>Heranort@Anzalized-NiwTR.local (牛天睿)</author>
+    <guid isPermaLink="false">./niwtr.yonix.html#orgheadline3</guid>
+    <pubDate>Fri, 14 Apr 2017 16:30:00 +0800</pubDate>
+
+    <description><![CDATA[]]></description>
+  </item>
+</channel>
+</rss>

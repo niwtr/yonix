@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-04-14 Fri 21:33 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title></title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="牛天睿" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="styles/readtheorg/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="styles/readtheorg/js/readtheorg.js"></script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline1">1. 我们的初期工作</a></li>
+<li><a href="#orgheadline2">2. swtch</a></li>
+<li><a href="#orgheadline3">3. 上下文切换</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgheadline1" class="outline-2">
+<h2 id="orgheadline1"><span class="section-number-2">1</span> 我们的初期工作</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+本文是我工作总结的一部分。按照分工结果，在第一阶段我负责的内容应当有：
+</p>
+
+<ol class="org-ol">
+<li>系统顶层设计。</li>
+<li>引导。</li>
+<li>进程数据结构设计。</li>
+<li>系统调用设计。</li>
+</ol>
+
+<p>
+其中“系统顶层设计”需要对操作系统的概念有全面的理解，我已经计划把它总结为另一篇文章。“引导”方面由我和 <i>刘含</i> 共同商量完成。
+我的前两个任务都是属于概要设计方面，而后两者则是属于详细设计。详细设计要求具体到设计本身，比如需要设计进程，就需要落实到进程究竟需要哪些东西。
+这些内容显然需要对进程调度方面有完全的了解。并且最后一项“系统调用设计”还需要对“中断”有完全的了解。关于这点，
+我本身和 <i>李凌璇</i> 同学属于一组（按照 <b>yonix</b> 小组的规定，组内再分组），因此我决定在初期先和 <i>李凌璇</i> 共同先把CPU调度和中断的内容研究透彻，再来进行自己的那份工作。
+因此从初期工作来看，我和 <i>李凌璇</i> 同学做的内容基本一致，但是我们侧重点不同——我需要研究更多的有关中断、进程表示和进程运行模式（内核态、用户态）的内容，而 <b>她</b> 则更加侧重于
+CPU调度算法。因此在中期验收的时候，我们对自己的工作各有不同的期望，在完成CPU进程方面的编码工作以后， <b>她</b> 希望能单独做出一个有关红黑树和静态CPU调度的演示程序，我则更希望
+自己的工作能够先 <b>融合</b> 进我们的教材—— <b>xv6</b> 里，以验证我对操作系统全局的理解。
+</p>
+</div>
+</div>
+
+
+
+<div id="outline-container-orgheadline2" class="outline-2">
+<h2 id="orgheadline2"><span class="section-number-2">2</span> swtch</h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #6434A3;">void</span> <span style="color: #006699;">swtch</span><span style="color: #ff00ff;">(</span><span style="color: #0000FF;">struct</span> <span style="color: #6434A3;">context</span> ** <span style="color: #BA36A5;">old</span> , <span style="color: #0000FF;">struct</span> <span style="color: #6434A3;">context</span> * <span style="color: #BA36A5;">new</span><span style="color: #ff00ff;">)</span>;
+</pre>
+</div>
+
+<p>
+swtch负责上下文切换。它要做的事情有：
+</p>
+<ol class="org-ol">
+<li>把上下文信息（ebp、ebx、esi、edi、eip、esp）保存在old指向的上下文结构体里。</li>
+<li>从new里面恢复寄存器（上下文）。</li>
+</ol>
+
+
+<div class="org-src-container">
+
+<pre class="src src-asm">  # Save old callee-save registers
+  # eip&#22312;&#21738;&#37324;&#65311;&#8212;&#8212;eip&#22312;&#20351;&#29992;call&#35843;&#29992;swtch&#30340;&#26102;&#20505;&#23601;&#20445;&#23384;&#22312;&#26632;&#20013;<span style="color: #BA36A5;">%ebp&#20043;&#19978;&#30340;&#20301;&#32622;&#19978;&#20102;</span>
+
+
+  # Switch stacks
+
+  <span style="color: #0000FF;">movl</span> <span style="color: #BA36A5;">%edx</span>, <span style="color: #BA36A5;">%esp</span> # new-&gt;stack&#37325;&#32622;&#26632;
+
+  # Load new callee-save registers
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%edi</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%esi</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%ebx</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%ebp</span>
+  <span style="color: #0000FF;">ret</span> # pop <span style="color: #BA36A5;">%eip</span>
+<span style="color: #006699;">rc</span> <span style="color: #0000FF;">asm</span>
+</pre>
+</div>
+
+<p>
+首先它从栈里面弹出两个参数到eax和edx。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #0000FF;">.globl</span> swtch
+<span style="color: #006699;">swtch</span>:
+  <span style="color: #0000FF;">movl</span> 4<span style="color: #ff00ff;">(</span><span style="color: #BA36A5;">%esp</span><span style="color: #ff00ff;">)</span>, <span style="color: #BA36A5;">%eax</span> # old
+  <span style="color: #0000FF;">movl</span> 8<span style="color: #ff00ff;">(</span><span style="color: #BA36A5;">%esp</span><span style="color: #ff00ff;">)</span>, <span style="color: #BA36A5;">%edx</span> # new
+</pre>
+</div>
+
+<p>
+把所有的一堆寄存器压栈。这里有ebp、ebx、esi、edi，但是没有eip。实际上eip早在caller
+调用swtch的时候就已经把它压栈了，因此它现在刚好处在ebp之下的位置。该过程由
+call指令自动完成。
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #006699;">pushl</span> <span style="color: #0000FF;">%ebp</span>
+<span style="color: #006699;">pushl</span> <span style="color: #0000FF;">%ebx</span>
+<span style="color: #006699;">pushl</span> <span style="color: #0000FF;">%esi</span>
+<span style="color: #006699;">pushl</span> <span style="color: #0000FF;">%edi</span>
+</pre>
+</div>
+
+<p>
+随后，它把栈指针赋给eax所指向的参数地址。其实也就相当于把当前的栈指针赋值给old参数。注意old参数是一个指针的指针，这里的第二个“指针”就是指esp。
+</p>
+<div class="org-src-container">
+
+<pre class="src src-asm"><span style="color: #006699;">movl</span> <span style="color: #0000FF;">%esp</span>, <span style="color: #ff00ff;">(</span><span style="color: #BA36A5;">%eax</span><span style="color: #ff00ff;">)</span> # &#25226;esp&#20445;&#23384;&#12290;
+</pre>
+</div>
+
+<p>
+现在格局如下：
+</p>
+<div class="org-src-container">
+
+<pre class="src src-c">+-----------------------+                      +-----------------------+             
+|          eax          |                      |          edx          |             
++-------+---------------+                      +---+-------------------+             
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        |                                          |                                 
+        v                                          |                                 
+ +------------+                                    |                                 
+ |    esp     |                                    |                                 
+ +------------+---&gt;+------------------------+      +-------&gt;------------------------+
+                   |          edi           |              |        edi<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          esi           |              |        esi<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          ebx           |              |        ebx<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          ebp           |              |        ebp<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+                   |          eip           |              |        eip<span style="color: #ff00ff;">(</span>new<span style="color: #ff00ff;">)</span>        |
+                   +------------------------+              +------------------------+
+</pre>
+</div>
+
+
+<p>
+如果把swtch过程看做是“save”和“load”两个过程的结合，那么上面所做的工作就是save的全部了，save把当前寄存器（上下文）的内容压栈，
+把栈指针保存下来。接下来还需要load工作，它负责恢复新的上下文。新的上下文也是之前通过相同的save工作保存下来的，因此它一定是指向某个内存区域的“栈指针”。我们把
+这个指针取出来作为新的栈指针，然后按序（这里是倒着的哦！）把新的上下文从栈里弹出来保存在寄存器里。这里load的工作就结束了。
+——注意栈的IO次序是反着的，因此我们pop的时候要按照push相反的次序。
+</p>
+
+<p>
+在最后，一句 <code>ret</code> 就相当于popl %eip， 它可以把程序计数器eip的值从栈里弹出。这就是内核上下文切换——swtch的全部了。
+</p>
+
+<p>
+<b>注意： 这里是ret而不是iret。</b> 这是一个很有趣的现象。它将会向我们揭示一个很容易让人混淆的假象，“上下文切换”的大幕将就此徐徐展开……
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgheadline3" class="outline-2">
+<h2 id="orgheadline3"><span class="section-number-2">3</span> 上下文切换</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+我不知道有多少人曾被“swtch”这个名字欺骗了，至少我是这样的，我曾经天真地以为上下文切换就是swtch过程自己的功劳。认为这一个过程就完成了我们所需的全部。
+</p>
+
+<p>
+可怕的不是我们只看到了冰山一角，可怕的是我们看到了冰山一角，认为这就是冰山的全部。
+</p>
+
+<p>
+操作系统的上下文切换容易给人造成一种假象：会让人认为所谓的上下文切换就是由swtch完成的，即用户进程swtch到scheduler的进程，再由scheduler
+进程swtch到另一个用户进程。这实际上是不对的。接下来我们要展开来说，上下文切换实际上是由多步过程共同实现的。
+</p>
+
+<p>
+而swtch又确实实现了上下文的切换，而且它还是上下文切换工作的核心。这不禁会让人混淆。在类Unix系统中，一定要注意，
+ <b>swtch</b> 切换的是内核态的上下文，而不是用户态。从用户态到内核态切换的桥梁
+其实是我们在“中断”里讨论过的 <b>trapframe</b> ——中断帧。中断帧保持的是一个用户级进程的 <b>用户态上下文</b> 。
+</p>
+
+<p>
+<b>可以这么理解：</b>
+</p>
+
+<p>
+在类Unix系统中每个进程有两种状态——用户态和核心态。
+</p>
+
+<p>
+用户态的程序运行的是其用户级代码，在其用户栈里运行。每个进程都有一份自己的用户栈。
+</p>
+
+<p>
+核心态的程序运行是内核级代码，在其核心栈里运行。每个进程也有一份核心栈。进程的栈是在进程创建的时候用 <code>kalloc()</code> 来创建的。
+</p>
+
+<p>
+中断帧保存的是进程用户态的上下文信息；context（上下文结构体）保存的是 <b>进程核心态</b> 的上下文信息。上下文切换实际上是由两种上下文共同作用的结果。
+</p>
+
+<p>
+实际上上下文切换的过程是：
+</p>
+
+<p>
+proc<sub>1</sub> 的用户态上下文-&gt;proc<sub>1</sub> 的内核态上下文-&gt;scheduelr的上下文-&gt;proc<sub>2</sub> 的内核态上下文-&gt;proc<sub>2</sub> 的上下文。
+</p>
+
+<p>
+我们分步骤来考虑。假设当前系统正在执行一个用户进程proc<sub>1</sub> 。
+</p>
+
+<ol class="org-ol">
+<li>来了一个时钟中断，于是CPU负责把proc1程序运行的上下文压栈，构成trapframe的前半部分。这时候，CPU已经进入内核态。转入中断处理程序alltraps。（在此之前，进入中断描述符表的对应位置，把trapno和errno压栈，也构成trapframe的一部分。）alltraps负责填入trapframe的另一些部分，于是trapframe就做好了。</li>
+<li>alltraps把trapframe作为参数调用trap。trap按照trapno指派到 <code>giveup_cpu</code> 函数。这一步就像是执行一个系统调用一样。</li>
+<li><code>giveup_cpu</code> 调用transform函数，进而调用 <code>swtch</code> 过程。</li>
+<li><code>swtch</code> 过程会保存当前所运行程序的上下文。注意！因为早已经进入内核态了，因此这里所说的“当前所运行程序”是指proc1的内核进程。proc<sub>1</sub> 的内核进程刚好运行在transform函数处。保存proc<sub>1</sub> 内核上下文之后，swtch还负责恢复scheduler的上下文，使得scheduler能够查找下一个READY态的进程。</li>
+<li>scheduer找到了下一个READY态的进程proc<sub>2</sub> ，它进行了关键的步骤——偷梁换柱。它调用了 <code>swtchuvm()</code> ，把当前的虚拟内存页表设置为进程proc<sub>2</sub> 的页表。proc<sub>2</sub> 的虚拟内存里保存着proc<sub>2</sub> 的内核栈（kstack）和用户数据。正是因为这一步，才让接下来调用swtch时传入的指针 <code>p-&gt;p_ctxt</code> 变得有效。于是触发swtch，swtch负责保存scheduler的上下文，同时恢复proc2的 <b>内核态</b> 上下文。</li>
+<li>恢复了 <b>proc<sub>2</sub></b> 的内核态上下文。注意proc<sub>2</sub> 上次也是因为时钟中断而被迫放弃CPU的，它所经历的事情是和proc<sub>1</sub> 一样的，所以proc<sub>2</sub> 的内核上下文仍然是在transform函数里的——正在swtch调用的下一行。于是，沿着调用链，proc<sub>2</sub> 的内核进程从transform历经 <code>transform-&gt;giveup_cpu-&gt;trap-&gt;alltraps</code> 一路返回到alltraps。（由于 <code>giveup_cpu</code> 和 <code>transform</code> 后面并没有什么语句了，所以编译器可能把二者的返回地址优化掉，于是我们可能会看到transform直接返回到了trap。）</li>
+<li>alltraps执行完毕，由于内核栈的设计，上下文结构体的后面刚好是trapret，因此程序调入trapret继续执行。trapret负责恢复 <b>proc<sub>2</sub> 的用户态上下文</b> ，并用iret指令返回proc2的用户态继续执行。</li>
+</ol>
+
+<p>
+上下文切换的过程如上所述。总的来说，调用链就是：
+</p>
+
+<p>
+proc<sub>1</sub> &#x2013;中断&#x2013;&gt;alltraps-&gt;trap-&gt; （进入proc<sub>1</sub> 的内核态） <code>giveup_cpu</code> -&gt;transform-&gt;swtch-&gt;scheduler-&gt;swtch-&gt;transform-&gt; <code>giveup_cpu</code> -&gt;trap-&gt;alltraps-&gt;trapret-&gt;proc<sub>2</sub>
+</p>
+
+<p>
+内核的虚拟内存只有一个，它通过 <code>switchkvm()</code> 过程来加载进CPU的cr3寄存器；每个用户进程各有一个虚拟内存，它通过 <code>switchuvm()</code> 进行加载。
+</p>
+
+<p>
+经过上面这一串简单的平铺直叙，我唯恐不能道出我心中一种强烈的感觉——上下文切换中最重要的过程，既不是swtch，不是transform（或者xv6里面的sched），
+而是两个耦合的操作： <code>switchuvm</code> 和 <code>switchkvm</code> 。
+</p>
+
+<p>
+两个过程做的其实是一对耦合的事情——切换到用户进程的虚拟内存页、（以及）切换到内核进程的虚拟内存页。我们来看一下 <code>swtchkvm</code> 的源代码：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #8D8D84;">// </span><span style="color: #8D8D84; font-style: italic;">Switch h/w page table register to the kernel-only page table,</span>
+<span style="color: #8D8D84;">// </span><span style="color: #8D8D84; font-style: italic;">for when no process is running.</span>
+<span style="color: #6434A3;">void</span>
+<span style="color: #006699;">switchkvm</span><span style="color: #ff00ff;">(</span><span style="color: #6434A3;">void</span><span style="color: #ff00ff;">)</span>
+<span style="color: #ff00ff;">{</span>
+  lcr3<span style="color: keyboardFocusIndicatorColor;">(</span>V2P<span style="color: #ee7600;">(</span>kpgdir<span style="color: #ee7600;">)</span><span style="color: keyboardFocusIndicatorColor;">)</span>;   <span style="color: #8D8D84;">// </span><span style="color: #8D8D84; font-style: italic;">switch to the kernel page table</span>
+<span style="color: #ff00ff;">}</span>
+</pre>
+</div>
+
+<p>
+只有一行一看就是和硬件相关的语句。它的意思是：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-c">load_cr3<span style="color: #ff00ff;">(</span>virtual_to_physical<span style="color: keyboardFocusIndicatorColor;">(</span>kernel_page_directory<span style="color: keyboardFocusIndicatorColor;">)</span><span style="color: #ff00ff;">)</span>;
+</pre>
+</div>
+
+<p>
+意思很明白了，就是把内核进程虚拟内存的页表地址转换成物理地址，然后把这个物理地址load进cr3寄存器。
+</p>
+
+<p>
+cr3寄存器实际上就是页表地址寄存器。也就是，虚拟内存地址寄存器。
+</p>
+
+<p>
+想我们是如何做才能让每个进程互相隔离地运行，使得彼此不会污染到对方的地址空间？——就是通过虚拟内存。ok，那么对于每个进程来说，
+虚拟内存页表的地址应该存到哪里呢？答案就是cr3寄存器。
+</p>
+
+<p>
+这是一个很有意思的寄存器。它让我们觉得一切事物都是假的，我们每个进程都自认为占领了整个内存，整个内存都是可用的。其实我们
+每个人都是井底之蛙，我们做的一切操作只会影响到那个禁锢我们的一个小小世界里面。这就像是反乌托邦小说《我们》里说的一样，
+所有人都在一个“绿墙”所包围起来的城市里面生活，没有人会过问外面的世界，饭票和玫瑰券就能满足我们的一切需求。
+我们每个人都是被禁锢的囚徒，
+我们接受这个小世界的统治规则，
+接受这个小世界的思想观念，直到终老，不曾越界。
+</p>
+
+<p>
+一个更有意思的现象是，不仅我们普通人（用户进程）是住在这个闭锁的小世界（虚拟内存）里的，甚至连小世界的统治者（内核进程）本身，也是
+被“困在里面”的。内核进程也被划在了一片虚拟内存里面，它就叫做内核虚拟内存（kvm）。我想统治者住的地方并不比平民好多少。
+</p>
+
+<p>
+你有没有想过，创世神（操作系统的编写者）其实是个骗子？你有没有想过，你在上一行写下了一个“int a=0”，不错，你还记住了这个整数
+a的地址0x000002。你在下一行开心地想读取变量a的值，却发现是某个奇葩的数值244（是什么并不重要了，总之大概率不是0）。你还兴致勃勃地打开
+gdb调试器打印出0x000002这个地址的内容，发现也不是自己所认识的那个样子了。自己仿佛是做了一场梦，现在从梦里醒来进入了一个完全不同的世界。
+你在无奈之余，值得痛苦地大骂一声
+</p>
+
+<p>
+“骗子。”
+</p>
+
+<p>
+这个现象就存在于操作系统的代码里面。这不仅让我想到一句话：
+</p>
+
+<p>
+“你想要骗过其他人，首先要骗过你自己。”
+</p>
+
+<p>
+我们来看一下scheduler的代码：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-c"><span style="color: #6434A3;">void</span> <span style="color: #006699;">scheduler</span><span style="color: #ff00ff;">(</span><span style="color: #6434A3;">void</span><span style="color: #ff00ff;">)</span>
+<span style="color: #ff00ff;">{</span>
+  <span style="color: #0000FF;">while</span> <span style="color: keyboardFocusIndicatorColor;">(</span><span style="color: #D0372D;">true</span><span style="color: keyboardFocusIndicatorColor;">)</span>
+  <span style="color: keyboardFocusIndicatorColor;">{</span>
+    sti<span style="color: #ee7600;">()</span>; <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#20801;&#35768;&#26102;&#38388;&#29255;&#20013;&#26029;&#65292;&#20013;&#26029;&#21518;trap&#35843;&#29992;yeild()&#20989;&#25968;&#36820;&#22238;</span>
+    <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">RR,&#25214;&#21040;&#22788;&#20110;READY&#29366;&#24577;&#30340;&#36827;&#31243;</span>
+    <span style="color: #006699;">search_through_ptablef</span><span style="color: #ee7600;">(</span>p<span style="color: #ee7600;">)</span>
+    <span style="color: #ee7600;">{</span>
+      <span style="color: #0000FF;">if</span> <span style="color: #00cd00;">(</span>p-&gt;p_stat == READY<span style="color: #00cd00;">)</span>
+      <span style="color: #00cd00;">{</span>
+        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#20999;&#25442;&#20854;&#29366;&#24577;&#20026;RUNNING</span>
+        proc = p;        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#35774;&#32622;&#24403;&#21069;&#20851;&#29031;&#30340;&#36827;&#31243;&#65288;&#20840;&#23616;&#21464;&#37327;&#65289;&#12290;</span>
+        switchuvm<span style="color: #ff00ff;">(</span>p<span style="color: #ff00ff;">)</span>;    <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#20132;&#25442;&#29992;&#25143;&#34394;&#25311;&#20869;&#23384;</span>
+        p-&gt;p_stat = SRUN;<span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#35774;&#32622;&#36827;&#31243;&#29366;&#24577;</span>
+        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#20174;&#36825;&#37324;&#31163;&#24320;&#35843;&#24230;&#22120;&#30340;&#19978;&#19979;&#25991;&#36716;&#20837;&#29992;&#25143;&#36827;&#31243;&#12290;</span>
+        swtch<span style="color: #ff00ff;">(</span>&amp;cpu-&gt;scheduler, p-&gt;p_ctxt<span style="color: #ff00ff;">)</span>;
+        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#26576;&#20010;&#26102;&#38388;&#29255;&#20013;&#26029;&#65281;pia&#30340;&#19968;&#19979;CPU&#21448;&#22238;&#21040;&#20102;&#36825;&#37324;&#65281;&#65281;&#65281;</span>
+        switchkvm<span style="color: #ff00ff;">()</span>;<span style="color: #8D8D84;">//</span><span style="color: #cc9393;">FIXME</span>
+        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#35774;&#32622;&#24403;&#21069;&#24037;&#20316;&#36827;&#31243;&#20026;&#35843;&#24230;&#22120;&#12290;</span>
+        <span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#20320;&#20250;&#21457;&#29616;&#36825;&#20010;&#20989;&#25968;&#30340;&#20195;&#30721;&#26368;&#22909;&#20889;&#22312;&#19968;&#20010;&#26609;&#38754;&#19978;&#12290;&#65306;&#65289;</span>
+        proc = <span style="color: #D0372D;">0</span>;<span style="color: #8D8D84;">//</span><span style="color: #8D8D84; font-style: italic;">&#35774;&#32622;&#24403;&#21069;&#20851;&#29031;&#30340;&#36827;&#31243;&#20026;&#35843;&#24230;&#22120;&#12290;</span>
+      <span style="color: #00cd00;">}</span>
+    <span style="color: #ee7600;">}</span>
+
+  <span style="color: keyboardFocusIndicatorColor;">}</span>
+<span style="color: #ff00ff;">}</span>
+</pre>
+</div>
+
+<p>
+在swtch一行的下面，有一个switchkvm，这一行负责把内核进程的页表加载进来。如果把这一行去掉呢，会怎样？
+</p>
+
+<p>
+你会发现后面的这句“proc= 0;”好像不起作用了。
+</p>
+
+<p>
+因为proc只存在于内核进程的虚拟地址空间里，而执行switchkvm之前，我们当前cr3寄存器存储的是用户进程的地址空间。
+（因为上面有个switchuvm）究竟是哪个倒霉的用户进程呢？管它呢，反正不是内核进程。因此我们虽然有proc的地址，但是这个地址
+实际上是无效的，它甚至可能会取到用户进程的某个非法区段。
+</p>
+
+<p>
+如果你明白了我的思路，你会发现scheduler的代码其实是环状的，夹在switchuvm和switchkvm两行的部分是运行在用户进程的虚拟空间上的，
+而其他的部分则是属于内核自己的地址空间。
+</p>
+
+<p>
+这意味着，swtch过程实际上也是在用户进程的地址空间内进行的。于是，
+</p>
+
+<p>
+地址空间切换的真正意义在于，它 <b>加载了即将被切换进程（p）的虚拟地址空间，使得我们可以取到它的中断帧，从而可以让它返回自己的用户态上下文</b> 。
+</p>
+
+<p>
+听起来好绕。
+</p>
+
+<p>
+我们来做一个设想：假如scheduler函数里没有switchuvm这一步，就是说我们没有切换到新进程的虚拟地址空间，会发生什么？
+</p>
+
+<p>
+swtch过程当然会照常进行，因为swtch过程只会进行核心态的上下文切换。然后我们会进入新进程p的内核栈上下文处继续执行，也就是
+p进程的transform函数。在那里，我们返回到trap过程，再由trap返回到trapret，由trapret返回到p的用户态。
+</p>
+
+<p>
+听起来好像很完美。但是我们漏下了一步，仔细看：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-asm">  # Return falls through to trapret...
+<span style="color: #0000FF;">.globl</span> trapret
+<span style="color: #006699;">trapret</span>:
+  <span style="color: #0000FF;">popal</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%gs</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%fs</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%es</span>
+  <span style="color: #0000FF;">popl</span> <span style="color: #BA36A5;">%ds</span>
+  <span style="color: #0000FF;">addl</span> $0x8, <span style="color: #BA36A5;">%esp</span>  # trapno and errcode
+  <span style="color: #0000FF;">iret</span>
+</pre>
+</div>
+
+<p>
+在trapret过程里，我们从栈里pop出一系列寄存器，并由iret返回用户态进而可以以用户进程的用户态继续执行。但问题是，你现在是在弹谁的栈呢？
+</p>
+
+<p>
+<b>你好像是在弹内核的栈。^_^</b>
+</p>
+
+<p>
+如果这些工作顺利进行下去，你会惊喜地发现，经过了上下文切换，你回到的还是刚才的进程，你的一系列工作都白费了。
+</p>
+
+<p>
+因此虚拟空间的切换是十分有必要的，经过了虚拟地址空间切换，我们才能顺利地从栈里面还原新进程中断帧，返回到新进程的用户态。
+所以我认为上下文切换的最重要步骤，实际上是两个switchvm。
+</p>
+
+
+<p>
+经过这些头脑风暴和思想洗礼，再来反观操作系统的设计哲学。操作系统的设计目的是为进程提供一个互不干扰、协作、可靠、高效的运行平台。
+我们如何让各种进程之间和谐共生、安全而互不干扰？
+</p>
+
+<p>
+人们最先想到的做法就是隔离。这太符合社会学了。人们总是异化、隔离、限制那些对当前社会或者意识形态有害的人或者群体，从而使得他们自己所处的社会
+能够安全地生存下去。无论是对罪犯还是被孤立的异族群体，这种手段总是最简单粗暴，却最高效。
+</p>
+
+<p>
+高明的统治者总是能干净利索地处理这些手续，也就是，让人都感觉不到自己是被隔离了。实现这种手段的就是虚拟内存。虚拟内存是一种毒品，
+它让人吃了之后感觉打通了任督二脉，惘若身处大草原，觉得“整个世界都是我的”。
+</p>
+
+<p>
+但是人没法做到纯粹的隔离，因为纯粹的隔离就意味着没有人权。有时候我们需要这样那样的权利，却因为自己受到隔离而无法行使。操作系统也为此提供便利，
+于是有了系统调用。系统调用是一些内核级别的特权指令，显然不能让众生加以乱用，不然政权将会动荡，社会将会变革。怎么办？
+</p>
+
+<p>
+我想行使中央集权的暴君都是一些缺乏安全感的人。他们觉得整个世界上只有他们自己是安全的，其他人都是罪犯。当你对一个人做事没有安全感的时候，
+最简单的做法就是自己把事情都处理完，让所有人都别插手。但是这有一个问题：你会累死的。古代中央集权最盛行的时候，皇帝恐怕都是最累的。换到操作系统的话题里，
+也就是，你需要频繁地开辟新的内核进程去执行用户进程的请求。于是得用点更“绝”的方法：给他们换脑子，让他们当自己的傀儡，
+借用他们的肉体（说得是不是有点露骨^_^）来帮助自己完成任务。
+</p>
+
+<p>
+操作系统给进程换脑子的方法就叫做中断。在操作系统的世界里，人（进程）生而有二脑，一个叫做“用户栈”，一个叫做“内核栈”。人可以自由使用自己的“用户栈”脑子，但是自其出生之时，
+其“内核栈”脑子就被统治者（操作系统内核）管制着。一旦一个进程被中断，它的脑子（用户栈）就被掏出来，换上他的另一个脑子（内核栈）。
+换句话说，这叫“模式转换”。意味着这个进程从用户态转向了内核态。一旦一个进程转向内核态，它就已经被操作系统支配，他执行的是操作系统的内核代码，而不是本身自己的代码。
+普通人脑子里或许装着一些危险的思想，与之相反，统治者认为自己的脑子总是安全的。帮助内核执行完代码之后，进程就要穿越回内核态，做自己的事情去。于是操作系统在给人换脑子
+之前，还要把原来人家的思想（上下文）保存下来。
+</p>
+
+<p>
+有人会问，为什么非得换个脑子，而不是简单地转换思想，洗脑（只使用中断帧做上下文切换）呢？因为统治者认为有些人可能会自毁，他们会自己把自己的脑子弄坏，于是即使被洗脑，脑子也可能是不中用
+或者是不安全的，而“内核栈”一直被操作系统自己管辖着，它受到了一系列的保护，因此操作系统认为它是安全的——于是，一个进程在使用int指令陷入内核态的时候，CPU会检查权限，如果发生了特权级变换，CPU就要保存esp和ss两个指针，以便换到内核栈上执行代码以后再返回用户栈。
+</p>
+
+<p>
+把“换脑子”这个概念领会明白之后，“上下文切换”的概念就自然清楚，它就是：
+</p>
+
+<p>
+用内核的脑子去交换进程的脑子-&gt;用内核的脑子去想下一个该调度的进程-&gt;用新进程的脑子来换内核的脑子。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: 牛天睿</p>
+<p class="date">Created: 2017-04-14 Fri 21:33</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

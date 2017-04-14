@@ -1,3 +1,14 @@
+# -*- mode: org; -*-
+
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="styles/readtheorg/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="styles/readtheorg/css/readtheorg.css"/>
+
+#+HTML_HEAD: <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+#+HTML_HEAD: <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="styles/lib/js/jquery.stickytableheaders.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="styles/readtheorg/js/readtheorg.js"></script>
+
+
 * 中断和第一个系统调用
 ** initcode
 第一个系统调用由initcode.S里的代码所启动。
@@ -106,7 +117,7 @@ struct trapframe {
 ** trapret
 trapret负责从trapframe里恢复寄存器信息。这种操作类似于swtch这样的上下文切换。
 
-#+begin_src c
+#+begin_src asm
   popal
   popl %gs
   popl %fs
@@ -185,6 +196,8 @@ userinit把tf->eip设置为0（initcode.S），同时userinit里面的allocproc�
 （被CPU给schedule到了）->（ =p_ctxt= ->eip）forkret->trapret->(tf->eip)initcode.S。
 
 其他类型的中断则是由硬件或者异常触发，这些中断可以发生在任何的时刻。中断发生时，则是从alltraps开始执行，由trap指派给不同的操作。
+
+CPUs
 
 
 
@@ -265,17 +278,20 @@ IDT中的每个表项都是一个大小为64比特的门描述符结构体，它
 
 
 中断描述符表定义了中断的中断处理程序入口。每个程序的中断处理程序是不同的。
+
 此外还有一个标志位区分了到底是异常（trap）还是中断(interrupt)。
+
 如果是中断，则将会把CPU的 =FL_IF= 位清零，这意味着处理该中断的时候不会接受其他的中断。
+
 如果是异常/陷阱，则不会清零，意味着在处理该中断到时候还接受其他中断。
+
 SYSCALL必须设置为异常/陷阱模式，因为系统调用可能出错。出错的可能性有好多种，比如发生了运行时/程序错误。
+
 这将导致其他的软件异常/硬件异常被触发。
+
 而其他的中断则设置为interrupt模式，这意味着不会发生递归中断。
 
 * int指令
-
-** TODO write this
-.draft
 如果CPU在用户模式运行，会从任务段描述符表里面加载新的%esp和%ss，进行一次栈切换以替代用户的栈。因为用户的栈可能会被恶意损毁。
 把用户的栈切换为内核栈。
 如果CPU是在内核模式运行，它不会做这个步骤。
