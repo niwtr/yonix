@@ -1,6 +1,6 @@
 // 虚拟内存管理
 
-#include "params.h"
+#include "param_yonix.h"
 #include "yotypes.h"
 #include "def.h"
 #include "mmu.h"
