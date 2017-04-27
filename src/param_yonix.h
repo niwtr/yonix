@@ -8,3 +8,8 @@
 #define K_STACKSZ 4096  //每个进程的内核栈大小
 
 #define SLABSIZE 32     // 小内存池块大小
+#define SWAPSIZE 0x8000000  //128MB swap area
+#define SLOTSIZE SWAPSIZE/PGSIZE  // number of slots
+#define PR_FIFO 1
+#define PR_SCND 2
+#define PR_ALGO PR_FIFO

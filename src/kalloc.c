@@ -21,7 +21,7 @@ struct
 	struct fpage *freelist;
 } kmem;
 
-// 32bit内存池
+// 32byte内存池
 struct
 {
 	uint nfreeblock;
