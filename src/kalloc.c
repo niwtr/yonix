@@ -112,7 +112,7 @@ void free_slab(vaddr_t v)
 }
 
 // 申请一个slab
-void alloc_slab()
+vaddr_t alloc_slab()
 {
 	if(slab->nfreeblock == 0)
 		slabinit();
