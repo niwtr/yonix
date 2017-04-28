@@ -36,6 +36,7 @@ main(void)
   ideinit();       // disk
 
   timerinit();   // uniprocessor timer
+  kinit2(P2V(4*1024*1024), P2V(PHYSTOP));
   userinit();      // first user process
 
 

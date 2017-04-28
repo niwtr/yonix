@@ -65,19 +65,21 @@ static struct proc* procalloc(void)
 	//找到内存中处于SUNUSED状态的进程
     search_through_ptablef(p)
 	{
+    //cprintf("searching for unused.:%d,%d\n", p->p_stat, ittt);
 		//如果找到了，则将其状态改为SEMBRYO
 		//且增加进程的pid值
 		if (p->p_stat == SUNUSED)
 		{
 			p->p_stat = SEMBRYO;
-			p->p_pid = nextpid;
-			nextpid++;
+			p->p_pid = nextpid++;
+			//nextpid++;
 
 
 			//为该新进程分配内核栈空间
 			p->p_kstack = kalloc();	//内核栈分配函数
+
 			//若分配失败,将其状态改回SUNUSED
-			if (!p->p_kstack)
+			if (p->p_kstack==0)
 			{
 				p->p_stat = SUNUSED;
 				return 0;
@@ -101,15 +103,13 @@ static struct proc* procalloc(void)
 			p->p_ctxt = (struct context*)sp;
       //TODO require API
 			memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
-
-			//返回新建的进程
+      //返回新建的进程
 			return p;
 
 		}
 
 	}
 	//如果找了一圈都没有找到SUNUESD的进程，则直接返回
-
 	return 0;
 }
 
@@ -140,15 +140,18 @@ int procgrow(int n){
 /* fork函数，创建子进程。 */
 int fork(void)
 {
+  cprintf("   forking...\n");
 	int i, pid;
 	struct proc *np;
 
 	//为进程分配内核空间
 	np = procalloc();
+
 	if (np == 0)
 	{
 		return -1;
 	}
+
 
 	//拷贝父进程的用户地址空间（用户虚拟内存）到新的物理内存处。
     //TODO add api
@@ -163,7 +166,6 @@ int fork(void)
 		np->p_stat = SUNUSED;
 		return -1;
 	}
-
 	//若以上操作都顺利进行，将父进程的各种信息复制一份到子进程上
 	np->p_size = proc->p_size; //设置进程的镜像大小。
 	np->p_prt = proc;          //把父进程设置为当前调用者。
@@ -197,6 +199,8 @@ int fork(void)
 
 
 	//将子进程的pid返回给父进程
+  cprintf("   forked\n");
+
 	return pid;
 }
 
@@ -219,6 +223,10 @@ void exit(void){
 
   //释放当前进程所在目录
   //TODO 文件系统
+  //TODO require api
+  begin_op();
+  iput(proc->p_cdir);
+  end_op();
   proc->p_cdir=0;
 
 
@@ -336,19 +344,61 @@ void userinit(void)
   p->p_ctxt->eip = (uint)forkret;//设置返回地址为forkret
 }
 
+
+int
+wait1(void)
+{
+ 
+  int havekids, pid;
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    search_through_ptablef(p){
+      if(p->p_prt != proc)
+        continue;
+      havekids = 1;
+      if(p->p_stat == SZOMB){
+        // Found one.
+        pid = p->p_pid;
+        kfree(p->p_kstack);
+        p->p_kstack = 0;
+        freevm(p->p_page);
+        p->p_pid = 0;
+        p->p_prt = 0;
+        p->p_name[0] = 0;
+        p->p_killed = 0;
+        p->p_stat = SUNUSED;
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->p_killed){
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc);  //DOC: wait-sleep
+  }
+}
+
 //wait——等待子进程执行完毕exit,并返回其进程ID号
 int wait(void)
 {
 	int pid;		//子进程pid
-
+  int have_kid;
 	while (true)
 	{
+    have_kid=0;
 		//遍历进程列表，找到当前进程是否有子进程
 		search_through_ptablef(p)
 		{
+
 			if (p->p_prt == proc)
 			{
-
+        have_kid=1;
 				//若该子进程是一个僵尸进程——子进程已经结束，但父进程因为太忙而没有等待它。。。。
 				//一个进程在调用exit命令结束自己的生命的时候，其实它并没有真正的被销毁，
 				//而是留下一个称为僵尸进程（Zombie）的数据结构（系统调用exit，它的作用是 使进程退出，
@@ -358,19 +408,23 @@ int wait(void)
 					//处理该进程信息
 					pid = p->p_pid;
 					kfree(p->p_kstack);	//释放内核栈
+          p->p_kstack=0;
 					freevm(p->p_page);	//释放虚拟内存
 					p->p_pid = 0;
 					p->p_prt = 0;		//父进程设为0
 					p->p_name[0] = 0;
 					p->p_killed = 0;
-					p->p_stat = 0;
 					p->p_stat = SUNUSED;
 					return pid;
 				}
-				//若找到一个不是僵尸进程的子进程，则父进程休眠，等待子进程变为僵尸进程
-				sleep(proc);
-			}
-		}
-	}
+      }
+    }
+    if(!have_kid || proc->p_killed){
+      return -1;
+    }
+    //若找到一个不是僵尸进程的子进程，则父进程休眠，等待子进程变为僵尸进程
+    sleep(proc);
+  }
 }
+
 

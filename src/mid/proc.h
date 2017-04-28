@@ -117,5 +117,5 @@ extern struct proc * initproc;
 
 
 #define search_through_ptablef(name)                            \
-  struct proc * name;                                           \
-  for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++)
+  struct proc * name;int ittt=0;                                          \
+  for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++,ittt++)

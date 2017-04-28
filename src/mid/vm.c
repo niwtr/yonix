@@ -75,6 +75,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
+
     if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
     if(*pte & PTE_P)
@@ -85,6 +86,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
     a += PGSIZE;
     pa += PGSIZE;
   }
+  //cprintf("before i exit.\n");
   return 0;
 }
 
@@ -130,15 +132,19 @@ setupkvm(void)
   pde_t *pgdir;
   struct kmap *k;
 
+
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
+
   memset(pgdir, 0, PGSIZE);
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
-  for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
+  for(k = kmap; k < &kmap[NELEM(kmap)]; k++){
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                 (uint)k->phys_start, k->perm) < 0)
       return 0;
+
+  }
   return pgdir;
 }
 
@@ -328,7 +334,10 @@ copyuvm(pde_t *pgdir, uint sz)
 
   if((d = setupkvm()) == 0)
     return 0;
+
+
   for(i = 0; i < sz; i += PGSIZE){
+
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
@@ -338,9 +347,11 @@ copyuvm(pde_t *pgdir, uint sz)
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)P2V(pa), PGSIZE);
+
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
+
   return d;
 
 bad:

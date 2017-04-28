@@ -65,7 +65,7 @@ void giveup_cpu(void)
 	//在所有状态改变的操作中，都需要先获得锁，以保证不会有冲突发生
 	proc->p_stat = READY;
 	transform();
-  cprintf("hello\n");
+  
 }
 
 

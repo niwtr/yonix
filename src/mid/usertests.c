@@ -470,6 +470,8 @@ sharedfd(void)
   printf(1, "sharedfd test\n");
 
   unlink("sharedfd");
+
+  printf(1,"in\n");
   fd = open("sharedfd", O_CREATE|O_RDWR);
   if(fd < 0){
     printf(1, "fstests: cannot open sharedfd for writing");
@@ -525,16 +527,14 @@ fourfiles(void)
 
   for(pi = 0; pi < 4; pi++){
     fname = names[pi];
-    printf(1, "ok...\n");
     unlink(fname);
-
     pid = fork();
     if(pid < 0){
       printf(1, "fork failed\n");
       exit();
     }
 
-    if(pid == 0){
+    if(pid == 0){ //分了好多子进程来做？
       fd = open(fname, O_CREATE | O_RDWR);
       if(fd < 0){
         printf(1, "create failed\n");
@@ -543,17 +543,17 @@ fourfiles(void)
 
       memset(buf, '0'+pi, 512);
       for(i = 0; i < 12; i++){
+        printf(1,"(");
         if((n = write(fd, buf, 500)) != 500){
           printf(1, "write failed %d\n", n);
           exit();
         }
+        printf(1,")" );
       }
       exit();
     }
   }
 
-
-  
   for(pi = 0; pi < 4; pi++){
     wait();
   }
@@ -781,7 +781,9 @@ concreate(void)
   for(i = 0; i < 40; i++){
     file[1] = '0' + i;
     unlink(file);
+    printf(1,"f\n");
     pid = fork();
+    printf(1,"fed\n");
     if(pid && (i % 3) == 1){
       link("C0", file);
     } else if(pid == 0 && (i % 5) == 1){
@@ -918,6 +920,7 @@ bigdir(void)
       printf(1, "bigdir link failed\n");
       exit();
     }
+    printf(1,"wrote.\n");
   }
 
   unlink("bd");
