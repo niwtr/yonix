@@ -90,9 +90,13 @@ struct proc {
 
 				   // for scheduling, borrowed from v6.
 				   // p_pri = f(p_nice, p_time, p_pu)
+
+
+  int p_time_slice; // time slice per proc.
+
 	int p_nice; // nice for scheduling
 	int p_pri; // priority, negative is high.
-	int p_time; // resident time for schedulint
+	int p_time; // resident time for schedule int
 	int p_pu; // cpu usage for scheduling.
 };
 
@@ -119,3 +123,13 @@ extern struct proc * initproc;
 #define search_through_ptablef(name)                            \
   struct proc * name;int ittt=0;                                          \
   for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++,ittt++)
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) > (b) ? (a) : (b))
+
+#define STATIC_PRI(nice) 120+nice
+#define TIME_SLICE(stpri) ((stpri>120)?\
+                           MAX((140-stpri)*5, MIN_TIMESLICE):\
+                           MAX((140-stpri)*20, MIN_TIMESLICE))
+#define DYNAMIC_PRI(stpri, bns) MAX(100,MIN(stpri-bns+5, 139))
+

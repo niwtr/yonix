@@ -103,6 +103,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            giveup_cpu(void);
+void            timeslice_yield(void);
 void            transform(void);
 
 
@@ -139,6 +140,7 @@ void            syscall(void);
 
 // timer.c
 void            timerinit(void);
+
 
 // trap.c
 void            idtinit(void);

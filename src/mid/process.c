@@ -8,7 +8,7 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
-
+//#include "lib/rbtree.h"
 int nextpid = 1;
 
 //fork return
@@ -70,9 +70,16 @@ static struct proc* procalloc(void)
 		//且增加进程的pid值
 		if (p->p_stat == SUNUSED)
 		{
+      //进程状态和pid设置
 			p->p_stat = SEMBRYO;
 			p->p_pid = nextpid++;
 			//nextpid++;
+
+      //进程时间片设置。
+      //TODO 在RR里，所有进程的时间片设置都是同等的，因此我们可以把它放到这里。但是。。
+      //在其他的调度算法里，我们需要根据进程的类型来改变时间片设置。因此推荐你把它转移到fork里面。
+      p->p_time_slice = SCHED_RR_TIMESLICE;
+      p->p_nice = 0; //初始p_nice设置0，可以通过系统调用来更改。
 
 
 			//为该新进程分配内核栈空间
@@ -141,6 +148,7 @@ int procgrow(int n){
 int fork(void)
 {
   cprintf("   forking...\n");
+  cprintf("%d",sizeof(proc));
 	int i, pid;
 	struct proc *np;
 
@@ -348,7 +356,7 @@ void userinit(void)
 int
 wait1(void)
 {
- 
+
   int havekids, pid;
 
   for(;;){

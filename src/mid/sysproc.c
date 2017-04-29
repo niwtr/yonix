@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "date.h"
 #include "param.h"
+#include "param_yonix.h"
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
@@ -68,14 +69,14 @@ sys_sleep(void)
   ticks0 = ticks;
   while(ticks - ticks0 < n){
     if(proc->p_killed){
-
       return -1;
     }
     sleep(&ticks);
   }
-  
+
   return 0;
 }
+
 
 // return how many clock tick interrupts have occurred
 // since start.
@@ -87,3 +88,32 @@ sys_uptime(void)
   xticks = ticks;
   return xticks;
 }
+
+
+
+private int __incnice(int n){
+  int aim= proc->p_nice+n;
+  if(MIN_NICE <= aim && aim <= MAX_NICE){
+    proc->p_nice = aim;
+    return 0;
+  }
+  else return -1; //illegal nice val.
+}
+
+
+int sys_incnice(void){
+  int n;
+  if(sysc_argint(0,&n)<0)
+    return -1;
+
+  return __incnice(n);
+}
+
+int sys_decnice(void){
+  int n;
+  if(sysc_argint(0, &n) <0)
+    return -1;
+  return __incnice(-n);
+}
+
+

@@ -14,7 +14,7 @@
 //userproc --sched-->schedulerproc--sched-->userproc...
 void scheduler(void)
 {
-	
+
 	while (true)
 	{
 		sti(); //允许时间片中断，中断后trap调用yeild()函数返回
@@ -25,8 +25,9 @@ void scheduler(void)
 			if (p->p_stat == READY)
 			{
 				//切换其状态为RUNNING
-				proc = p;        //设置当前关照的进程（全局变量）。
+
 				switchuvm(p);    //交换用户虚拟内存
+        proc = p;        //设置当前关照的进程（全局变量）。
 				p->p_stat = SRUN;//设置进程状态
         //从这里离开调度器的上下文转入用户进程。
 				swtch(&cpu->scheduler, p->p_ctxt);
@@ -41,6 +42,7 @@ void scheduler(void)
 
 	}
 }
+
 
 
 //进程从用户态切换到cpu调度器xv6中的sched
@@ -59,21 +61,36 @@ void transform(void)
 }
 
 //放弃CUP的所有权——针对时间片到期后
-//这个函数通常由中断进入。
+//于是我们需要更新该进程的时间片。
 void giveup_cpu(void)
 {
+
 	//在所有状态改变的操作中，都需要先获得锁，以保证不会有冲突发生
 	proc->p_stat = READY;
+  proc->p_time_slice = SCHED_RR_TIMESLICE;
+
 	transform();
-  
+
 }
+
+
+//这个过程通常由中断进入。
+void timeslice_yield(){
+  proc->p_time_slice -= TIMER_INTERVAL;
+  cprintf("\nPID %d Rest time slice:%d\n",proc->p_pid, proc->p_time_slice);
+  if(proc->p_time_slice<=0) // 时间片用完了，于是giveup，执行上下文切换到调度器。
+      giveup_cpu();
+  else
+    ; // 如果时间片没有用完，直接返回
+}
+
+
+
 
 
 /* sleep a proc on specific event and swtch away. */
 void sleep(void * e)
 {
-
-
   //tell event.
   proc->p_chan=e;
   proc->p_stat=SSLEEPING;
@@ -88,4 +105,10 @@ void wakeup(void * e)
     if(p->p_stat==SSLEEPING && p->p_chan==e)
       p->p_stat=READY;
 }
+
+
+
+
+
+
 
