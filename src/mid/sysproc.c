@@ -115,5 +115,14 @@ int sys_decnice(void){
     return -1;
   return __incnice(-n);
 }
-
+int sys_sched(void){
+  int n;
+  if(sysc_argint(0,&n) < 0)
+    return -1;
+  if(n >= sizeof (SCHEME_NUMS)) //支持的schedule算法的数目
+    return -1;
+  select_scheme(n);
+  recalc_timeslice();
+  return 0;
+}
 

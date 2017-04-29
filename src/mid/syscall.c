@@ -218,7 +218,8 @@ argstr(int n, char **pp)
   X(mkdir)                                      \
   X(close)                                      \
   X(incnice)                                    \
-  X(decnice)
+  X(decnice)                                    \
+  X(sched)
 
 
 

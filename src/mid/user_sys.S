@@ -31,4 +31,5 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(incnice)
 SYSCALL(decnice)
+SYSCALL(sched)
 

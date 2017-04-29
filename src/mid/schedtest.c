@@ -2,7 +2,7 @@
 #include "stat.h"
 #include "user.h"
 
-#define N 10 //总共需fork的数目
+#define N 5 //总共需fork的数目
 #define TIMES 32767
 
 
@@ -21,6 +21,9 @@ void calcula(void){
 }
 
 void schedtest(void){
+
+
+
   int n, pid;
   printf(1, "Forking children...\n");
   for(n=0;n<N;n++){
@@ -48,8 +51,13 @@ void schedtest(void){
 
 
 
-int main(void)
+int main(int argc, char ** argv)
 {
+  if(argc<=1);else{
+    int n = atoi(argv[1]); //获取命令行参数
+    printf(1, "Testing sched method %d\n", n);
+    sched(n);
+  }
   schedtest();
   exit();
 

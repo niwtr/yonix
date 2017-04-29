@@ -45,6 +45,14 @@ enum procflag {
   */
 };
 
+enum sched_method {
+  SCHEME_FIFO,
+  SCHEME_RR,
+  SCHEME_PRI,
+};
+
+
+
 // Per-CPU state
 // BORROWED from xv6
 // TODO 这些东西都不太懂。
@@ -59,6 +67,8 @@ struct cpu {
 								 // Cpu-local storage variables; see below
 	struct cpu *cpu;
 	struct proc *proc;           // The currently-running process.
+  enum sched_method scheme ; //当前执行的调度算法索引
+
 };
 
 
@@ -95,9 +105,10 @@ struct proc {
   int p_time_slice; // time slice per proc.
 
 	int p_nice; // nice for scheduling
-	int p_pri; // priority, negative is high.
-	int p_time; // resident time for schedule int
-	int p_pu; // cpu usage for scheduling.
+	int p_spri; // static priority, negative is high.
+  int p_dpri; // dynamic priority.
+	//int p_time; // resident time for schedule int
+	//int p_pu; // cpu usage for scheduling.
 };
 
 
@@ -112,6 +123,19 @@ extern struct proc *proc asm("%gs:4");     // cpus[cpunum()].proc
 struct protab {
   struct proc proc[NPROC];
 } ;
+
+// scheme: alias for sched_method
+
+struct sched_refstruct {
+  void (*scheme) (void);
+  void (*after) (void); //当进程时间片用完的时候，这个方法将会被调用。
+  void  (*timeslice) (struct proc *); //用于计算时间片的函数
+} ;
+
+extern struct sched_refstruct sched_reftable[SCHEME_NUMS];//调度器算法查找表
+
+
+
 
 										   //进程表结构
 

@@ -22,5 +22,6 @@
 #define SYS_close  21
 #define SYS_incnice 22
 #define SYS_decnice 23
+#define SYS_sched  24
 
 

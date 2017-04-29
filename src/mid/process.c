@@ -55,6 +55,15 @@ struct proc * initproc;
  * 产生的进程称为芽孢进程。这个进程的上下文全部为初始值0.
  */
 
+/* 重新计算时间片。 */
+void recalc_timeslice (void)
+{
+  search_through_ptablef(p){
+    if(p->p_stat != SUNUSED)
+      sched_reftable[cpu->scheme].timeslice(p);
+  }
+}
+
 
 static struct proc* procalloc(void)
 {
@@ -78,8 +87,9 @@ static struct proc* procalloc(void)
       //进程时间片设置。
       //TODO 在RR里，所有进程的时间片设置都是同等的，因此我们可以把它放到这里。但是。。
       //在其他的调度算法里，我们需要根据进程的类型来改变时间片设置。因此推荐你把它转移到fork里面。
-      p->p_time_slice = SCHED_RR_TIMESLICE;
+      p->p_spri = STATIC_PRI(p->p_nice);
       p->p_nice = 0; //初始p_nice设置0，可以通过系统调用来更改。
+      sched_reftable[cpu->scheme].timeslice(p);//设置时间片
 
 
 			//为该新进程分配内核栈空间

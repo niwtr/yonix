@@ -25,8 +25,12 @@ int sleep(int);
 int uptime(void);
 int incnice(int);
 int decnice(int);
-
-
+int sched(int);
+enum sched_method {
+  SCHED_FIFO,
+  SCHED_RR,
+  SCHED_PRI,
+};
 
 
 

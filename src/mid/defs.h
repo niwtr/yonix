@@ -96,7 +96,14 @@ int             procgrow(int);
 int             kill(int);
 
 void            dbg_procdump(void);
+void            select_scheme(int);
+void            recalc_timeslice(void);
 void            scheduler(void) __attribute__((noreturn));
+
+
+
+
+
 
 void            sleep(void*);
 void            userinit(void);
