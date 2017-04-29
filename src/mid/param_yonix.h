@@ -14,5 +14,7 @@
 #define MIN_TIMESLICE 100 //最小的时间片就是RR的时间片。
 #define MAX_NICE 19
 #define MIN_NICE 20
+#define MAX_AVGSLP 100 // 100ticks
+
 #define private static
 

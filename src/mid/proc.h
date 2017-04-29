@@ -103,10 +103,11 @@ struct proc {
 
 
   int p_time_slice; // time slice per proc.
-
+  int p_creatime; //creation time.
 	int p_nice; // nice for scheduling
 	int p_spri; // static priority, negative is high.
   int p_dpri; // dynamic priority.
+  int p_avgslp; // average sleep time, measured in ticks
 	//int p_time; // resident time for schedule int
 	//int p_pu; // cpu usage for scheduling.
 };
@@ -149,11 +150,15 @@ extern struct proc * initproc;
   for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++,ittt++)
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
-#define MIN(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-#define STATIC_PRI(nice) 120+nice
-#define TIME_SLICE(stpri) ((stpri>120)?\
-                           MAX((140-stpri)*5, MIN_TIMESLICE):\
-                           MAX((140-stpri)*20, MIN_TIMESLICE))
-#define DYNAMIC_PRI(stpri, bns) MAX(100,MIN(stpri-bns+5, 139))
+
+
+#define STATIC_PRI(nice) 120+(nice)
+#define TIME_SLICE(stpri) (((stpri)>120)?                     \
+                           MAX((140-(stpri))*5, MIN_TIMESLICE): \
+                           MAX((140-(stpri))*20, MIN_TIMESLICE))
+
+#define BONUS(avgslp) (avgslp)/10
+#define DYNAMIC_PRI(stpri, bns) MAX(100,MIN((stpri)-(bns)+5, 139))
 

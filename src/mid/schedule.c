@@ -25,6 +25,20 @@ void sched_fifo (void)
   if(proc && proc->p_stat==READY)
     switch_to(proc);
 
+  //find proc with smallest creatime.
+  struct proc * min = 0;
+  search_through_ptablef(p){
+    if(p->p_stat == READY){
+      if(min==0)
+        min=p;
+      else
+        if(min->p_creatime > p->p_creatime)
+          min = p;
+    }
+  }
+  if(min)
+    switch_to(min);
+  /*
   static struct proc * p = ptable.proc ;
   while(p<&ptable.proc[PROC_NUM]){
     if(p->p_stat != READY){
@@ -36,6 +50,7 @@ void sched_fifo (void)
     return ;
   }
   p=ptable.proc; // wind back.
+  */
 }
 void sched_fifo_after(void)
 {
@@ -59,20 +74,25 @@ void sched_priority(void)
       if(p_primax == 0)
         p_primax = p;
       else
-        if(p_primax->p_dpri < p->p_dpri) // 找到了一个优先级更高的。
+        if(p_primax->p_dpri > p->p_dpri) // 找到了一个优先级更高的。注意dpri越低，优先级越高。
           p_primax = p;
     }
   }
   if(p_primax) //找到了进程 to swtich
     switch_to(p_primax);
 }
-void sched_priority_after(void)
-{
-  ;
-}
 void sched_priority_timeslice(struct proc *p)
 {
-  p->p_time_slice = 0;
+
+  p->p_spri = STATIC_PRI(p->p_nice);
+  p->p_time_slice = TIME_SLICE(p->p_spri);
+}
+
+void sched_priority_after(void)
+{
+  sched_priority_timeslice(proc);
+  proc->p_dpri = DYNAMIC_PRI(proc->p_spri, BONUS(proc->p_avgslp));
+  cprintf("pid %d dpri %d\n", proc->p_pid, proc->p_dpri);
 }
 
 //RR调度。
@@ -91,11 +111,12 @@ void sched_rr (void)
   p=ptable.proc; // wind back.
 }
 
-void sched_rr_after(void){
-  ; /* well, do nothing. */
-}
 void sched_rr_timeslice(struct proc * p){
   p->p_time_slice= SCHED_RR_TIMESLICE;
+}
+
+void sched_rr_after(void){
+  sched_rr_timeslice(proc);
 }
 
 struct sched_refstruct sched_reftable[SCHEME_NUMS]={
@@ -126,7 +147,6 @@ void scheduler(void)
 
       //sched_rr();
       sched_reftable[cpu->scheme].scheme(); //sched
-      sched_reftable[cpu->scheme].after();  //aftersched
 
       //某个时间片中断！pia的一下CPU又回到了这里！！！
 
@@ -180,6 +200,10 @@ void scheduler1(void)
 void transform(void)
 {
 
+  //执行after过程。
+  //1. 重新计算时间片。
+  //2. 重新计算动态优先级（如果有的话）
+
 	/*
 	最后，调用 swtch 把当前上下文保存在 proc->context 中然后切换到调度器上下文即 cpu->scheduler 中
 	*/
@@ -198,7 +222,8 @@ void giveup_cpu(void)
 
 	//在所有状态改变的操作中，都需要先获得锁，以保证不会有冲突发生
 	proc->p_stat = READY;
-  proc->p_time_slice = SCHED_RR_TIMESLICE;
+  // proc->p_time_slice = SCHED_RR_TIMESLICE;
+  sched_reftable[cpu->scheme].after();
 
 	transform();
 
@@ -210,9 +235,13 @@ void timeslice_yield(){
   if (proc->p_time_slice == ETERNAL)
     return ; // 该进程的时间片是无穷，直接返回。
   proc->p_time_slice -= TIMER_INTERVAL;
-  cprintf("\nPID %d Rest time slice:%d\n",proc->p_pid, proc->p_time_slice);
+  proc->p_avgslp -= 1; //让avgslp递减1个tick
+
   if(proc->p_time_slice<=0) // 时间片用完了，于是giveup，执行上下文切换到调度器。
+    {
+      cprintf("\nPID %d Used up its time slice.\n",proc->p_pid);
       giveup_cpu();
+    }
   else
     ; // 如果时间片没有用完，直接返回
 }

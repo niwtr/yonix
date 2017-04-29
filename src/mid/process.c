@@ -87,10 +87,13 @@ static struct proc* procalloc(void)
       //进程时间片设置。
       //TODO 在RR里，所有进程的时间片设置都是同等的，因此我们可以把它放到这里。但是。。
       //在其他的调度算法里，我们需要根据进程的类型来改变时间片设置。因此推荐你把它转移到fork里面。
-      p->p_spri = STATIC_PRI(p->p_nice);
-      p->p_nice = 0; //初始p_nice设置0，可以通过系统调用来更改。
-      sched_reftable[cpu->scheme].timeslice(p);//设置时间片
 
+      p->p_nice = 0; //初始p_nice设置0，可以通过系统调用来更改。
+      p->p_spri = STATIC_PRI(p->p_nice);
+      p->p_creatime = ticks;
+      p->p_avgslp = 0; //average sleep time 的初值为0.
+      sched_reftable[cpu->scheme].timeslice(p);//设置时间片
+      p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
 
 			//为该新进程分配内核栈空间
 			p->p_kstack = kalloc();	//内核栈分配函数

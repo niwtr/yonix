@@ -73,6 +73,8 @@ sys_sleep(void)
     }
     sleep(&ticks);
   }
+  //avgslp的单位为ticks，在0到100之间。
+  proc->p_avgslp = MIN(proc->p_avgslp+(ticks-ticks0), MAX_AVGSLP);
 
   return 0;
 }

@@ -22,8 +22,6 @@ void calcula(void){
 
 void schedtest(void){
 
-
-
   int n, pid;
   printf(1, "Forking children...\n");
   for(n=0;n<N;n++){
