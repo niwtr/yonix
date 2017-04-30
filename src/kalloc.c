@@ -4,6 +4,7 @@
 #include "param_yonix.h"
 #include "mmu.h"
 #include "memlayout.h"
+#include "defs.h"
 
 extern char end[]; // first address after kernel loaded from ELF file
 
@@ -39,7 +40,7 @@ void freerange(vaddr_t vstart, vaddr_t vend)
 		kfree(p);
 }
 
-/*
+
 //使用entrypgdir页表时，初始化内存
 void kinit1(void *vstart, void *vend)
 {
@@ -51,19 +52,20 @@ void kinit1(void *vstart, void *vend)
 void kinit2(void *vstart, void *vend)
 {
 	freerange(vstart, vend);
+	slabinit();
 }
-*/
+
 
 //释放某个内存页
-void kfree(vaddr_t vaddr)
+void kfree(vaddr_t v)
 {
 	// 内存页基地址不是页数整数倍，或者不在有效区域
-	if ((uint)vaddr % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+	if ((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
 		panic("kfree");
 
 	// 使用了强制类型转换，结构体地址即等于空闲页地址
 	struct fpage *f;
-	f = (struct fpage *)vaddr;
+	f = (struct fpage *)v;
 
 	f->size = PGSIZE;
 	f->next = kmem.freelist;
@@ -85,7 +87,7 @@ vaddr_t kalloc()
 
 	kmem.nfreeblock--;
 
-	return f;
+	return (vaddr_t)f;
 }
 
 // 小内存池初始化，用于动态申请32-byte slab
@@ -114,7 +116,7 @@ void free_slab(vaddr_t v)
 // 申请一个slab
 vaddr_t alloc_slab()
 {
-	if(slab->nfreeblock == 0)
+	if(slab.nfreeblock == 0)
 		slabinit();
 	
 	struct fpage *f = slab.freelist;
