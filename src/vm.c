@@ -538,10 +538,7 @@ void free_page(uint pn_pid, uint flag_slot)
 struct page_entry *sel_page()
 {
 	struct page_entry *e;
-	if (PG_ALGO == PR_FIFO)
-		// FIFO算法
-		e = Q_FIRST(&pgqueue.qhead);
-	else
+	if (PG_ALGO == PR_SCND)
 	{
 		// 二次机会算法
 		Q_FOREACH (e, &queue.qhead, link)
@@ -549,10 +546,12 @@ struct page_entry *sel_page()
 			if (e->ref == PTE_A)
 				e->ref = 0;
 			else
-				break;
+				return e;
 		}
 	}
 
+	// FIFO算法, 或者二次机会的下一轮
+	e = Q_FIRST(&pgqueue.qhead);
 	return e;
 }
 
