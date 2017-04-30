@@ -92,10 +92,14 @@ int             pipewrite(struct pipe*, char*, int);
 // proc.c
 void            exit(void);
 int             fork(void);
+int             lwp_create(void *, void *, void *, int);
+int             lwp_join(void **);
+
 int             procgrow(int);
 int             kill(int);
 
 void            dbg_procdump(void);
+void            switch_to(struct proc *);
 void            select_scheme(int);
 void            recalc_timeslice(void);
 void            scheduler(void) __attribute__((noreturn));

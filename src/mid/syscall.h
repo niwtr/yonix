@@ -23,5 +23,6 @@
 #define SYS_incnice 22
 #define SYS_decnice 23
 #define SYS_sched  24
-
+#define SYS_lwp_create 25
+#define SYS_lwp_join 26
 

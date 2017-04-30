@@ -128,3 +128,33 @@ int sys_sched(void){
   return 0;
 }
 
+
+
+
+int
+sys_lwp_create(void)
+{
+  int fn, arg, stack, stksz;
+  if(sysc_argint(0, &fn) < 0)
+    return -1;
+  if(sysc_argint(1, &arg) < 0)
+    return -1;
+  if(sysc_argint(2, &stack) < 0)
+    return -1;
+  if(sysc_argint(3, &stksz) < 0)
+    return -1;
+  if(stksz < 0) return -1;
+  return lwp_create((void*)fn, (void*)arg, (void*)stack, stksz);
+}
+
+int
+sys_lwp_join(void)
+{
+  int stack;
+  if(sysc_argint(0, &stack) < 0)
+    return -1;
+  return lwp_join((void**)stack);
+}
+
+
+

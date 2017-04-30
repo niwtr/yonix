@@ -79,6 +79,7 @@ struct proc {
 
 
 	int p_pid;
+  int p_procp ;
 	struct proc * p_prt; // pointer to parent
 
 	paget * p_page; // page table
@@ -87,6 +88,7 @@ struct proc {
 
 	struct trapframe *p_tf;//中断前信息，内核状态
 	char * p_kstack;//bottom of kernel stack
+  int p_stack; // 用户态的栈
 	struct context * p_ctxt; //swtch() here to run proc.上下文
 	void * p_chan; // event process is awaiting -> 进程或者是SSLEEPING或者是SWAIT，这个位标志了导致进程睡眠的原因。
 
@@ -126,14 +128,20 @@ struct protab {
 } ;
 
 // scheme: alias for sched_method
-
-struct sched_refstruct {
+// 调度器类，包含调度器类的编号（名字）
+// 有一点点面向对象的味道，不是吗？
+struct sched_class {
+  enum sched_method scheme_num;
+  const char * scheme_method;
   void (*scheme) (void);
   void (*after) (void); //当进程时间片用完的时候，这个方法将会被调用。
   void  (*timeslice) (struct proc *); //用于计算时间片的函数
-} ;
+};
 
-extern struct sched_refstruct sched_reftable[SCHEME_NUMS];//调度器算法查找表
+//调度器算法查找表
+//在scheduler_class里定义。
+extern struct sched_class sched_reftable[SCHEME_NUMS];
+
 
 
 
@@ -142,6 +150,7 @@ extern struct sched_refstruct sched_reftable[SCHEME_NUMS];//调度器算法查找表
 
 
 extern struct protab ptable;
+extern int nextpid;
 extern struct proc * initproc;
 
 
@@ -153,12 +162,12 @@ extern struct proc * initproc;
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 
-
-#define STATIC_PRI(nice) 120+(nice)
+/* for priority scheduler */
+#define STATIC_PRI(nice) MAX_RT_PRI+(nice)+20
 #define TIME_SLICE(stpri) (((stpri)>120)?                     \
-                           MAX((140-(stpri))*5, MIN_TIMESLICE): \
-                           MAX((140-(stpri))*20, MIN_TIMESLICE))
+                           MAX((PRI_NUM-(stpri))*5, MIN_TIMESLICE): \
+                           MAX((PRI_NUM-(stpri))*20, MIN_TIMESLICE))
 
-#define BONUS(avgslp) (avgslp)/10
-#define DYNAMIC_PRI(stpri, bns) MAX(100,MIN((stpri)-(bns)+5, 139))
+#define BONUS(avgslp) (avgslp)/10 // simplifyed bonus calculation.
+#define DYNAMIC_PRI(stpri, bns) MAX(MAX_RT_PRI, MIN((stpri)-(bns)+5, PRI_NUM-1))
 

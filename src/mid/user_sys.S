@@ -32,4 +32,5 @@ SYSCALL(uptime)
 SYSCALL(incnice)
 SYSCALL(decnice)
 SYSCALL(sched)
-
+SYSCALL(lwp_create)
+SYSCALL(lwp_join)

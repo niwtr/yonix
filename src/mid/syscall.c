@@ -219,7 +219,9 @@ argstr(int n, char **pp)
   X(close)                                      \
   X(incnice)                                    \
   X(decnice)                                    \
-  X(sched)
+  X(sched)                                      \
+  X(lwp_create)                                 \
+  X(lwp_join)
 
 
 
