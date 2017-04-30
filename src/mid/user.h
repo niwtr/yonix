@@ -23,6 +23,18 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int incnice(int);
+int decnice(int);
+int sched(int);
+int lwp_create(void*, void*, void*, int);
+int lwp_join(void **);
+enum sched_method {
+  SCHED_FIFO,
+  SCHED_RR,
+  SCHED_PRI,
+};
+
+
 
 // ulib.c
 int stat(char*, struct stat*);

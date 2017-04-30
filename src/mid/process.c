@@ -8,7 +8,6 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
-
 int nextpid = 1;
 
 //fork return
@@ -55,6 +54,15 @@ struct proc * initproc;
  * 产生的进程称为芽孢进程。这个进程的上下文全部为初始值0.
  */
 
+/* 重新计算时间片。 */
+void recalc_timeslice (void)
+{
+  search_through_ptablef(p){
+    if(p->p_stat != SUNUSED)
+      sched_reftable[cpu->scheme].timeslice(p);
+  }
+}
+
 
 static struct proc* procalloc(void)
 {
@@ -70,10 +78,21 @@ static struct proc* procalloc(void)
 		//且增加进程的pid值
 		if (p->p_stat == SUNUSED)
 		{
+      //进程状态和pid设置
 			p->p_stat = SEMBRYO;
 			p->p_pid = nextpid++;
 			//nextpid++;
 
+      //进程时间片设置。
+      //TODO 在RR里，所有进程的时间片设置都是同等的，因此我们可以把它放到这里。但是。。
+      //在其他的调度算法里，我们需要根据进程的类型来改变时间片设置。因此推荐你把它转移到fork里面。
+
+      p->p_nice = 0; //初始p_nice设置0，可以通过系统调用来更改。
+      p->p_spri = STATIC_PRI(p->p_nice);
+      p->p_creatime = ticks;
+      p->p_avgslp = 0; //average sleep time 的初值为0.
+      sched_reftable[cpu->scheme].timeslice(p);//设置时间片
+      p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
 
 			//为该新进程分配内核栈空间
 			p->p_kstack = kalloc();	//内核栈分配函数
@@ -137,10 +156,11 @@ int procgrow(int n){
 
 
 
+
 /* fork函数，创建子进程。 */
 int fork(void)
 {
-  cprintf("   forking...\n");
+
 	int i, pid;
 	struct proc *np;
 
@@ -193,13 +213,13 @@ int fork(void)
 
 	//保存子进程的pid值，以便返回给父进程
 	pid = np->p_pid;
+  np->p_procp = 1; // this is, indeed, a proc.
 
 	//修改新建子进程的状态
 	np->p_stat = READY;
 
 
 	//将子进程的pid返回给父进程
-  cprintf("   forked\n");
 
 	return pid;
 }
@@ -339,50 +359,12 @@ void userinit(void)
 	safestrcpy(p->p_name, "initcode", sizeof(p->p_name));
 	//进程所在目录为根目录“/”
 	p->p_cdir = namei("/");
+  p->p_procp = 1;//this is indeed a proc.
 	//将进程状态设置为READY
 	p->p_stat = READY;
   p->p_ctxt->eip = (uint)forkret;//设置返回地址为forkret
 }
 
-
-int
-wait1(void)
-{
- 
-  int havekids, pid;
-
-  for(;;){
-    // Scan through table looking for exited children.
-    havekids = 0;
-    //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    search_through_ptablef(p){
-      if(p->p_prt != proc)
-        continue;
-      havekids = 1;
-      if(p->p_stat == SZOMB){
-        // Found one.
-        pid = p->p_pid;
-        kfree(p->p_kstack);
-        p->p_kstack = 0;
-        freevm(p->p_page);
-        p->p_pid = 0;
-        p->p_prt = 0;
-        p->p_name[0] = 0;
-        p->p_killed = 0;
-        p->p_stat = SUNUSED;
-        return pid;
-      }
-    }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || proc->p_killed){
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(proc);  //DOC: wait-sleep
-  }
-}
 
 //wait——等待子进程执行完毕exit,并返回其进程ID号
 int wait(void)
@@ -426,5 +408,98 @@ int wait(void)
     sleep(proc);
   }
 }
+
+
+
+
+/* create a light-weight proc. */
+int lwp_create (void * task, void * arg, void * stack, int stksz){
+  int i, pid;
+  struct proc * lwp;
+  lwp = procalloc();
+  if(lwp == 0) return -1;
+
+  lwp->p_page = proc->p_page;
+  lwp->p_size = proc->p_size;
+
+  if(lwp->p_page == 0) return -1;
+
+  if (proc->p_procp){
+    lwp->p_prt = proc;
+  } else {
+    lwp->p_prt = proc->p_prt;
+  }
+  *(lwp->p_tf) = *(proc->p_tf);//设置trapframe。
+  //这里应该深拷贝，不是吗？C支持直接拷贝一个结构体？
+
+	//清空寄存器eax的值 以便fork后返回给子进程的值为0
+	lwp->p_tf->eax = 0;
+  lwp->p_ctxt->eip=(uint)forkret;
+  lwp->p_tf->eip = (int)task;//接下来将要执行task的内容。
+  lwp->p_stack = (int)stack;
+  lwp->p_tf->esp = lwp->p_stack + stksz - 4 ; //TODO 弄懂这个4092是个神马玩意儿。
+  *((int *)(lwp->p_tf->esp)) = (int)arg; // push the argument
+  *((int *)(lwp->p_tf->esp-4))=0xFFFFFFFF;  //return addr.
+  lwp->p_tf->esp -=4;
+
+	//遍历父进程打开的所有文件,将其复制一份到子进程
+	for (i = 0; i < P_NOFILE; i++)
+		if (proc->p_of[i])
+			lwp->p_of[i] = filedup(proc->p_of[i]);
+
+  lwp->p_cdir = idup(proc->p_cdir);
+
+  safestrcpy(lwp->p_name, proc->p_name, sizeof(proc->p_name));
+	//保存子进程的pid值，以便返回给父进程
+	pid = lwp->p_pid;
+  lwp->p_procp = 0; // this is,not a proc.
+
+	//修改新建子进程的状态
+	lwp->p_stat = READY;
+	//将子进程的pid返回给父进程
+
+	return pid;
+}
+
+int
+lwp_join(void **stack)
+{
+
+
+  int have_kid, pid;
+
+  for(;;){
+    // Scan through table looking for zombie children.
+    have_kid = 0;
+    search_through_ptablef(p){
+      // wait for the child thread, but not the child process
+      if(p->p_prt != proc || p->p_procp != 0)
+        continue;
+      have_kid = 1;
+      if(p->p_stat == SZOMB){
+        // Found one.
+        pid = p->p_pid;
+        kfree(p->p_kstack);
+        p->p_kstack = 0;
+        p->p_stat = SUNUSED;
+        p->p_pid = 0;
+        p->p_prt = 0;
+        p->p_name[0] = 0;
+        p->p_killed = 0;
+        *(int*)stack = p->p_stack; //mark the stack.
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children thread.
+    if(!have_kid || proc->p_killed)
+      return -1;
+
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc);  //DOC: wait-sleep
+  }
+}
+
 
 

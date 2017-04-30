@@ -12,6 +12,7 @@ OBJS = \
 	picirq.o\
 	pipe.o\
 	process.o\
+	scheduler_class.o\
 	schedule.o\
 	sleeplock.o\
 	procutils.o\
@@ -145,6 +146,8 @@ UPROGS=\
 	_sh\
 	_stressfs\
 	_usertests\
+	_schedtest\
+  _threadtest\
 	_wc\
 	_zombie\
 

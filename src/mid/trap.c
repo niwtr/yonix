@@ -30,7 +30,7 @@ struct gatedesc idt[TV_ENTRIES]; //为所有CPU共享的中断描述符表。
 extern uint vectors[];
 
 
-uint ticks;
+uint ticks; //interrupts
 
 //中断描述符初始化
 void trapvecinit(void){
@@ -80,13 +80,13 @@ void trap (struct trapframe * tf)
 	{
 	case T_IRQ0+IRQ_TIMER://时钟中断 处理过程不懂
 		//cpunum()获取cpu自身的编号
-			ticks++;
+      ticks++;//一个ticks就是一个10ms
 			wakeup(&ticks);
 		break;
 	case T_IRQ0 + IRQ_KBD://键盘中断请求
 		kbdintr();
 		break;
-	case T_IRQ0 + IRQ_COM1://
+	case T_IRQ0 + IRQ_COM1:
 		uartintr();
 
 		break;
@@ -101,7 +101,7 @@ void trap (struct trapframe * tf)
 	case T_IRQ0 + IRQ_SPURIOUS:
 		cprintf("cpu%d: spurious interrupt at %x:%x\n",
 		  0, tf->cs, tf->eip);
-		
+
 		break;
 
 	default://不懂。。。
@@ -127,10 +127,13 @@ void trap (struct trapframe * tf)
 		if (proc->p_killed&&(tf->cs & 3 )== DPL_USER)
 			exit();
 		//对于内核级进程，则让它一直运行，直到它返回系统调用
-		
+
 		//当进程运行时间到了RR调度的时间片时，强行迫使进程放弃CPU
-		if (tf->trapno == T_IRQ0 + IRQ_TIMER&&proc->p_stat == SRUN)
-			giveup_cpu();
+		if (tf->trapno == T_IRQ0 + IRQ_TIMER&&proc->p_stat == SRUN){
+      //WARNING modified.
+			//giveup_cpu();
+      timeslice_yield();
+    }
 
 		//检查一遍进程在放弃cpu之后进程是否被killed了（为什么呢？？？？？。。。。）
 		if (proc->p_killed && (tf->cs & 3) == DPL_USER)

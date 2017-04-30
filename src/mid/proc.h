@@ -45,6 +45,14 @@ enum procflag {
   */
 };
 
+enum sched_method {
+  SCHEME_FIFO,
+  SCHEME_RR,
+  SCHEME_PRI,
+};
+
+
+
 // Per-CPU state
 // BORROWED from xv6
 // TODO 这些东西都不太懂。
@@ -59,6 +67,8 @@ struct cpu {
 								 // Cpu-local storage variables; see below
 	struct cpu *cpu;
 	struct proc *proc;           // The currently-running process.
+  enum sched_method scheme ; //当前执行的调度算法索引
+
 };
 
 
@@ -69,6 +79,7 @@ struct proc {
 
 
 	int p_pid;
+  int p_procp ;
 	struct proc * p_prt; // pointer to parent
 
 	paget * p_page; // page table
@@ -77,6 +88,7 @@ struct proc {
 
 	struct trapframe *p_tf;//中断前信息，内核状态
 	char * p_kstack;//bottom of kernel stack
+  int p_stack; // 用户态的栈
 	struct context * p_ctxt; //swtch() here to run proc.上下文
 	void * p_chan; // event process is awaiting -> 进程或者是SSLEEPING或者是SWAIT，这个位标志了导致进程睡眠的原因。
 
@@ -90,10 +102,16 @@ struct proc {
 
 				   // for scheduling, borrowed from v6.
 				   // p_pri = f(p_nice, p_time, p_pu)
+
+
+  int p_time_slice; // time slice per proc.
+  int p_creatime; //creation time.
 	int p_nice; // nice for scheduling
-	int p_pri; // priority, negative is high.
-	int p_time; // resident time for schedulint
-	int p_pu; // cpu usage for scheduling.
+	int p_spri; // static priority, negative is high.
+  int p_dpri; // dynamic priority.
+  int p_avgslp; // average sleep time, measured in ticks
+	//int p_time; // resident time for schedule int
+	//int p_pu; // cpu usage for scheduling.
 };
 
 
@@ -109,13 +127,47 @@ struct protab {
   struct proc proc[NPROC];
 } ;
 
+// scheme: alias for sched_method
+// 调度器类，包含调度器类的编号（名字）
+// 有一点点面向对象的味道，不是吗？
+struct sched_class {
+  enum sched_method scheme_num;
+  const char * scheme_method;
+  void (*scheme) (void);
+  void (*after) (void); //当进程时间片用完的时候，这个方法将会被调用。
+  void  (*timeslice) (struct proc *); //用于计算时间片的函数
+};
+
+//调度器算法查找表
+//在scheduler_class里定义。
+extern struct sched_class sched_reftable[SCHEME_NUMS];
+
+
+
+
+
 										   //进程表结构
 
 
 extern struct protab ptable;
+extern int nextpid;
 extern struct proc * initproc;
 
 
 #define search_through_ptablef(name)                            \
   struct proc * name;int ittt=0;                                          \
   for(name = ptable.proc;name < &ptable.proc[PROC_NUM]; name++,ittt++)
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+
+/* for priority scheduler */
+#define STATIC_PRI(nice) MAX_RT_PRI+(nice)+20
+#define TIME_SLICE(stpri) (((stpri)>120)?                     \
+                           MAX((PRI_NUM-(stpri))*5, MIN_TIMESLICE): \
+                           MAX((PRI_NUM-(stpri))*20, MIN_TIMESLICE))
+
+#define BONUS(avgslp) (avgslp)/10 // simplifyed bonus calculation.
+#define DYNAMIC_PRI(stpri, bns) MAX(MAX_RT_PRI, MIN((stpri)-(bns)+5, PRI_NUM-1))
+

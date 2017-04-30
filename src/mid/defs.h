@@ -92,17 +92,29 @@ int             pipewrite(struct pipe*, char*, int);
 // proc.c
 void            exit(void);
 int             fork(void);
+int             lwp_create(void *, void *, void *, int);
+int             lwp_join(void **);
+
 int             procgrow(int);
 int             kill(int);
 
 void            dbg_procdump(void);
+void            switch_to(struct proc *);
+void            select_scheme(int);
+void            recalc_timeslice(void);
 void            scheduler(void) __attribute__((noreturn));
+
+
+
+
+
 
 void            sleep(void*);
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            giveup_cpu(void);
+void            timeslice_yield(void);
 void            transform(void);
 
 
@@ -139,6 +151,7 @@ void            syscall(void);
 
 // timer.c
 void            timerinit(void);
+
 
 // trap.c
 void            idtinit(void);

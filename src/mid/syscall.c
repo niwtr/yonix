@@ -195,11 +195,6 @@ argstr(int n, char **pp)
 
 
 
-
-
-
-
-
 #define __lo_syscll__                           \
   X(fork)                                       \
   X(exit)                                       \
@@ -221,7 +216,13 @@ argstr(int n, char **pp)
   X(unlink)                                     \
   X(link)                                       \
   X(mkdir)                                      \
-  X(close)
+  X(close)                                      \
+  X(incnice)                                    \
+  X(decnice)                                    \
+  X(sched)                                      \
+  X(lwp_create)                                 \
+  X(lwp_join)
+
 
 
 
