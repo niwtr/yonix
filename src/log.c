@@ -22,25 +22,25 @@ struct log {
 
 struct log log;
 
-void initlog(int n);     //initial
+void initLog(int n);     //initial
 void readHeadToLog(void);	//get fileOp's details
 void logRecord(struct buf *n); //record which block needed to  be changed
 void writeLog(void);    //write log
 void writeHead(void);
 void fileOpCommit(void);	//commmit fileOp
-void recover_from_log(void);  
+void recoverFromLog(void);  
 void beginOp(void);   //lock
 void endOp(void);    //lock
-void updateFile(void);    //do fileOp
+void installTrans(void);    //do fileOp
 
-void initlog(int devno){
+void initLog(int devno){
 	if (sizeof(struct loghd) >= BSIZE) //exception handling
-		panic("initlog:too big logheader");
+		panic("initLog:too big logheader");
 	struct superblock sub; //TOD0,need teammates' struct 'superlock',needed to store block's inode and size
 	log.start = sub.start;
 	log.size = sub.size;
 	log.devno = devno;
-	recover_from_log();    //TOD1
+	recoverFromLog();    //TOD1
 }
 
 void readHeadToLog(void){
@@ -105,14 +105,14 @@ void fileOpCommit(void){
   	}
 }
 
-void recover_from_log(void){
+void recoverFromLog(void){
   	readHeadToLog();
   	fileOpCommit(); // if committed, copy from log to disk
   	log.bgn.n = 0;
   	writeHead(); // clear the log
 }
 
-void begin_op(void){
+void beginOp(void){
   	while(1){
     	if(log.committing){
       		sleep(&log);
@@ -127,7 +127,7 @@ void begin_op(void){
   	}
 }
 
-void end_op(void){
+void endOp(void){
   	int do_commit = 0;
 	log.outstanding -= 1;
 
@@ -143,13 +143,13 @@ void end_op(void){
 
     if(do_commit){ // call commit w/o holding locks, since not allowed
                    // to sleep with locks.
-    	commit();
+    	fileOpCommit();
     	log.committing = 0;
     	wakeup(&log);
   	}
 }
 
-void install_trans(void){
+void installTrans(void){
   	int tail;
 
   	for (tail = 0; tail < log.bgn.n; tail++) {
