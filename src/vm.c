@@ -16,6 +16,8 @@
 typedef Q_HEAD(page_entry_list, page_entry) q_head;
 typedef Q_ENTRY(page_entry) q_entry;
 
+struct cpu cpus[1];
+
 // 页队列项
 struct page_entry
 {
@@ -52,10 +54,10 @@ static struct kmap
 	paddr_t phys_end;
 	uint perm;
 } kmap[] = {
-	{(vaddr_t)KERNBASE, 0, 				EXTMEM, 	PTE_W},			  // I/O space
-	{(vaddr_t)KERNLINK, V2P(KERNLINK), 	V2P(data), 	0}, // kern text+rodata
-	{(vaddr_t)data, 	V2P(data), 		PHYSTOP, 	PTE_W},		  // kern data+memory
-	{(vaddr_t)DEVSPACE, DEVSPACE, 		MEMTOP, 	PTE_W},	 // more devices
+	{(vaddr_t)KERNBASE, 0, EXTMEM, PTE_W},			  // I/O space
+	{(vaddr_t)KERNLINK, V2P(KERNLINK), V2P(data), 0}, // kern text+rodata
+	{(vaddr_t)data, V2P(data), PHYSTOP, PTE_W},		  // kern data+memory
+	{(vaddr_t)DEVSPACE, DEVSPACE, MEMTOP, PTE_W},	 // more devices
 };
 
 // Set up CPU's kernel segment descriptors.
@@ -68,7 +70,7 @@ void seginit(void)
 	// Cannot share a CODE descriptor for both kernel and user
 	// because it would have to have DPL_USR, but the CPU forbids
 	// an interrupt from CPL=0 to DPL=3.
-	c = &cpus[1];
+	c = &cpus[0];
 	c->gdt[SEG_KCODE] = SEG(STA_X | STA_R, 0, 0xffffffff, 0);
 	c->gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
 	c->gdt[SEG_UCODE] = SEG(STA_X | STA_R, 0, 0xffffffff, DPL_USER);
@@ -120,10 +122,10 @@ int mappages(pde_t *pgdir, vaddr_t va, uint size, paddr_t pa, uint perm)
 
 	pte_t *pte = NULL;
 
-	while (bottom <= top)
+	while (1)
 	{
 		if ((pte = walkpgdir(pgdir, bottom, 1)) == 0)
-			return 0;
+			return -1;
 
 		// 重复的映射
 		if (*pte & PTE_P)
@@ -131,21 +133,24 @@ int mappages(pde_t *pgdir, vaddr_t va, uint size, paddr_t pa, uint perm)
 
 		*pte = pa | perm | PTE_P;
 
+		if (bottom == top) // 注意：到达最大内存地址后32位会溢出，造成无限循环
+			break;
+
 		bottom += PGSIZE;
 		pa += PGSIZE;
 	}
 
-	return 1;
+	return 0;
 }
 
 // 获取一个新的二级页表，并包含内核所有映射(此处为内核页表，不需要加入到页队列中)
 pde_t *setupkvm()
 {
 	// 物理内存过大
-	if (V2P(PHYSTOP) > DEVSPACE)
+	if (PHYSTOP > DEVSPACE)
 		panic("PHYSICAL MEMORY TOO BIG");
 
-	pde_t *pgdir = NULL;
+	pde_t *pgdir;
 	if ((pgdir = (pde_t *)kalloc()) == 0)
 		return 0;
 
@@ -153,8 +158,8 @@ pde_t *setupkvm()
 
 	int i;
 	for (i = 0; i < NELEM(kmap); i++)
-		if (mappages(pgdir, kmap[i].virt_start, kmap[i].phys_end-kmap[i].phys_start, 
-					kmap[i].phys_start, kmap[i].perm) == 0)
+		if (mappages(pgdir, kmap[i].virt_start, kmap[i].phys_end - kmap[i].phys_start,
+					 kmap[i].phys_start, kmap[i].perm) < 0)
 			return NULL;
 
 	return pgdir;
@@ -164,6 +169,8 @@ pde_t *setupkvm()
 void kvmalloc()
 {
 	kpgdir = setupkvm();
+	if (!kpgdir)
+		panic("kvmalloc: setupkvm error");
 	switchkvm();
 }
 
@@ -203,6 +210,7 @@ void write_ref()
 
 		uint pa = PTE_ADDR(*(e->ptr_pte));
 		pte_t *pte = walkpgdir(proc->p_page, (char *)P2V(pa), 0); // 得到页在内核段页表项
+
 		if (pte == 0)
 			panic("write_ref: PTE should exist");
 
@@ -245,8 +253,10 @@ void inituvm(pde_t *pgdir, char *init, uint sz)
 // 用户进程增长物理内存，从startva到endva（startva<endva）
 int allocuvm(pde_t *pgdir, uint startva, uint endva)
 {
-	if (endva > KERNBASE || endva < startva)
+	if (endva >= KERNBASE)
 		return 0;
+	if (endva < startva)
+		return startva;
 
 	int badflag = 0; //出错标志
 	vaddr_t mem;
@@ -262,7 +272,7 @@ int allocuvm(pde_t *pgdir, uint startva, uint endva)
 
 		memset(mem, 0, PGSIZE);
 
-		if (mappages(pgdir, (vaddr_t)i, PGSIZE, V2P(mem), PTE_P | PTE_W | PTE_U) == 0)
+		if (mappages(pgdir, (vaddr_t)i, PGSIZE, V2P(mem), PTE_P | PTE_W | PTE_U) < 0)
 		{
 			kfree(mem);
 			badflag = 1;
@@ -277,20 +287,21 @@ int allocuvm(pde_t *pgdir, uint startva, uint endva)
 
 	if (badflag)
 	{
-		cprintf("OUT OF MEMORY");
-		deallocuvm(pgdir, endva, startva, proc->p_pid); // 恢复原始内存大小
+		deallocuvm(pgdir, i, startva, proc->p_pid); // 恢复原始内存大小
 		return 0;
 	}
 
-	return 1;
+	return endva;
 }
 
 // 为用户进程释放部分物理内存，从startva到endva（startva>endva）
 // 注意程序可能由另外的程序释放，故而应输入程序pid
 int deallocuvm(pde_t *pgdir, uint startva, uint endva, uint pid)
 {
-	if (endva < 0 || startva < endva)
+	if (endva < 0)
 		return 0;
+	if (startva <= endva)
+		return startva;
 
 	pte_t *pte = NULL;
 	uint i;
@@ -302,19 +313,20 @@ int deallocuvm(pde_t *pgdir, uint startva, uint endva, uint pid)
 
 		paddr_t pa = PTE_ADDR(*pte);
 		kfree(P2V(pa));
+
 		free_page(i | proc->p_pid, 1); // 从页队列中删除
 
 		*pte = 0; // 对应页表项清零
 	}
 
-	return 1;
+	return endva;
 }
 
 // 释放用户进程全部地址空间
 void freeuvm(pde_t *pgdir, uint pid)
 {
 	if (pgdir == NULL)
-		panic("ALREADY FREEED");
+		panic("freeuvm: already freed");
 
 	deallocuvm(pgdir, KERNBASE, 0, pid);
 
@@ -391,7 +403,7 @@ pde_t *copyuvm(pde_t *spgdir, uint sz, uint pid)
 		else
 		{
 			memmove(mem, P2V(pa), PGSIZE);
-			if (mappages(tpgdir, (vaddr_t)i, PGSIZE, V2P(mem), aflags) == 0)
+			if (mappages(tpgdir, (vaddr_t)i, PGSIZE, V2P(mem), aflags) < 0)
 			{
 				badflag = 1;
 				break;
@@ -421,7 +433,7 @@ void clearpteu(pde_t *pgdir, char *uva)
 
 	pte = walkpgdir(pgdir, uva, 0);
 	if (pte == 0)
-		panic("clearpteu");
+		panic("clearpteu: error");
 	*pte &= ~PTE_U;
 }
 
@@ -453,7 +465,10 @@ int copyout(pde_t *pgdir, uint va, void *p, uint len)
 		va0 = (uint)PGROUNDDOWN(va);
 		pa0 = uva2ka(pgdir, (char *)va0);
 		if (pa0 == 0)
+		{
+
 			return -1;
+		}
 		n = PGSIZE - (va - va0);
 		if (n > len)
 			n = len;
@@ -490,6 +505,7 @@ uint find_slot(uint pn_pid)
 		if (swap_map[i] == pn_pid)
 			return SWAPM2SECNO(i);
 
+	cprintf("find_slot %d\n", pn_pid);
 	panic("find_slot: slot not found");
 }
 
@@ -500,6 +516,18 @@ void free_slot(uint slotn)
 	if (i >= SLOTSIZE)
 		panic("free_slot: free a non-exist slot");
 	swap_map[i] = 0;
+}
+
+// 和上面函数作用相同，但允许输入不存在的页标识符
+void free_page_slot(uint pn_pid)
+{
+	uint i = 0;
+	for (; i < SLOTSIZE; i++)
+		if (swap_map[i] == pn_pid)
+		{
+			swap_map[i] = 0;
+			break;
+		}
 }
 
 // 添加页到队列中，用于后期页面置换（只用于添加用户页，内核页不允许置换）
@@ -525,16 +553,13 @@ void free_page(uint pn_pid, uint flag_slot)
 		{
 			if (flag_slot)
 			{
-				uint slotn = find_slot(e->pn_pid);
-				free_slot(slotn);
+				free_page_slot(e->pn_pid);
 			}
 
 			Q_REMOVE(&pgqueue, e, link);
 			return;
 		}
 	}
-
-	panic("free_page: free a non-exist page");
 }
 
 // 从队列选择需要换出的页
@@ -563,7 +588,7 @@ int pgflt_handle(uint va)
 {
 	va = PGROUNDDOWN(va);
 	cprintf("page fault %x\n", va);
-	if (va < proc->p_size)
+	if (va < KERNBASE + proc->p_size)		// 传入的是内核地址
 	{
 		page_in(va);
 		return 0;
@@ -619,5 +644,5 @@ void page_out()
 	kfree(P2V(pa));
 	free_page(e->pn_pid, 0);
 
-	cprintf("page out %x\n", P2V(pa));
+	cprintf("page out %x\n", PTE_ADDR(e->pn_pid));
 }

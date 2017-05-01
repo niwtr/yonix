@@ -51,8 +51,10 @@ void kinit1(void *vstart, void *vend)
 //使用完整页表时，初始化内存
 void kinit2(void *vstart, void *vend)
 {
-	freerange(vstart, vend);
+	// freerange(vstart, vend);
 	slabinit();
+
+	cprintf("free memory: %dMB\n", kmem.nfreeblock*4/1024);
 }
 
 
@@ -86,6 +88,9 @@ vaddr_t kalloc()
 		kmem.freelist = f->next;
 
 	kmem.nfreeblock--;
+
+	if(!f)
+		cprintf("kalloc: out of memory\n");
 
 	return (vaddr_t)f;
 }
