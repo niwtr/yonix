@@ -11,10 +11,10 @@
 //non-private.
 void switch_to (struct proc * p)
 {
-  proc = p;        //设置当前关照的进程（全局变量）。
-  switchuvm(p);    //交换用户虚拟内存
-  p->p_stat = SRUN;//设置进程状态
-  //从这里离开调度器的上下文转入用户进程。
+  proc = p;        //锟斤拷锟矫碉拷前锟斤拷锟秸的斤拷锟教ｏ拷全锟街憋拷锟斤拷锟斤拷锟斤拷
+  switchuvm(p);    //锟斤拷锟斤拷锟矫伙拷锟斤拷锟斤拷锟节达拷
+  p->p_stat = SRUN;//锟斤拷锟矫斤拷锟斤拷状态
+  //锟斤拷锟斤拷锟斤拷锟诫开锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷转锟斤拷锟矫伙拷锟斤拷锟教★拷
   swtch(&cpu->scheduler, p->p_ctxt);
 }
 
@@ -27,30 +27,30 @@ void sched_name(char * name){
 }
 
 //#include "process.h"
-//proc=0表示调度器线程本身。
-//调度器scheduler
-//CPU在初始化后边调用该函数
+//proc=0锟斤拷示锟斤拷锟斤拷锟斤拷锟竭程憋拷锟斤拷锟斤拷
+//锟斤拷锟斤拷锟斤拷scheduler
+//CPU锟节筹拷始锟斤拷锟斤拷锟竭碉拷锟矫该猴拷锟斤拷
 //userproc --sched-->schedulerproc--sched-->userproc...
 void scheduler(void)
 {
 
 	while (true)
     {
-      sti(); //允许时间片中断，中断后trap调用yeild()函数返回
+      sti(); //锟斤拷锟斤拷时锟斤拷片锟叫断ｏ拷锟叫断猴拷trap锟斤拷锟斤拷yeild()锟斤拷锟斤拷锟斤拷锟斤拷
 
-      //RR,找到处于READY状态的进程
+      //RR,锟揭碉拷锟斤拷锟斤拷READY状态锟侥斤拷锟斤拷
 
       //sched_rr();
       if(!sched_reftable[cpu->scheme].scheme()) //sched
         continue;
 
-      //某个时间片中断！pia的一下CPU又回到了这里！！！
+      //某锟斤拷时锟斤拷片锟叫断ｏ拷pia锟斤拷一锟斤拷CPU锟街回碉拷锟斤拷锟斤拷锟斤！锟斤拷锟斤拷
 
       //switch back.
       switchkvm();//FIXME
-      //设置当前工作进程为调度器。
-      //你会发现这个函数的代码最好写在一个柱面上。：）
-      proc = 0;//设置当前关照的进程为调度器。
+      //锟斤拷锟矫碉拷前锟斤拷锟斤拷锟斤拷锟斤拷为锟斤拷锟斤拷锟斤拷锟斤拷
+      //锟斤拷锟结发锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟侥达拷锟斤拷锟斤拷锟斤拷写锟斤拷一锟斤拷锟斤拷锟斤拷锟较★拷锟斤拷锟斤拷
+      proc = 0;//锟斤拷锟矫碉拷前锟斤拷锟秸的斤拷锟斤拷为锟斤拷锟斤拷锟斤拷锟斤拷
 
 
     }
@@ -58,19 +58,19 @@ void scheduler(void)
 
 
 
-//进程从用户态切换到cpu调度器xv6中的sched
+//锟斤拷锟教达拷锟矫伙拷态锟叫伙拷锟斤拷cpu锟斤拷锟斤拷锟斤拷xv6锟叫碉拷sched
 void transform(void)
 {
 
-  //执行after过程。
-  //1. 重新计算时间片。
-  //2. 重新计算动态优先级（如果有的话）
+  //执锟斤拷after锟斤拷锟教★拷
+  //1. 锟斤拷锟铰硷拷锟斤拷时锟斤拷片锟斤拷
+  //2. 锟斤拷锟铰硷拷锟姐动态锟斤拷锟饺硷拷锟斤拷锟斤拷锟斤拷锟叫的伙拷锟斤拷
 
 	/*
-	最后，调用 swtch 把当前上下文保存在 proc->context 中然后切换到调度器上下文即 cpu->scheduler 中
+	锟斤拷锟襟，碉拷锟斤拷 swtch 锟窖碉拷前锟斤拷锟斤拷锟侥憋拷锟斤拷锟斤拷 proc->context 锟斤拷然锟斤拷锟叫伙拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟侥硷拷 cpu->scheduler 锟斤拷
 	*/
 	if (proc->p_stat == SRUN)
-		panic("sched running");//不shed正在SRUN的进程
+		panic("sched running");//锟斤拷shed锟斤拷锟斤拷SRUN锟侥斤拷锟斤拷
 
 	swtch(&proc->p_ctxt, cpu->scheduler);
 
@@ -79,12 +79,12 @@ void transform(void)
 
 
 
-//放弃CUP的所有权——针对时间片到期后
-//于是我们需要更新该进程的时间片。
+//锟斤拷锟斤拷CUP锟斤拷锟斤拷锟斤拷权锟斤拷锟斤拷锟斤拷锟斤拷时锟斤拷片锟斤拷锟节猴拷
+//锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷要锟斤拷锟铰该斤拷锟教碉拷时锟斤拷片锟斤拷
 void giveup_cpu(void)
 {
 
-	//在所有状态改变的操作中，都需要先获得锁，以保证不会有冲突发生
+	//锟斤拷锟斤拷锟斤拷状态锟侥憋拷锟侥诧拷锟斤拷锟叫ｏ拷锟斤拷锟斤拷要锟饺伙拷锟斤拷锟斤拷锟斤拷锟皆憋拷证锟斤拷锟斤拷锟叫筹拷突锟斤拷锟斤拷
 	proc->p_stat = READY;
   // proc->p_time_slice = SCHED_RR_TIMESLICE;
   sched_reftable[cpu->scheme].after();
@@ -94,20 +94,20 @@ void giveup_cpu(void)
 }
 
 
-//这个过程通常由中断进入。
+//锟斤拷锟斤拷锟斤拷锟斤拷通锟斤拷锟斤拷锟叫断斤拷锟诫。
 void timeslice_yield(){
   if (proc->p_time_slice == ETERNAL)
-    return ; // 该进程的时间片是无穷，直接返回。
+    return ; // 锟矫斤拷锟教碉拷时锟斤拷片锟斤拷锟斤拷锟筋，直锟接凤拷锟截★拷
   proc->p_time_slice -= TIMER_INTERVAL;
-  proc->p_avgslp -= 1; //让avgslp递减1个tick
+  proc->p_avgslp -= 1; //锟斤拷avgslp锟捷硷拷1锟斤拷tick
 
-  if(proc->p_time_slice<=0) // 时间片用完了，于是giveup，执行上下文切换到调度器。
+  if(proc->p_time_slice<=0) // 时锟斤拷片锟斤拷锟斤拷锟剿ｏ拷锟斤拷锟斤拷giveup锟斤拷执锟斤拷锟斤拷锟斤拷锟斤拷锟叫伙拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
     {
-      cprintf("\nPID %d Used up its time slice.\n",proc->p_pid);
+      // cprintf("\nPID %d Used up its time slice.\n",proc->p_pid);
       giveup_cpu();
     }
   else
-    ; // 如果时间片没有用完，直接返回
+    ; // 锟斤拷锟斤拷时锟斤拷片没锟斤拷锟斤拷锟疥，直锟接凤拷锟斤拷
 }
 
 

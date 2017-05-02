@@ -393,7 +393,7 @@ int wait(void)
 					pid = p->p_pid;
 					kfree(p->p_kstack);	//�ͷ��ں�ջ
           p->p_kstack=0;
-					freeuvm(p->p_page, proc->p_pid);	//�ͷ������ڴ�
+					freeuvm(p->p_page, pid);	//�ͷ������ڴ�
 					p->p_pid = 0;
 					p->p_prt = 0;		//��������Ϊ0
 					p->p_name[0] = 0;

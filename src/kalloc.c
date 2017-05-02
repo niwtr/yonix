@@ -11,7 +11,7 @@ extern char end[]; // first address after kernel loaded from ELF file
 //空闲链表，结构体占用空间满足小于size
 struct fpage
 {
-	uint size;		// 页大小或者slab大小
+	uint size; // 页大小或者slab大小
 	struct fpage *next;
 };
 
@@ -40,30 +40,30 @@ void freerange(vaddr_t vstart, vaddr_t vend)
 		kfree(p);
 }
 
-
 //使用entrypgdir页表时，初始化内存
 void kinit1(void *vstart, void *vend)
 {
 	freerange(vstart, vend);
 }
 
-
 //使用完整页表时，初始化内存
 void kinit2(void *vstart, void *vend)
 {
-	// freerange(vstart, vend);
+	freerange(vstart, vend);
 	slabinit();
 
-	cprintf("free memory: %dMB\n", kmem.nfreeblock*4/1024);
+	cprintf("free memory: %dMB\n", kmem.nfreeblock * 4 / 1024);
 }
-
 
 //释放某个内存页
 void kfree(vaddr_t v)
 {
 	// 内存页基地址不是页数整数倍，或者不在有效区域
 	if ((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+	{
+		cprintf("kfree addr: %p\n", v);
 		panic("kfree");
+	}
 
 	// 使用了强制类型转换，结构体地址即等于空闲页地址
 	struct fpage *f;
@@ -89,7 +89,7 @@ vaddr_t kalloc()
 
 	kmem.nfreeblock--;
 
-	if(!f)
+	if (!f)
 		cprintf("kalloc: out of memory\n");
 
 	return (vaddr_t)f;
@@ -121,11 +121,11 @@ void free_slab(vaddr_t v)
 // 申请一个slab
 vaddr_t alloc_slab()
 {
-	if(slab.nfreeblock == 0)
+	if (slab.nfreeblock == 0)
 		slabinit();
-	
+
 	struct fpage *f = slab.freelist;
-	if(f)
+	if (f)
 		slab.freelist = f->next;
 	slab.nfreeblock--;
 

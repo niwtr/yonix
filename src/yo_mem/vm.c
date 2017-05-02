@@ -308,16 +308,17 @@ int deallocuvm(pde_t *pgdir, uint startva, uint endva, uint pid)
 	for (i = PGROUNDUP(endva); i < startva; i += PGSIZE)
 	{
 		pte = walkpgdir(pgdir, (vaddr_t)i, 0);
-		if (!pte || ((*pte) & PTE_P) == 0) // **可优化**
-			continue;
+		if (!pte)
+			i += (NPTENTRIES - 1) * PGSIZE;
+		else if ((*pte & PTE_P) != 0)
+		{
+			paddr_t pa = PTE_ADDR(*pte);
 
-		paddr_t pa = PTE_ADDR(*pte);
+			free_page(i | pid, 1); // 从页队列中删除
+			kfree(P2V(pa));
 
-		free_page(i | proc->p_pid, 1); // 从页队列中删除
-
-		kfree(P2V(pa));
-
-		*pte = 0; // 对应页表项清零
+			*pte = 0; // 对应页表项清零
+		}
 	}
 
 	return endva;
@@ -540,9 +541,6 @@ void add_page(pte_t *p, vaddr_t va, uint pid)
 	e->pn_pid = (uint)va | pid;
 	e->ref = *p & PTE_A;
 
-	if((uint)p == 0x8024e008)
-	cprintf("Hello-------------- %p\n", PTE_ADDR(*p));
-
 	// 队列尾部添加
 	Q_INSERT_TAIL(&pgqueue, e, link);
 }
@@ -584,6 +582,7 @@ struct page_entry *sel_page()
 
 	// FIFO算法, 或者二次机会的下一轮
 	e = Q_FIRST(&pgqueue);
+
 	return e;
 }
 
@@ -592,7 +591,7 @@ int pgflt_handle(uint va)
 {
 	va = PGROUNDDOWN(va);
 	cprintf("page fault %x\n", va);
-	if (va < proc->p_size)		
+	if (va < proc->p_size)
 	{
 		page_in(va);
 		return 0;
@@ -641,8 +640,6 @@ void page_out()
 	pte_t *p = e->ptr_pte;
 	uint pa = PTE_ADDR(*p);
 	*p ^= PTE_P;
-
-	cprintf("%p %p\n", p, pa);
 
 	// 写入交换区,并从内存中删除
 	uint slotn = alloc_slot(e->pn_pid);
