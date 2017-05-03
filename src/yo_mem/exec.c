@@ -15,33 +15,40 @@ exec(char *path, char **argv)
   char *s, *last;
   int i, off;
   uint argc, sz, sp, ustack[3+MAXARG+1];
-  struct elfhdr elf;
-  struct inode *ip;
-  struct proghdr ph;
+  struct elfhdr elf;      //elf头
+  struct inode *ip;       //i节点
+  struct proghdr ph;      //prog头
   pde_t *p_page, *oldp_page;
+  // A system call should call begin_op()/end_op() to mark
+  // its start and end. Usually begin_op() just increments
+  // the count of in-progress FS system calls and returns.
+  // But if it thinks the log is close to running out, it
+  // sleeps until the last outstanding end_op() commits.
+  begin_op();   //--start
 
-  begin_op();
-
+  //根据路径名找到其对应的i节点号
   if((ip = namei(path)) == 0){
-    end_op();
+    end_op();   //--end
     return -1;
   }
-  ilock(ip);
+  ilock(ip);    //锁定i节点
   p_page = 0;
 
   // Check ELF header
-  if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
+  if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf)) //读取elf
     goto bad;
-  if(elf.magic != ELF_MAGIC)
+  if(elf.magic != ELF_MAGIC)    //检查文件是否包含ELF的二进制代码
     goto bad;
 
-  if((p_page = setupkvm()) == 0)
+  if((p_page = setupkvm()) == 0)//获取一个新的二级页表，并包含内核所有映射(此处为内核页表，不需要加入到页队列中)
     goto bad;
 
   // Load program into memory.
   sz = 0;
+  //xv6中程序只有一个程序段的头
+  //               段偏移量      段的数目
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
-    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
+    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))//将问价内容从i节点读出
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
@@ -49,33 +56,36 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.vaddr + ph.memsz < ph.vaddr)
       goto bad;
-    if((sz = allocuvm(p_page, sz, ph.vaddr + ph.memsz)) == 0)
+    if((sz = allocuvm(p_page, sz, ph.vaddr + ph.memsz)) == 0)//为每个ELF段分配内存
       goto bad;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
-    if(loaduvm(p_page, (char*)ph.vaddr, ip, ph.off, ph.filesz) < 0)
+    if(loaduvm(p_page, (char*)ph.vaddr, ip, ph.off, ph.filesz) < 0)//把段的内容载入内存中
       goto bad;
   }
-  iunlockput(ip);
-  end_op();
+  iunlockput(ip);//i节点使用完毕 被释放
+  end_op();     //--end
   ip = 0;
 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   sz = PGROUNDUP(sz);
+  //                     oldsize   newsize
   if((sz = allocuvm(p_page, sz, sz + 2*PGSIZE)) == 0)
     goto bad;
+  // Used to create an inaccessible page beneath the user stack.
   clearpteu(p_page, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
   // Push argument strings, prepare rest of stack in ustack.
+  //拷贝所有参数到栈顶
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
-    if(copyout(p_page, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
+    if(copyout(p_page, sp, argv[argc], strlen(argv[argc]) + 1) < 0)//拷贝参数到栈顶
       goto bad;
-    ustack[3+argc] = sp;
+    ustack[3+argc] = sp;//指针保存在ustack中
   }
   ustack[3+argc] = 0;
 
@@ -101,7 +111,6 @@ exec(char *path, char **argv)
   proc->p_tf->esp = sp;
   switchuvm(proc);
   freeuvm(oldp_page, proc->p_pid);
-
   return 0;
 
  bad:
