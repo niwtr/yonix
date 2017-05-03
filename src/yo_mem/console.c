@@ -182,7 +182,7 @@ struct {
 void
 consoleintr(int (*getc)(void))
 {
-  int c, doprocdump = 0;
+  int c, doprocdump = 0, dokill=0, dolistproc=0;
 
   while((c = getc()) >= 0){
     switch(c){
@@ -203,6 +203,13 @@ consoleintr(int (*getc)(void))
         consputc(BACKSPACE);
       }
       break;
+    case C('C'): //kill
+      dokill = 1;
+      break;
+    case C('L'): //list procs.
+      dolistproc =1;
+      break;
+
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
@@ -216,6 +223,19 @@ consoleintr(int (*getc)(void))
       break;
     }
   }
+  if(dokill){
+    if(proc && proc->p_pid > 2){
+      int pid=proc->p_pid;
+      kill(pid);
+      cprintf("killed: %d\n", pid);
+    }
+  }
+
+  if(dolistproc){
+    dbg_lstprocs();
+  }
+
+
   if(doprocdump) {
     dbg_procdump();  // now call procdump() wo. cons.lock held
   }

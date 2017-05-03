@@ -222,7 +222,23 @@ argstr(int n, char **pp)
   X(sched)                                      \
   X(lwp_create)                                 \
   X(lwp_join)                                   \
-  X(sched_name)
+  X(sched_name)                                 \
+  X(dsstore)                                    \
+  X(dsrestart)                                  \
+  X(atom_add)                                   \
+  X(atom_sub)                                   \
+  X(atom_mul)                                   \
+  X(atom_div)                                   \
+  X(atom_mod)                                   \
+  X(atom_set)                                   \
+  X(atom_swp)                                   \
+  X(sem_init)                                   \
+  X(sem_p)                                      \
+  X(sem_v)                                      \
+  X(mut_init)                                   \
+  X(mut_p)                                      \
+  X(mut_v)
+
 
 
 

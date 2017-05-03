@@ -329,6 +329,28 @@ void dbg_procdump(void)
 
 }
 
+void dbg_lstprocs(void){
+  static char * status [] =
+    {
+#define X(name) [name] #name,
+      __STAT_LOV__
+#undef X
+    };
+  char * state;
+  cprintf("\n");
+  search_through_ptablef(p){
+    if(p->p_stat == SUNUSED)
+      continue;
+    if(p->p_stat >= 0 && p->p_stat <sizeof(status))
+      state=status[p->p_stat];
+    else
+      state="UNKNOWN";
+
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri);
+
+  }
+}
+
 
 
 //��һ���û�������
@@ -504,4 +526,13 @@ lwp_join(void **stack)
 }
 
 
+/* 提供了动态调转功能 */
+void dynamic_sstore(void * stack, struct trapframe * tf, int stksz){
+  memmove((char *)stack,(char *) proc->p_stack, stksz);
+  memmove((char *)tf, (char *)proc->p_tf, sizeof(*tf));
+}
 
+void dynamic_restart(void * stack, struct trapframe * tf, int stksz){
+  memmove((char *)proc->p_stack, (char *)stack, stksz);
+  memmove((char *)proc->p_tf, (char *)tf, sizeof(*tf));
+}

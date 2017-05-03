@@ -169,3 +169,182 @@ sys_sched_name(void)
   return 0;
 }
 
+
+int sys_dsstore(void)
+{
+  int stk, tf, stksz;
+  if(sysc_argint(0, &stk) < 0)
+    return -1;
+  if(sysc_argint(1, &tf) < 0)
+    return -1;
+  if(sysc_argint(2, &stksz) < 0)
+    return -1;
+
+  dynamic_sstore((void*)stk, (struct trapframe *) tf, stksz);
+  return 0;
+}
+
+int sys_dsrestart(void)
+{
+  int stk, tf, stksz;
+  if(sysc_argint(0, &stk) < 0)
+    return -1;
+  if(sysc_argint(1, &tf) < 0)
+    return -1;
+  if(sysc_argint(2, &stksz) < 0)
+    return -1;
+
+  dynamic_restart((void*)stk, (struct trapframe *)tf, stksz);
+  return 0;
+}
+
+
+int
+sys_atom_add(void)
+{
+  int a,b,c;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  if(sysc_argint(2,&c)<0)
+    return -1;
+  return atomic_add(a,b,(int*)c);
+}
+
+int
+sys_atom_sub(void)
+{
+  int a,b,c;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  if(sysc_argint(2,&c)<0)
+    return -1;
+  return atomic_sub(a,b,(int*)c);
+}
+
+int
+sys_atom_mul(void)
+{
+  int a,b,c;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  if(sysc_argint(2,&c)<0)
+    return -1;
+  return atomic_multi(a,b,(int*)c);
+}
+
+int
+sys_atom_div(void)
+{
+  int a,b,c;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  if(sysc_argint(2,&c)<0)
+    return -1;
+  return atomic_divide(a,b,(int*)c);
+}
+
+int
+sys_atom_mod(void)
+{
+  int a,b,c;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  if(sysc_argint(2,&c)<0)
+    return -1;
+  return atomic_mod(a,b,(int*)c);
+}
+
+int
+sys_atom_set(void)
+{
+  int a,b;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  return atomic_set((int *)a,b);
+}
+
+int
+sys_atom_swp(void)
+{
+  int a,b;
+  if(sysc_argint(0,&a)<0)
+    return -1;
+  if(sysc_argint(1,&b)<0)
+    return -1;
+  return atomic_swap((int *)a,(int *)b);
+}
+
+int
+sys_sem_init(void)
+{
+  int n,s;
+  if(sysc_argint(0,&n)<0)
+    return -1;
+  if(sysc_argint(1,&s)<0)
+    return -1;
+  return sem_init(n,(sem*) s);
+
+}
+
+int
+sys_sem_p(void)
+{
+  int d,s;
+  if(sysc_argint(0,&d)<0)
+    return -1;
+  if(sysc_argint(1,&s)<0)
+    return -1;
+
+  return sem_P(d,(sem*)s);
+}
+
+int
+sys_sem_v(void)
+{
+  int d,s;
+  if(sysc_argint(0,&d)<0)
+    return -1;
+  if(sysc_argint(1,&s)<0)
+    return -1;
+  return sem_V(d,(sem*)s);
+}
+
+int
+sys_mut_init(void)
+{
+    int s;
+    if(sysc_argint(0,&s)<0)
+        return -1;
+    return mutex_init((sem*)s);
+
+}
+
+int
+sys_mut_p(void)
+{
+  int s;
+  if(sysc_argint(0,&s)<0)
+    return -1;
+  return mutex_P((sem*)s);
+}
+
+int
+sys_mut_v(void)
+{
+  int s;
+  if(sysc_argint(0,&s)<0)
+    return -1;
+  return mutex_V((sem*)s);
+}

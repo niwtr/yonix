@@ -27,6 +27,9 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
+	atomic.o\
+	semaphore.o\
+
 
 
 # Try to infer the correct TOOLPREFIX if not set
@@ -169,6 +172,8 @@ UPROGS=\
 	_schedtest\
   _threadtest\
   _setsched\
+	_dstest\
+	_sematest\
 	_wc\
 	_zombie\
 

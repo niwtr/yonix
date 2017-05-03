@@ -9,7 +9,8 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct page_entry;
-
+struct trapframe;
+typedef int sem;
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
@@ -99,11 +100,16 @@ void            exit(void);
 int             fork(void);
 int             lwp_create(void *, void *, void *, int);
 int             lwp_join(void **);
+void            dynamic_sstore(void * , struct trapframe *, int);
+void            dynamic_restart(void * , struct trapframe *, int);
+
 
 int             procgrow(int);
+
 int             kill(int);
 
 void            dbg_procdump(void);
+void            dbg_lstprocs(void);
 void            switch_to(struct proc *);
 void            select_scheme(int);
 void            sched_name(char *);
@@ -198,6 +204,24 @@ int             pgflt_handle(uint);
 void            swapinit(void);
 void            page_out(void);
 void            page_in(uint);
+
+
+//atomic.c
+int             atomic_add(int a, int b, int * c);
+int             atomic_sub(int a, int b, int * c);
+int             atomic_multi(int a, int b, int * c);
+int             atomic_divide(int a, int b, int * c);
+int             atomic_mod(int a, int b, int * c);
+int             atomic_set(int * a,int b);
+int             atomic_swap(int * a,int *b);
+
+//semaphore.c
+int             sem_init(int num,sem * semaphore);
+int             sem_P(int step,sem * semaphore);
+int             sem_V(int step,sem * semaphore);
+int             mutex_init(sem * semaphore);
+int             mutex_P(sem * semaphore);
+int             mutex_V(sem * semaphore);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

@@ -26,3 +26,19 @@
 #define SYS_lwp_create 25
 #define SYS_lwp_join 26
 #define SYS_sched_name 27
+#define SYS_dsstore 28
+#define SYS_dsrestart 29
+#define SYS_atom_add 30
+#define SYS_atom_sub 31
+#define SYS_atom_mul 32
+#define SYS_atom_div 33
+#define SYS_atom_mod 34
+#define SYS_atom_set 35
+#define SYS_atom_swp 36
+#define SYS_sem_init 37
+#define SYS_sem_p    38
+#define SYS_sem_v    39
+#define SYS_mut_init 40
+#define SYS_mut_p    41
+#define SYS_mut_v    42
+

@@ -10,6 +10,9 @@ struct stat;
 struct superblock;
 struct page_entry;
 
+
+struct trapframe;
+typedef int sem;
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);

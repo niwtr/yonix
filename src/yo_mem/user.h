@@ -1,5 +1,8 @@
 struct stat;
 struct rtcdate;
+#include "param_yonix.h"
+typedef struct trapframe dstate;
+typedef int sem;
 
 // system calls
 int fork(void);
@@ -29,6 +32,26 @@ int sched(int);
 int lwp_create(void*, void*, void*, int);
 int lwp_join(void **);
 int sched_name(char *);
+int dsstore(void *, dstate * , int);
+int dsrestart(void *, dstate * , int);
+//atomic and semaphores
+int atom_add(int,int,int*);
+int atom_sub(int,int,int*);
+int atom_mul(int,int,int*);
+int atom_div(int,int,int*);
+int atom_mod(int,int,int*);
+int atom_set(void*,void*);
+int atom_swp(void*,void*);
+int sem_init(int, sem *);
+int sem_p(int, sem * );
+int sem_v(int,sem * );
+int mut_init(sem *);
+int mut_p(sem *);
+int mut_v(sem *);
+
+
+
+
 enum sched_method {
   SCHED_FIFO,
   SCHED_RR,
