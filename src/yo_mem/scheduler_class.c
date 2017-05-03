@@ -9,16 +9,21 @@
 //extern struct proc * proc;
 
 
-#define DEFSHED(X,BODY, BODY_AFTER, CAPTURE_NAME, BODY_TIMESLICE) \
+#define DEFSHED(X,BODY, BODY_AFTER, CAPTURE_NAME, BODY_TIMESLICE, BODY_BEFORE)  \
   void sched_ ## X ## _timeslice (struct proc *);            \
   void sched_ ## X ## _after(void);                            \
+  void sched_ ## X ## _before(void); \
   int sched_ ## X (void)                       \
     BODY \
     void sched_ ## X ## _after(void)            \
     BODY_AFTER\
     void sched_ ## X ## _timeslice (struct proc * CAPTURE_NAME) \
-    BODY_TIMESLICE
+    BODY_TIMESLICE \
+    void sched_ ## X ## _init (void)\
+    BODY_BEFORE
 
+
+/*
 DEFSHED(fifo, //name: fifo
         //fifo body
         {
@@ -51,6 +56,48 @@ DEFSHED(fifo, //name: fifo
         {
           p->p_time_slice = SCHED_FIFO_TIMESLICE; //forever.
         })
+*/
+DEFSHED(fifo, //name: fifo
+        //fifo body
+        {
+
+          if(proc && proc->p_stat==READY)
+            switch_to(proc);
+
+          if(Q_EMPTY(&rdyqueue)){
+            return 0;
+          }
+          struct slot_entry * e = Q_FIRST(&rdyqueue);
+          Q_REMOVE(&rdyqueue, e, lnk);
+          switch_to(e->slotptr);
+          return 1;
+        },
+        //after
+        {
+          sched_fifo_timeslice(proc);
+        },
+        //timeslice
+        p,//captured name
+        {
+          p->p_time_slice = SCHED_FIFO_TIMESLICE; //forever.
+        },
+        {
+          struct slot_entry * e;
+          if(!Q_EMPTY(&rdyqueue))
+            Q_FOREACH(e, &rdyqueue, lnk)
+              if(e->slotptr->p_stat != READY)
+                Q_REMOVE(&rdyqueue, e, lnk);
+
+          search_through_ptablef(p)
+            if(p->p_stat==READY)
+            {
+              struct slot_entry * e = (struct slot_entry *)alloc_slab();
+              e->slotptr = p;
+              Q_INSERT_TAIL(&rdyqueue, e, lnk);
+            }
+        }
+        )
+
 
 
 DEFSHED(rr,
@@ -74,7 +121,11 @@ DEFSHED(rr,
         p,
         {
           p->p_time_slice= SCHED_RR_TIMESLICE;
-        })
+        },
+        {
+
+        }
+        )
 
 
 DEFSHED(priority,
@@ -104,7 +155,11 @@ DEFSHED(priority,
         {
           p->p_spri = STATIC_PRI(p->p_nice);
           p->p_time_slice = TIME_SLICE(p->p_spri);
-        })
+        }
+        ,
+        {
+        }
+        )
 
 
 
@@ -116,21 +171,24 @@ sched_reftable[SCHEME_NUMS]={
     "FIFO",
     sched_fifo,
     sched_fifo_after,
-    sched_fifo_timeslice
+    sched_fifo_timeslice,
+    sched_fifo_init
   },
   [SCHEME_RR]  = {
     SCHEME_RR,
     "RR",
     sched_rr,
     sched_rr_after,
-    sched_rr_timeslice
+    sched_rr_timeslice,
+    sched_rr_init
   },
   [SCHEME_PRI] = {
     SCHEME_PRI,
     "PRIORITY",
     sched_priority,
     sched_priority_after,
-    sched_priority_timeslice
+    sched_priority_timeslice,
+    sched_priority_init
   }
 };
 

@@ -96,6 +96,9 @@ int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
+
+void            esinit(void);
+void            rdinit(void);
 void            exit(void);
 int             fork(void);
 int             lwp_create(void *, void *, void *, int);

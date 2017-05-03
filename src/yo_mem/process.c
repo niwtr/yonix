@@ -8,6 +8,7 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
+#include "queue_netbsd.h"
 int nextpid = 1;
 
 //fork return
@@ -19,6 +20,23 @@ extern void trapret(void);
 struct protab ptable;
 struct proc * initproc;
 struct proc * proc;
+
+void esinit()
+{
+  Q_INIT(&esqueue);
+  search_through_ptablef(p){
+    struct slot_entry * e = (struct slot_entry *) alloc_slab();
+    e->slotptr=p;
+    Q_INSERT_TAIL(&esqueue, e, lnk);
+  }
+}
+void rdinit()
+{
+  Q_INIT(&rdyqueue);
+}
+
+
+
 
 /* �ҵ�һ�����еĲۣ������µĽ���PCB��Ϊ�������ں˿ռ䡣
  * �µĽ��̵�״̬ΪSEMBRYO��
@@ -72,15 +90,23 @@ static struct proc* procalloc(void)
 	//ָʾջ��λ��
 	char * sp;
 
+  if(Q_EMPTY(&esqueue))
+    return 0;
+
+
 	//�ҵ��ڴ��д���SUNUSED״̬�Ľ���
-    search_through_ptablef(p)
-	{
+  //search_through_ptablef(p)
+	//{
     //cprintf("searching for unused.:%d,%d\n", p->p_stat, ittt);
 		//�����ҵ��ˣ�������״̬��ΪSEMBRYO
 		//�����ӽ��̵�pidֵ
-		if (p->p_stat == SUNUSED)
-		{
+		//if (p->p_stat == SUNUSED)
+		do {
       //����״̬��pid����
+      struct slot_entry * ee = Q_FIRST(&esqueue);
+      struct proc * p = ee->slotptr;
+      Q_REMOVE(&esqueue, ee, lnk);
+
 			p->p_stat = SEMBRYO;
 			p->p_pid = nextpid++;
 			//nextpid++;
@@ -103,8 +129,10 @@ static struct proc* procalloc(void)
 			if (p->p_kstack==0)
 			{
 				p->p_stat = SUNUSED;
+
 				return 0;
 			}
+
 
 			//�޸�ջ��λ��
 			sp = p->p_kstack + K_STACKSZ;
@@ -127,9 +155,9 @@ static struct proc* procalloc(void)
       //�����½��Ľ���
 			return p;
 
-		}
+		} while(0);
 
-	}
+    //}
 	//��������һȦ��û���ҵ�SUNUESD�Ľ��̣���ֱ�ӷ���
 	return 0;
 }
@@ -186,6 +214,12 @@ int fork(void)
 		kfree(np->p_kstack);
 		np->p_kstack = 0;
 		np->p_stat = SUNUSED;
+
+
+    struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+    ee->slotptr = np;
+    Q_INSERT_TAIL(&esqueue, ee, lnk);
+
 		return -1;
 	}
 	//�����ϲ�����˳�����У��������̵ĸ�����Ϣ����һ�ݵ��ӽ�����
@@ -220,6 +254,10 @@ int fork(void)
 	//�޸��½��ӽ��̵�״̬
 	np->p_stat = READY;
 
+
+  struct slot_entry * e = (struct slot_entry *)alloc_slab();
+  e->slotptr = np;
+  Q_INSERT_TAIL(&rdyqueue, e, lnk);
 
 	//���ӽ��̵�pid���ظ�������
 
@@ -265,6 +303,9 @@ void exit(void){
 
   proc->p_stat=SZOMB;
   transform();
+
+
+
   panic("zombie exit.");
 
 }
@@ -386,6 +427,13 @@ void userinit(void)
   p->p_procp = 1;//this is indeed a proc.
 	//������״̬����ΪREADY
 	p->p_stat = READY;
+
+
+  struct slot_entry * e = (struct slot_entry *)alloc_slab();
+  e->slotptr = p;
+  Q_INSERT_TAIL(&rdyqueue, e, lnk);
+
+  
   p->p_ctxt->eip = (uint)forkret;//���÷��ص�ַΪforkret
 }
 
@@ -421,6 +469,10 @@ int wait(void)
 					p->p_name[0] = 0;
 					p->p_killed = 0;
 					p->p_stat = SUNUSED;
+          struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+          ee->slotptr = p;
+          Q_INSERT_TAIL(&esqueue, ee, lnk);
+
 					return pid;
 				}
       }
@@ -482,6 +534,10 @@ int lwp_create (void * task, void * arg, void * stack, int stksz){
 	lwp->p_stat = READY;
 	//���ӽ��̵�pid���ظ�������
 
+  struct slot_entry * e = (struct slot_entry *)alloc_slab();
+  e->slotptr = lwp;
+  Q_INSERT_TAIL(&rdyqueue, e, lnk);
+
 	return pid;
 }
 /* �൱��fork��wait��Ψһ�Ĳ�ͬ�ǣ�lwp��stack���ᱻ�������������á�*/
@@ -511,6 +567,9 @@ lwp_join(void **stack)
         p->p_name[0] = 0;
         p->p_killed = 0;
         *(int*)stack = p->p_stack; //mark the stack.
+        struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+        ee->slotptr = p;
+        Q_INSERT_TAIL(&esqueue, ee, lnk);
         return pid;
       }
     }

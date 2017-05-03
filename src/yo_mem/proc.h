@@ -1,6 +1,7 @@
 #include "param_yonix.h"
 #include "param.h"
 #include "yotypes.h"
+#include "queue_netbsd.h"
 struct context {
 	uint edi;		//Ŀ�������Ĵ���
 	uint esi;		//��ַ�Ĵ��� Դ�����Ĵ���
@@ -116,6 +117,9 @@ struct proc {
 };
 
 
+
+
+
 extern struct cpu cpus[1];// �ȴ������߳�����
 
 //ָʾ��ǰʱ�̵�CPU״̬������״̬��ָ��
@@ -138,6 +142,7 @@ struct sched_class {
   int (*scheme) (void);
   void (*after) (void); //������ʱ��Ƭ������ʱ���������������ᱻ���á�
   void  (*timeslice) (struct proc *); //���ڼ���ʱ��Ƭ�ĺ���
+  void (*init) (void);
 };
 
 //�������㷨���ұ�
@@ -172,4 +177,22 @@ extern struct proc * initproc;
 
 #define BONUS(avgslp) (avgslp)/10 // simplifyed bonus calculation.
 #define DYNAMIC_PRI(stpri, bns) MAX(MAX_RT_PRI, MIN((stpri)-(bns)+5, PRI_NUM-1))
+
+typedef Q_HEAD(empty_slot_entry_list, slot_entry) es_head;
+typedef Q_ENTRY(slot_entry) s_entry;
+
+struct slot_entry
+{
+  struct proc * slotptr;
+  s_entry lnk;
+};
+
+es_head esqueue; // 空闲slot队列
+
+
+typedef Q_HEAD(ready_list, slot_entry) rdy_qhead;
+
+
+rdy_qhead rdyqueue; // ready队列
+
 

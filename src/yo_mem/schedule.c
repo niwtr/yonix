@@ -15,11 +15,15 @@ void switch_to (struct proc * p)
   switchuvm(p);    //�����û������ڴ�
   p->p_stat = SRUN;//���ý���״̬
   //�������뿪��������������ת���û����̡�
+
+
   swtch(&cpu->scheduler, p->p_ctxt);
 }
 
 void select_scheme (int schem){
   cpu->scheme = schem;
+  sched_reftable[cpu->scheme].init();
+
 }
 void sched_name(char * name){
   const char * schedname =sched_reftable[cpu->scheme].scheme_method;
@@ -40,9 +44,12 @@ void scheduler(void)
 
       //RR,�ҵ�����READY״̬�Ľ���
 
+
       //sched_rr();
       if(!sched_reftable[cpu->scheme].scheme()) //sched
-        continue;
+        {
+          continue;
+        }
 
       //ĳ��ʱ��Ƭ�жϣ�pia��һ��CPU�ֻص����������
 
@@ -72,6 +79,8 @@ void transform(void)
 	if (proc->p_stat == SRUN)
 		panic("sched running");//��shed����SRUN�Ľ���
 
+
+
 	swtch(&proc->p_ctxt, cpu->scheduler);
 
 
@@ -87,6 +96,9 @@ void giveup_cpu(void)
 	//������״̬�ı��Ĳ����У�����Ҫ�Ȼ��������Ա�֤�����г�ͻ����
 	proc->p_stat = READY;
   // proc->p_time_slice = SCHED_RR_TIMESLICE;
+  struct slot_entry * e = (struct slot_entry *)alloc_slab();
+  e->slotptr = proc;
+  Q_INSERT_TAIL(&rdyqueue, e, lnk);
   sched_reftable[cpu->scheme].after();
 
 	transform();
@@ -129,7 +141,12 @@ void wakeup(void * e)
   //find specific proc that is sleep on specific event e (or chan)
   search_through_ptablef(p)
     if(p->p_stat==SSLEEPING && p->p_chan==e)
-      p->p_stat=READY;
+      {
+        p->p_stat=READY;
+        struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+        ee->slotptr = p;
+        Q_INSERT_TAIL(&rdyqueue, ee, lnk);
+      }
 }
 
 

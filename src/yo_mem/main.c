@@ -37,14 +37,14 @@ main(void)
 
   timerinit();   // uniprocessor timer
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP));
-  swapinit();     // page queue for swap initial 
+  swapinit();     // page queue for swap initial
 
-  select_scheme(SCHEME_RR);    // init scheduler method (for time slice)
-
-
-
-
+  esinit();       // init proc slot queue
+  rdinit();
+  //cprintf("hello\n");
+  select_scheme(SCHEME_FIFO);    // init scheduler method (for time slice)
   userinit();      // first user process
+
   idtinit();       // load idt register
 
   scheduler();     // start running processes

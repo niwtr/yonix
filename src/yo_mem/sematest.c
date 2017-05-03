@@ -15,7 +15,7 @@ void thread_tsk(void *arg){
   int klocal;
   int i;
 	sleep(100);
-       
+
   for(i=0;i<TIMES;i++)
     {
       //sem_p(2,&sema);
@@ -38,10 +38,7 @@ int main(void){
 
    mut_init(&sema);//互斥
    //sem_init(2,&sema);
-  
 
-
-	    
   // Stacks
 	void *stacks[NUM_THREADS];
 	// Args
