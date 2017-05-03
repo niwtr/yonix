@@ -17,4 +17,3 @@ $buf .= "\x55\xAA";
 open(SIG, ">$ARGV[0]") || die "open >$ARGV[0]: $!";
 print SIG $buf;
 close SIG;
-
