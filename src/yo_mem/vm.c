@@ -609,6 +609,9 @@ void swapinit()
 // 调页进内存
 void page_in(uint va)
 {
+	if(!USE_SWAP)
+		panic("page_in: swap is denied");	// 没有开启swap功能
+
 	vaddr_t mem = kalloc();
 	if (mem == 0)
 		panic("page_in: no enough memory");

@@ -1,7 +1,7 @@
 // Memory layout
 
 #define EXTMEM  0x100000            // 可用内存开始
-#define PHYSTOP 0xE000000           // 物理内存顶端，默认物理内存240MB
+#define PHYSTOP 0x2000000           // 物理内存顶端，默认物理内存240MB
 #define DEVSPACE 0xFE000000         // 预留设备地址空间，最大物理内存不超过DEVSPACE-KERNBASE=2016MB
 #define MEMTOP 0xFFFFFFFF			// 32位地址空间顶端
 

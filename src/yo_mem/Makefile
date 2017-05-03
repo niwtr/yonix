@@ -79,13 +79,18 @@ ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 swap.img:
-	dd if=/dev/zero of=swap.img bs=1M count=512
+	dd if=/dev/zero of=swap.img bs=1M count=200
 	mkswap swap.img
 
 xv6.img: bootblock kernel fs.img
 	dd if=/dev/zero of=xv6.img count=10000
 	dd if=bootblock of=xv6.img conv=notrunc
 	dd if=kernel of=xv6.img seek=1 conv=notrunc
+
+xv6memfs.img: bootblock kernelmemfs
+	dd if=/dev/zero of=xv6memfs.img count=10000
+	dd if=bootblock of=xv6memfs.img conv=notrunc
+	dd if=kernelmemfs of=xv6memfs.img seek=1 conv=notrunc
 
 bootblock: bootasm.S bootmain.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -I. -c bootmain.c
@@ -94,7 +99,6 @@ bootblock: bootasm.S bootmain.c
 	$(OBJDUMP) -S bootblock.o > bootblock.asm
 	$(OBJCOPY) -S -O binary -j .text bootblock.o bootblock
 	./sign.pl bootblock
-
 
 initcode: initcode.S
 	$(CC) $(CFLAGS) -nostdinc -I. -c initcode.S
@@ -115,8 +119,8 @@ kernel: $(OBJS) entry.o initcode kernel.ld
 # great for testing the kernel on real hardware without
 # needing a scratch disk.
 MEMFSOBJS = $(filter-out ide.o,$(OBJS)) memide.o
-kernelmemfs: $(MEMFSOBJS) entry.o initcode fs.img
-	$(LD) $(LDFLAGS) -Ttext 0x100000 -e main -o kernelmemfs entry.o  $(MEMFSOBJS) -b binary initcode fs.img
+kernelmemfs: $(MEMFSOBJS) entry.o initcode kernel.ld fs.img
+	$(LD) $(LDFLAGS) -T kernel.ld -o kernelmemfs entry.o  $(MEMFSOBJS) -b binary initcode fs.img
 	$(OBJDUMP) -S kernelmemfs > kernelmemfs.asm
 	$(OBJDUMP) -t kernelmemfs | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernelmemfs.sym
 
@@ -176,7 +180,7 @@ fs.img: mkfs README $(UPROGS)
 clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
-	initcode initcode.out kernel xv6.img fs.img swap.img kernelmemfs mkfs \
+	initcode initcode.out kernel xv6.img xv6memfs.img fs.img swap.img kernelmemfs mkfs \
 	.gdbinit \
 	$(UPROGS)
 

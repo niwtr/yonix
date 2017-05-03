@@ -57,3 +57,15 @@ iderw(struct buf *b)
     memmove(b->data, p, BSIZE);
   b->flags |= B_VALID;
 }
+
+int
+read_swap(uint secno, void *dst)
+{
+    return 0;
+}
+
+int
+write_swap(uint secno, const void *src)
+{
+  return 0;
+}

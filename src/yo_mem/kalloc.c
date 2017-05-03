@@ -79,7 +79,7 @@ void kfree(vaddr_t v)
 //申请一页内存,失败返回NULL
 vaddr_t kalloc()
 {
-	if (kmem.nfreeblock == 0)
+	if (kmem.nfreeblock == 0 && USE_SWAP)
 		page_out();
 
 	struct fpage *f;
