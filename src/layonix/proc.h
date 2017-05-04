@@ -143,6 +143,7 @@ struct sched_class {
   void (*after) (void); //������ʱ��Ƭ������ʱ���������������ᱻ���á�
   void  (*timeslice) (struct proc *); //���ڼ���ʱ��Ƭ�ĺ���
   void (*init) (void);
+  void (*enqueue)(struct proc *);
 };
 
 
@@ -186,9 +187,9 @@ struct slot_entry
   s_entry lnk;
 };
 
+
+
 es_head esqueue; // 空闲slot队列
-
-
 typedef Q_HEAD(ready_list, slot_entry) rdy_qhead;
 
 

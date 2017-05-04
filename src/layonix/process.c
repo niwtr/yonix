@@ -33,14 +33,13 @@ void esinit()
 void rdinit()
 {
   Q_INIT(&rdyqueue);
+
 }
 
 
 
 
-/* �ҵ�һ�����еĲۣ������µĽ���PCB��Ϊ�������ں˿ռ䡣
- * �µĽ��̵�״̬ΪSEMBRYO��
- * �µĽ��̽������ں�ջ�������ں�ջ����̬Ϊ��
+/*
  *   +------------+
  *   |  kstack +  | <------+----------------------+
  *   | kstacksize |        |                      |
@@ -70,11 +69,10 @@ void rdinit()
  *   |   kstack   |        |                      |
  *   |   bottom   | <------+----------------------+
  *   +------------+
- * �����Ľ��̳�Ϊѿ�߽��̡��������̵�������ȫ��Ϊ��ʼֵ0.
+ *
  */
 
-/* ���¼���ʱ��Ƭ�� */
-/* ��ϵͳת��schedule������scheme����ʱ�򣬸ú������뱻���á�*/
+
 void recalc_timeslice (void)
 {
   search_through_ptablef(p){
@@ -102,17 +100,17 @@ static struct proc* procalloc(void)
   p->p_pid = nextpid++;
   //nextpid++;
 
-  p->p_nice = 0; //��ʼp_nice����0������ͨ��ϵͳ���������ġ�
+  p->p_nice = 0;
   p->p_spri = STATIC_PRI(p->p_nice);
   p->p_creatime = ticks;
-  p->p_avgslp = 0; //average sleep time �ĳ�ֵΪ0.
-  sched_reftable[cpu->scheme].timeslice(p);//����ʱ��Ƭ
+  p->p_avgslp = 0;
+  sched_reftable[cpu->scheme].timeslice(p);
   p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
 
-  //Ϊ���½��̷����ں�ջ�ռ�
-  p->p_kstack = kalloc();	//�ں�ջ���亯��
 
-  //������ʧ��,����״̬�Ļ�SUNUSED
+  p->p_kstack = kalloc();
+
+
   if (p->p_kstack==0)
     {
       p->p_stat = SUNUSED;
@@ -121,17 +119,17 @@ static struct proc* procalloc(void)
     }
 
 
-  //�޸�ջ��λ��
+
   sp = p->p_kstack + K_STACKSZ;
 
-  //Ϊtarpframe����λ�ã���
+
   sp = sp - sizeof(*p->p_tf);
   p->p_tf = (struct trapframe*) sp;
 
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
-  //TODO ������ô�����ģ�
+
   sp = sp - 4;
   *(uint*)sp = (uint)trapret;
 
@@ -139,7 +137,7 @@ static struct proc* procalloc(void)
   p->p_ctxt = (struct context*)sp;
   //TODO require API
   memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
-  //�����½��Ľ���
+
   return p;
 
 }
@@ -169,14 +167,14 @@ int procgrow(int n){
 
 
 
-/* fork�����������ӽ��̡� */
+
 int fork(void)
 {
 
 	int i, pid;
 	struct proc *np;
 
-	//Ϊ���̷����ں˿ռ�
+
 	np = procalloc();
 
 	if (np == 0)
@@ -185,14 +183,11 @@ int fork(void)
 	}
 
 
-	//���������̵��û���ַ�ռ䣨�û������ڴ棩���µ������ڴ洦��
-    //TODO add api
-  //FIXME xv6
 	np->p_page = copyuvm(proc->p_page, proc->p_size, np->p_pid);
-	if (np->p_page == 0)	//��������ʧ�ܣ����ͷŽ�����ռ�ڴ��ռ�
-    //TODO �Ƿ����԰����δ�����������һ�������ĺ�����
+	if (np->p_page == 0)
+
 	{
-    //TODO add api
+
 		kfree(np->p_kstack);
 		np->p_kstack = 0;
 		np->p_stat = SUNUSED;
@@ -204,44 +199,28 @@ int fork(void)
 
 		return -1;
 	}
-	//�����ϲ�����˳�����У��������̵ĸ�����Ϣ����һ�ݵ��ӽ�����
-	np->p_size = proc->p_size; //���ý��̵ľ�����С��
-	np->p_prt = proc;          //�Ѹ���������Ϊ��ǰ�����ߡ�
-	*(np->p_tf) = *(proc->p_tf);//����trapframe��
 
-	//���ռĴ���eax��ֵ �Ա�fork�󷵻ظ��ӽ��̵�ֵΪ0
+	np->p_size = proc->p_size;
+	np->p_prt = proc;
+	*(np->p_tf) = *(proc->p_tf);
+
+
 	np->p_tf->eax = 0;
   np->p_ctxt->eip = (uint)forkret;
-  //TODO ������ô�����ģ�����û�п���������ʲô��˼��
-
-	//���������̴򿪵������ļ�,���临��һ�ݵ��ӽ���
 	for (i = 0; i < P_NOFILE; i++)
 		if (proc->p_of[i])
 			np->p_of[i] = filedup(proc->p_of[i]);
 
-	//��������������Ŀ¼
-  //TODO require api
-  //FIXME xv6
+
 	np->p_cdir = idup(proc->p_cdir);
 
-	//���������̵Ľ�����
-  //TODO require api
-  //FIXME xv6
-	safestrcpy(np->p_name, proc->p_name, sizeof(proc->p_name));
 
-	//�����ӽ��̵�pidֵ���Ա㷵�ظ�������
+	safestrcpy(np->p_name, proc->p_name, sizeof(proc->p_name));
 	pid = np->p_pid;
   np->p_procp = 1; // this is, indeed, a proc.
-
-	//�޸��½��ӽ��̵�״̬
 	np->p_stat = READY;
+  sched_reftable[cpu->scheme].enqueue(np);
 
-
-  struct slot_entry * e = (struct slot_entry *)alloc_slab();
-  e->slotptr = np;
-  Q_INSERT_TAIL(&rdyqueue, e, lnk);
-
-	//���ӽ��̵�pid���ظ�������
 
 	return pid;
 }
@@ -249,7 +228,7 @@ int fork(void)
 void exit(void){
 
 
-  //initproc������proc�ĸ������ý��̲������˳���
+
   if(proc == initproc)
     panic("init exiting");
 
@@ -381,46 +360,40 @@ void userinit(void)
 {
 	struct proc *p;
 	extern char _binary_initcode_start[], _binary_initcode_size[];//���Ǹ����ģ�
-	p = procalloc();	//��ҳ���з���һ��proc,����ʼ������״̬ SUNUSED->SEMBRYO
-						//��һ���û�����
+	p = procalloc();
+
 	initproc = p;
 	//Ϊ�����������ڴ�ҳ�� ��ȡһ���µĶ���ҳ�����������ں�����ӳ��
 	p->p_page = setupkvm();
 	if (!p->p_page)
 		panic("userinit: setupkvm failed!");
 
-	//��ʼ���û�����������ַ�ռ�
-	inituvm(p->p_page, _binary_initcode_start, (int) _binary_initcode_size);
 
-	//trapframe������
+	inituvm(p->p_page, _binary_initcode_start, (int) _binary_initcode_size);
 	memset(p->p_tf, 0, sizeof(*p->p_tf));
-	p->p_tf->cs = (SEG_UCODE << 3) | DPL_USER;//%cs �Ĵ���������һ����ѡ������ ָ���� SEG_UCODE ��������Ȩ�� DPL_USER�������û�ģʽ�����ں�ģʽ��
-	p->p_tf->ds = (SEG_UDATA << 3) | DPL_USER;//ds,es,ss��ѡ����ָ���� SEG_UDATA ��������Ȩ�� DPL_USER
+	p->p_tf->cs = (SEG_UCODE << 3) | DPL_USER;
+	p->p_tf->ds = (SEG_UDATA << 3) | DPL_USER;
 	p->p_tf->es = p->p_tf->ds;
 	p->p_tf->ss = p->p_tf->ds;
-	p->p_tf->eflags = FL_IF;// FL_IF λ������Ϊ����Ӳ���ж�
-	p->p_tf->esp = PGSIZE;//��Ϊ���̵�������Ч�����ڴ�
-	p->p_tf->eip = 0;  // beginning of initcode.Sָ����ʼ�����������ڵ㣬����ַ0
+	p->p_tf->eflags = FL_IF;
+	p->p_tf->esp = PGSIZE;
+	p->p_tf->eip = 0;
 
 	p->p_size = PGSIZE;
 	safestrcpy(p->p_name, "initcode", sizeof(p->p_name));
-	//��������Ŀ¼Ϊ��Ŀ¼��/��
+
 	p->p_cdir = namei("/");
   p->p_procp = 1;//this is indeed a proc.
-	//������״̬����ΪREADY
+
 	p->p_stat = READY;
 
+  sched_reftable[cpu->scheme].enqueue(p);
 
-  struct slot_entry * e = (struct slot_entry *)alloc_slab();
-  e->slotptr = p;
-  Q_INSERT_TAIL(&rdyqueue, e, lnk);
-
-  
-  p->p_ctxt->eip = (uint)forkret;//���÷��ص�ַΪforkret
+  p->p_ctxt->eip = (uint)forkret;
 }
 
 
-//wait�����ȴ��ӽ���ִ������exit,������������ID��
+
 int wait(void)
 {
 	int pid;		//�ӽ���pid
@@ -428,26 +401,22 @@ int wait(void)
 	while (true)
 	{
     have_kid=0;
-		//���������б����ҵ���ǰ�����Ƿ����ӽ���
+
 		search_through_ptablef(p)
 		{
 
 			if (p->p_prt == proc)
 			{
         have_kid=1;
-				//�����ӽ�����һ����ʬ���̡����ӽ����Ѿ�����������������Ϊ̫æ��û�еȴ�����������
-				//һ�������ڵ���exit���������Լ���������ʱ������ʵ����û�������ı����٣�
-				//��������һ����Ϊ��ʬ���̣�Zombie�������ݽṹ��ϵͳ����exit������������ ʹ�����˳���
-				//��Ҳ�������ڽ�һ�������Ľ��̱���һ����ʬ���̣������ܽ�����ȫ���٣�
 				if (p->p_stat == SZOMB)
 				{
-					//�����ý�����Ϣ
+
 					pid = p->p_pid;
-					kfree(p->p_kstack);	//�ͷ��ں�ջ
+					kfree(p->p_kstack);
           p->p_kstack=0;
-					freeuvm(p->p_page, pid);	//�ͷ������ڴ�
+					freeuvm(p->p_page, pid);
 					p->p_pid = 0;
-					p->p_prt = 0;		//��������Ϊ0
+					p->p_prt = 0;
 					p->p_name[0] = 0;
 					p->p_killed = 0;
 					p->p_stat = SUNUSED;
@@ -462,7 +431,7 @@ int wait(void)
     if(!have_kid || proc->p_killed){
       return -1;
     }
-    //���ҵ�һ�����ǽ�ʬ���̵��ӽ��̣��򸸽������ߣ��ȴ��ӽ��̱�Ϊ��ʬ����
+
     sleep(proc);
   }
 }
@@ -487,20 +456,17 @@ int lwp_create (void * task, void * arg, void * stack, int stksz){
   } else {
     lwp->p_prt = proc->p_prt;
   }
-  *(lwp->p_tf) = *(proc->p_tf);//����trapframe��
-  //����Ӧ���������������C֧��ֱ�ӿ���һ���ṹ�壿
+  *(lwp->p_tf) = *(proc->p_tf);
 
-	//���ռĴ���eax��ֵ �Ա�fork�󷵻ظ��ӽ��̵�ֵΪ0
 	lwp->p_tf->eax = 0;
   lwp->p_ctxt->eip=(uint)forkret;
-  lwp->p_tf->eip = (int)task;//��������Ҫִ��task�����ݡ�
+  lwp->p_tf->eip = (int)task;
   lwp->p_stack = (int)stack;
-  lwp->p_tf->esp = lwp->p_stack + stksz - 4 ; //TODO Ū������4092�Ǹ�������������
-  *((int *)(lwp->p_tf->esp)) = (int)arg; // push the argument
-  *((int *)(lwp->p_tf->esp-4))=0xFFFFFFFF;  //return addr.
+  lwp->p_tf->esp = lwp->p_stack + stksz - 4 ;
+  *((int *)(lwp->p_tf->esp)) = (int)arg;
+  *((int *)(lwp->p_tf->esp-4))=0xFFFFFFFF;
   lwp->p_tf->esp -=4;
 
-	//���������̴򿪵������ļ�,���临��һ�ݵ��ӽ���
 	for (i = 0; i < P_NOFILE; i++)
 		if (proc->p_of[i])
 			lwp->p_of[i] = filedup(proc->p_of[i]);
@@ -508,21 +474,18 @@ int lwp_create (void * task, void * arg, void * stack, int stksz){
   lwp->p_cdir = idup(proc->p_cdir);
 
   safestrcpy(lwp->p_name, proc->p_name, sizeof(proc->p_name));
-	//�����ӽ��̵�pidֵ���Ա㷵�ظ�������
+
 	pid = lwp->p_pid;
   lwp->p_procp = 0; // this is,not a proc.
 
-	//�޸��½��ӽ��̵�״̬
 	lwp->p_stat = READY;
-	//���ӽ��̵�pid���ظ�������
 
-  struct slot_entry * e = (struct slot_entry *)alloc_slab();
-  e->slotptr = lwp;
-  Q_INSERT_TAIL(&rdyqueue, e, lnk);
+
+  sched_reftable[cpu->scheme].enqueue(lwp);
 
 	return pid;
 }
-/* �൱��fork��wait��Ψһ�Ĳ�ͬ�ǣ�lwp��stack���ᱻ�������������á�*/
+
 int
 lwp_join(void **stack)
 {
