@@ -11,79 +11,43 @@
 //non-private.
 void switch_to (struct proc * p)
 {
-  proc = p;        //���õ�ǰ���յĽ��̣�ȫ�ֱ�������
-  switchuvm(p);    //�����û������ڴ�
-  p->p_stat = SRUN;//���ý���״̬
-  //�������뿪��������������ת���û����̡�
-
-
+  proc = p;
+  switchuvm(p);
+  p->p_stat = SRUN;
   swtch(&cpu->scheduler, p->p_ctxt);
 }
 
 void select_scheme (int schem){
   cpu->scheme = schem;
   sched_reftable[cpu->scheme].init();
-
 }
 void sched_name(char * name){
   const char * schedname =sched_reftable[cpu->scheme].scheme_method;
   safestrcpy(name, schedname, strlen(schedname)+1);
 }
 
-//#include "process.h"
-//proc=0��ʾ�������̱߳�����
-//������scheduler
-//CPU�ڳ�ʼ�����ߵ��øú���
-//userproc --sched-->schedulerproc--sched-->userproc...
 void scheduler(void)
 {
 
 	while (true)
     {
-      sti(); //����ʱ��Ƭ�жϣ��жϺ�trap����yeild()��������
-
-      //RR,�ҵ�����READY״̬�Ľ���
-
-
-      //sched_rr();
+      sti();
       if(!sched_reftable[cpu->scheme].scheme()) //sched
-        {
           continue;
-        }
-
-      //ĳ��ʱ��Ƭ�жϣ�pia��һ��CPU�ֻص����������
-
       //switch back.
       switchkvm();//FIXME
-      //���õ�ǰ��������Ϊ��������
-      //���ᷢ�����������Ĵ�������д��һ�������ϡ�����
-      proc = 0;//���õ�ǰ���յĽ���Ϊ��������
-
-
+      proc = 0;
     }
 }
 
 
-
-//���̴��û�̬�л���cpu������xv6�е�sched
 void transform(void)
 {
 
-  //ִ��after���̡�
-  //1. ���¼���ʱ��Ƭ��
-  //2. ���¼��㶯̬���ȼ��������еĻ���
-
-	/*
-	���󣬵��� swtch �ѵ�ǰ�����ı����� proc->context ��Ȼ���л��������������ļ� cpu->scheduler ��
-	*/
 	if (proc->p_stat == SRUN)
-		panic("sched running");//��shed����SRUN�Ľ���
-
-
+		panic("sched running");
 
 	swtch(&proc->p_ctxt, cpu->scheduler);
-
-
 }
 
 
@@ -92,10 +56,8 @@ void transform(void)
 void giveup_cpu(void)
 {
 	proc->p_stat = READY;
-  // proc->p_time_slice = SCHED_RR_TIMESLICE;
-  struct slot_entry * e = (struct slot_entry *)alloc_slab();
-  e->slotptr = proc;
-  Q_INSERT_TAIL(&rdyqueue, e, lnk);
+
+  sched_reftable[cpu->scheme].enqueue(proc);
   sched_reftable[cpu->scheme].after();
 
 	transform();
@@ -135,9 +97,7 @@ void wakeup(void * e)
     if(p->p_stat==SSLEEPING && p->p_chan==e)
       {
         p->p_stat=READY;
-        struct slot_entry * ee = (struct slot_entry*) alloc_slab();
-        ee->slotptr = p;
-        Q_INSERT_TAIL(&rdyqueue, ee, lnk);
+        sched_reftable[cpu->scheme].enqueue(p);
       }
 }
 

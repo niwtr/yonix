@@ -33,6 +33,8 @@ void esinit()
 void rdinit()
 {
   Q_INIT(&rdyqueue);
+
+
 }
 
 
