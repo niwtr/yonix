@@ -170,12 +170,13 @@ UPROGS=\
 	_stressfs\
 	_usertests\
 	_schedtest\
-  _threadtest\
-  _setsched\
+  	_threadtest\
+ 	 _setsched\
 	_dstest\
 	_sematest\
 	_wc\
 	_zombie\
+	_consumer\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
