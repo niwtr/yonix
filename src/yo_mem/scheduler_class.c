@@ -70,6 +70,7 @@ DEFSHED(fifo, //name: fifo
           struct slot_entry * e = Q_FIRST(&rdyqueue);
           Q_REMOVE(&rdyqueue, e, lnk);
           switch_to(e->slotptr);
+          free_slab((char*) e);
           return 1;
         },
         //after
@@ -86,8 +87,10 @@ DEFSHED(fifo, //name: fifo
           if(!Q_EMPTY(&rdyqueue))
             Q_FOREACH(e, &rdyqueue, lnk)
               if(e->slotptr->p_stat != READY)
+              {
                 Q_REMOVE(&rdyqueue, e, lnk);
-
+                free_slab((char *) e);
+              }
           search_through_ptablef(p)
             if(p->p_stat==READY)
             {

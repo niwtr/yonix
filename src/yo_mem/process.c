@@ -87,79 +87,61 @@ void recalc_timeslice (void)
 static struct proc* procalloc(void)
 {
 
-	//ָʾջ��λ��
+
 	char * sp;
 
   if(Q_EMPTY(&esqueue))
     return 0;
 
 
-	//�ҵ��ڴ��д���SUNUSED״̬�Ľ���
-  //search_through_ptablef(p)
-	//{
-    //cprintf("searching for unused.:%d,%d\n", p->p_stat, ittt);
-		//�����ҵ��ˣ�������״̬��ΪSEMBRYO
-		//�����ӽ��̵�pidֵ
-		//if (p->p_stat == SUNUSED)
-		do {
-      //����״̬��pid����
-      struct slot_entry * ee = Q_FIRST(&esqueue);
-      struct proc * p = ee->slotptr;
-      Q_REMOVE(&esqueue, ee, lnk);
+  struct slot_entry * ee = Q_FIRST(&esqueue);
+  struct proc * p = ee->slotptr;
+  Q_REMOVE(&esqueue, ee, lnk);
+  free_slab((char *) ee);
+  p->p_stat = SEMBRYO;
+  p->p_pid = nextpid++;
+  //nextpid++;
 
-			p->p_stat = SEMBRYO;
-			p->p_pid = nextpid++;
-			//nextpid++;
+  p->p_nice = 0; //��ʼp_nice����0������ͨ��ϵͳ���������ġ�
+  p->p_spri = STATIC_PRI(p->p_nice);
+  p->p_creatime = ticks;
+  p->p_avgslp = 0; //average sleep time �ĳ�ֵΪ0.
+  sched_reftable[cpu->scheme].timeslice(p);//����ʱ��Ƭ
+  p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
 
-      //����ʱ��Ƭ���á�
-      //TODO ��RR����н��̵�ʱ��Ƭ���ö���ͬ�ȵģ��������ǿ��԰����ŵ�������ǡ���
-      //�������ĵ����㷨�������Ҫ���ݽ��̵��������ı�ʱ��Ƭ���á������Ƽ�������ת�Ƶ�fork���档
+  //Ϊ���½��̷����ں�ջ�ռ�
+  p->p_kstack = kalloc();	//�ں�ջ���亯��
 
-      p->p_nice = 0; //��ʼp_nice����0������ͨ��ϵͳ���������ġ�
-      p->p_spri = STATIC_PRI(p->p_nice);
-      p->p_creatime = ticks;
-      p->p_avgslp = 0; //average sleep time �ĳ�ֵΪ0.
-      sched_reftable[cpu->scheme].timeslice(p);//����ʱ��Ƭ
-      p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
+  //������ʧ��,����״̬�Ļ�SUNUSED
+  if (p->p_kstack==0)
+    {
+      p->p_stat = SUNUSED;
 
-			//Ϊ���½��̷����ں�ջ�ռ�
-			p->p_kstack = kalloc();	//�ں�ջ���亯��
-
-			//������ʧ��,����״̬�Ļ�SUNUSED
-			if (p->p_kstack==0)
-			{
-				p->p_stat = SUNUSED;
-
-				return 0;
-			}
+      return 0;
+    }
 
 
-			//�޸�ջ��λ��
-			sp = p->p_kstack + K_STACKSZ;
+  //�޸�ջ��λ��
+  sp = p->p_kstack + K_STACKSZ;
 
-			//Ϊtarpframe����λ�ã���
-			sp = sp - sizeof(*p->p_tf);
-			p->p_tf = (struct trapframe*) sp;
+  //Ϊtarpframe����λ�ã���
+  sp = sp - sizeof(*p->p_tf);
+  p->p_tf = (struct trapframe*) sp;
 
 
-			// Set up new context to start executing at forkret,
-			// which returns to trapret.
-      //TODO ������ô�����ģ�
-			sp = sp - 4;
-			*(uint*)sp = (uint)trapret;
+  // Set up new context to start executing at forkret,
+  // which returns to trapret.
+  //TODO ������ô�����ģ�
+  sp = sp - 4;
+  *(uint*)sp = (uint)trapret;
 
-			sp = sp - sizeof (*p->p_ctxt);
-			p->p_ctxt = (struct context*)sp;
-      //TODO require API
-			memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
-      //�����½��Ľ���
-			return p;
+  sp = sp - sizeof (*p->p_ctxt);
+  p->p_ctxt = (struct context*)sp;
+  //TODO require API
+  memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
+  //�����½��Ľ���
+  return p;
 
-		} while(0);
-
-    //}
-	//��������һȦ��û���ҵ�SUNUESD�Ľ��̣���ֱ�ӷ���
-	return 0;
 }
 
 
