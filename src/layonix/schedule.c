@@ -82,6 +82,7 @@ void timeslice_yield(){
 void sleep(void * e)
 {
   //tell event.
+
   uint tick0 = ticks;
   proc->p_chan=e;
   proc->p_stat=SSLEEPING;
@@ -92,6 +93,7 @@ void sleep(void * e)
 
 void wakeup(void * e)
 {
+
   //find specific proc that is sleep on specific event e (or chan)
   search_through_ptablef(p)
     if(p->p_stat==SSLEEPING && p->p_chan==e)

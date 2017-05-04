@@ -120,7 +120,7 @@ int sys_link(void)
 
 	begin_op();
 	if ((ip = namei(old)) == 0) {
-		end_op();
+    end_op();
 		return -1;
 	}
 
@@ -146,7 +146,6 @@ int sys_link(void)
 	iput(ip);
 
 	end_op();
-
 	return 0;
 
 bad:
@@ -278,6 +277,7 @@ static struct inode* create(char *path, short type, short major, short minor)
 //为inode分配文件和文件描述符，并填充文件
 int sys_open(void)
 {
+
 	char *path;
 	int fd, omode;
 	struct file *f;
@@ -293,6 +293,7 @@ int sys_open(void)
 		if (ip == 0) {
 			end_op();
 			return -1;
+
 		}
 	}
 	else {

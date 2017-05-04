@@ -91,11 +91,11 @@ void brelse(struct buf *b)
 
 	b->refcnt--;
 	if (b->refcnt == 0) {
-		//移动缓冲区 按最近被使用情况排序 
+		//移动缓冲区 按最近被使用情况排序
 		//从队列取出p节点
 		b->next->prev = b->prev;
 		b->prev->next = b->next;
-		//将p节点插入链表头 
+		//将b节点插入链表头
 		b->next = bcache.head.next;
 		b->prev = &bcache.head;
 		bcache.head.next->prev = b;

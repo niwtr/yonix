@@ -133,9 +133,6 @@ struct protab {
   struct proc proc[NPROC];
 } ;
 
-// scheme: alias for sched_method
-// �������࣬�������������ı��ţ����֣�
-// ��һ��������������ζ������������
 struct sched_class {
   enum sched_method scheme_num;
   const char * scheme_method;
@@ -147,7 +144,6 @@ struct sched_class {
 };
 
 
-//��scheduler_class�ﶨ�塣
 extern struct sched_class sched_reftable[SCHEME_NUMS];
 
 

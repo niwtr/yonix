@@ -22,7 +22,7 @@ void            consoleinit(void);
 void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
-
+void            prtwelcome();
 // exec.c
 int             exec(char*, char**);
 
@@ -171,6 +171,7 @@ void            timerinit(void);
 // trap.c
 void            idtinit(void);
 extern uint     ticks;
+
 void            trapvecinit(void);
 
 // uart.c

@@ -32,6 +32,8 @@ extern uint vectors[];
 
 uint ticks; //interrupts
 
+
+
 //中断描述符初始化
 void trapvecinit(void){
   int i;
@@ -80,6 +82,7 @@ void trap (struct trapframe * tf)
 	{
 	case T_IRQ0+IRQ_TIMER://时钟中断 处理过程不懂
 		//cpunum()获取cpu自身的编号
+
       ticks++;//一个ticks就是一个10ms
 			wakeup(&ticks);
 		break;
@@ -92,7 +95,6 @@ void trap (struct trapframe * tf)
 		break;
 	case T_IRQ0+IRQ_IDE0://IDE0输入请求
 		ideintr();
-
 		break;
 	case T_IRQ0+IRQ_IDE1://IDE1输入请求
 		// Bochs generates spurious IDE1 interrupts.
@@ -143,6 +145,7 @@ void trap (struct trapframe * tf)
 		if (tf->trapno == T_IRQ0 + IRQ_TIMER&&proc->p_stat == SRUN){
       //WARNING modified.
 			//giveup_cpu();
+
       timeslice_yield();
     }
 

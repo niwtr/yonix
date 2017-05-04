@@ -179,11 +179,12 @@ struct {
 
 #define C(x)  ((x)-'@')  // Control-x
 
+int pausing =1;
 void
 consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0, dokill=0, dolistproc=0;
-
+  int q;
   while((c = getc()) >= 0){
     switch(c){
     case C('P'):  // Process listing.
@@ -207,7 +208,8 @@ consoleintr(int (*getc)(void))
       dokill = 1;
       break;
     case C('L'): //list procs.
-      dolistproc =1;
+        dbg_lstprocs();
+        while((q=getc())!=C('L'));
       break;
 
     default:
@@ -300,3 +302,13 @@ consoleinit(void)
   //ioapicenable(IRQ_KBD, 0);//TODO warning
 }
 
+void prtwelcome(){
+  cprintf("  ___    ___ ________  ________   ___     ___    ___ \n");
+  cprintf(" |\\  \\  /  /|\\   __  \\|\\   ___  \\|\\  \\   |\\  \\  /  /|\n");
+  cprintf(" \\ \\  \\/  / | \\  \\|\\  \\ \\  \\\\ \\  \\ \\  \\  \\ \\  \\/  / /\n");
+  cprintf("  \\ \\    / / \\ \\  \\\\\\  \\ \\  \\\\ \\  \\ \\  \\  \\ \\    / / \n");
+  cprintf("   \\/  /  /   \\ \\  \\\\\\  \\ \\  \\\\ \\  \\ \\  \\  /     \\/  \n");
+  cprintf(" __/  / /      \\ \\_______\\ \\__\\\\ \\__\\ \\__\\/  /\\   \\  \n");
+  cprintf("|\\___/ /        \\|_______|\\|__| \\|__|\\|__/__/ /\\ __\\ \n");
+  cprintf("\\|___|/                                  |__|/ \\|__| \n");
+}

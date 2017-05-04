@@ -30,6 +30,9 @@ main(void)
   consoleinit();   // console hardware
   uartinit();      // serial port
 
+  prtwelcome();
+
+
   trapvecinit();        // trap vectors
   binit();         // buffer cache
   fileinit();      // file table
@@ -41,7 +44,6 @@ main(void)
 
   esinit();       // init proc slot queue
   rdinit();
-  //cprintf("hello\n");
   select_scheme(SCHEME_RR);    // init scheduler method (for time slice)
   userinit();      // first user process
 
