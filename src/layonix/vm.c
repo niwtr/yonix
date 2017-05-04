@@ -651,5 +651,5 @@ void page_out()
 	kfree(P2V(pa));
 	free_page(e->pn_pid, 0);
 
-	cprintf("page out %x\n", PTE_ADDR(e->pn_pid));
+	cprintf("page out %x of proc %x\n", PTE_ADDR(e->pn_pid), PTE_FLAGS(e->pn_pid));
 }

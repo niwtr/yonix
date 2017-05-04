@@ -27,5 +27,5 @@
 #define PR_FIFO 1
 #define PR_SCND 2
 #define PR_ALGO PR_SCND
-#define USE_SWAP 0      // 是否开启交换区
+#define USE_SWAP 1      // 是否开启交换区
 
