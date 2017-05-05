@@ -1,31 +1,31 @@
-/*ÎÄ¼ş½á¹¹*/
+/*æ–‡ä»¶ç»“æ„*/
 struct file {
-	enum { FD_NONE, FD_PIPE, FD_INODE } type;//ÎÄ¼şÀàĞÍpipe/inode
-	int ref; //Ó¦ÓÃ´ÎÊı 
-	char readable;//¿É¶Á
-	char writable;//¿ÉĞ´
+	enum { FD_NONE, FD_PIPE, FD_INODE } type;//æ–‡ä»¶ç±»å‹pipe/inode
+	int ref; //åº”ç”¨æ¬¡æ•° 
+	char readable;//å¯è¯»
+	char writable;//å¯å†™
 	struct pipe *pipe;
 	struct inode *ip;
 	uint off;
 };
 
-/*ÄÚ´æÉÏi½áµã*/
+/*å†…å­˜ä¸Šiç»“ç‚¹*/
 struct inode {
-	uint dev;           //Éè±¸ºÅ 
-	uint inum;          //i½ÚµãºÅ
-	int ref;            //Ö¸Ïò¸Ãi½ÚµãµÄÖ¸Õë
+	uint dev;           //è®¾å¤‡å· 
+	uint inum;          //ièŠ‚ç‚¹å·
+	int ref;            //åº”ç”¨æ•°ç›®
 	struct sleeplock lock;
-	int flags;          //×´Ì¬£¨Õ¼ÓÃ£¬¿ÕÏĞ£© 
-	short type;         //ÎÄ¼şÀàĞÍ
-	short major;		// Ö÷Éè±¸ºÅ 
-	short minor;		// ´ÎÉè±¸ºÅ 
-	short nlink;		//Ö¸Ïò¸Ãi½ÚµãµÄÊıÄ¿
-	uint size;			//ÎÄ¼ş´óĞ¡ 
-	uint addrs[NDIRECT + 1];//Êı¾İ¿éµØÖ·£¬Ö±½Ó¿é/¼ä½Ó¿é
+	int flags;          //çŠ¶æ€ï¼ˆå ç”¨ï¼Œç©ºé—²ï¼‰ 
+	short type;         //æ–‡ä»¶ç±»å‹
+	short major;		// ä¸»è®¾å¤‡å· 
+	short minor;		// æ¬¡è®¾å¤‡å· 
+	short nlink;		//æŒ‡å‘è¯¥ièŠ‚ç‚¹çš„æ•°ç›®
+	uint size;			//æ–‡ä»¶å¤§å° 
+	uint addrs[NDIRECT + 1];//æ•°æ®å—åœ°å€ï¼Œç›´æ¥å—/é—´æ¥å—
 };
 #define I_VALID 0x2
 
-/*Éè±¸ÎÄ¼şÀàĞÍ*/
+/*è®¾å¤‡æ–‡ä»¶ç±»å‹*/
 struct devsw {
 	int(*read)(struct inode*, char*, int);
 	int(*write)(struct inode*, char*, int);
