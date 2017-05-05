@@ -5,70 +5,70 @@
 #include "fs.h"
 #include "buf.h"
 
-//Ã¿Ò»´ÎÏµÍ³µ÷ÓÃ¶¼ĞèÒªµ÷ÓÃbegin_op()±ê¼ÇÆğÊ¼,end_op()±ê¼Ç½áÊø.
-//Í¨³£Çé¿öÏÂ£¬begin_op()½öÔö¼Ó¶ÓÁĞÖĞÏµÍ³µ÷ÓÃ¸öÊı£¬µ«µ±Ëü·¢¾õÈÕÖ¾ÒÑ¾­ÒòÓÃÍê¶ø¹Ø±ÕÊ±
-//»áË¯Ãßµ±Ç°½ø³ÌÖ±ÖÁ×î½üµÄend_op()½áÊø.
+//æ¯ä¸€æ¬¡ç³»ç»Ÿè°ƒç”¨éƒ½éœ€è¦è°ƒç”¨begin_op()æ ‡è®°èµ·å§‹,end_op()æ ‡è®°ç»“æŸ.
+//é€šå¸¸æƒ…å†µä¸‹ï¼Œbegin_op()ä»…å¢åŠ é˜Ÿåˆ—ä¸­ç³»ç»Ÿè°ƒç”¨ä¸ªæ•°ï¼Œä½†å½“å®ƒå‘è§‰æ—¥å¿—åŒºåŸŸå·²ç»å› ç”¨å®Œè€Œå…³é—­æ—¶
+//ä¼šç¡çœ å½“å‰è¿›ç¨‹ç›´è‡³æœ€è¿‘çš„end_op()ç»“æŸ.
 
-//ÈÕÖ¾³õÊ¼¿é
+//æ—¥å¿—åˆå§‹å—
 struct logheader {
-	int n;//µ±Ç°ÓĞĞ§Êı¾İ¿éµÄ¼ÆÊı
-	int block[LOGSIZE];//Êı×éµÄÖµÎª¶ÔÓ¦Êı¾İ¿éµÄÄÚÈİÓ¦¸ÃĞ´ÈëÎÄ¼şÏµÍ³ÖĞµÄÄÄÒ»¿é
+	int n;//å½“å‰æœ‰æ•ˆæ•°æ®å—çš„è®¡æ•°
+	int block[LOGSIZE];//æ•°ç»„çš„å€¼ä¸ºå¯¹åº”æ•°æ®å—çš„å†…å®¹åº”è¯¥å†™å…¥æ–‡ä»¶ç³»ç»Ÿä¸­çš„å“ªä¸€å—
 };
 
-//ÈÕÖ¾Êı¾İ¿é
+//æ—¥å¿—æ•°æ®å—
 struct log {
-	int start;       //ÆğÊ¼Î»ÖÃ
-	int size;		 //¸ÃÈÕÖ¾ËùÕ¼´óĞ¡
-	int outstanding; // ÕıÔÚ±»Ö´ĞĞµÄÎÄ¼şÏµÍ³ÏµÍ³µ÷ÓÃ¸öÊı
-	int committing;  // ×´Ì¬£ºÊÇ·ñÌá½»
+	int start;       //èµ·å§‹ä½ç½®
+	int size;		 //è¯¥æ—¥å¿—æ‰€å å¤§å°
+	int outstanding; // æ­£åœ¨è¢«æ‰§è¡Œçš„æ–‡ä»¶ç³»ç»Ÿç³»ç»Ÿè°ƒç”¨ä¸ªæ•°
+	int committing;  // çŠ¶æ€ï¼šæ˜¯å¦æäº¤
 	int dev;
 	struct logheader lh;
 };
 struct log log;
 
-static void recover_from_log(void);//´ÓÈÕÖ¾ÖĞ»Ö¸´
-static void commit();//Ìá½»ÈÕÖ¾
+static void recover_from_log(void);//ä»æ—¥å¿—ä¸­æ¢å¤
+static void commit();//æäº¤æ—¥å¿—
 
-//³õÊ¼ÈÕÖ¾¿é
+//åˆå§‹åŒ–æ—¥å¿—å—
 void initlog(int dev){
 	if (sizeof(struct logheader) >= BSIZE)
 		panic("initlog: too big logheader");
 
-	struct superblock sb;//³¬¼¶¿é
+	struct superblock sb;//è¶…çº§å—
 	readsb(dev, &sb);
 	log.start = sb.logstart;
 	log.size = sb.nlog;
 	log.dev = dev;
-	recover_from_log();
+	recover_from_log();//æ£€éªŒä¸Šæ¬¡è¯»å†™æ“ä½œæ˜¯å¦æˆåŠŸï¼Œä¸æˆåŠŸåˆ™æ¢å¤æ•°æ®
 }
 
-// ½«Êı¾İ´ÓÈÕÖ¾¸²¸Çµ½¶ÔÓ¦´ÅÅÌ¿é
+// æ­£å¼æ›´æ–°ç£ç›˜æ•°æ®
 static void install_trans(void){
 	int tail;
 	for (tail = 0; tail < log.lh.n; tail++) {
-		struct buf *lbuf = bread(log.dev, log.start + tail + 1); // ¶ÁÈ¡ÈÕÖ¾
-		struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // ¶ÁÖĞ¼ÌÇø
-		memmove(dbuf->data, lbuf->data, BSIZE);  // ½«ÈÕÖ¾¸²¸ÇÖÁÖĞ¼ÌÇø
-		bwrite(dbuf);  // ×îÖÕĞ´Èë´ÅÅÌ
+		struct buf *lbuf = bread(log.dev, log.start + tail + 1); // è¯»å–æ—¥å¿—
+		struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // è¯»ä¸­ç»§åŒº
+		memmove(dbuf->data, lbuf->data, BSIZE);  // å°†æ—¥å¿—è¦†ç›–è‡³ä¸­ç»§åŒº
+		bwrite(dbuf);  // æœ€ç»ˆå†™å…¥ç£ç›˜
 		brelse(lbuf);
 		brelse(dbuf);
 	}
 }
 
-// ´Ó´ÅÅÌÈÕÖ¾ÇøÌáÈ¡ÈÕÖ¾³õÊ¼¿éÖÁÄÚ´æ
+// è¯»å–æ—¥å¿—åˆå§‹å—è‡³å†…å­˜
 static void read_head(void)
 {
 	struct buf *buf = bread(log.dev, log.start);
 	struct logheader *lh = (struct logheader *) (buf->data);
 	int i;
-	log.lh.n = lh->n;
+	log.lh.n = lh->n;//ä¸Šæ¬¡æ“ä½œæ˜¯å¦å´©æºƒæ ‡å¿—ï¼Œéé›¶åˆ™æœªå‘ç”Ÿå´©æºƒ
 	for (i = 0; i < log.lh.n; i++) {
 		log.lh.block[i] = lh->block[i];
 	}
 	brelse(buf);
 }
 
-//½«ÄÚ´æÈÕÖ¾³õÊ¼¿éĞ´Èë´ÅÅÌ,·¢ÉúÔÚµ±Ç°ÈÕÖ¾¸üĞÂÌá½»Ê±
+//å°†å†…å­˜æ—¥å¿—åˆå§‹å—å†™å…¥ç£ç›˜,å‘ç”Ÿåœ¨å½“å‰æ—¥å¿—æ›´æ–°æäº¤æ—¶
 static void write_head(void)
 {
 	struct buf *buf = bread(log.dev, log.start);
@@ -82,16 +82,16 @@ static void write_head(void)
 	brelse(buf);
 }
 
-//´ÓÈÕÖ¾»Ö¸´ÎÄ¼ş
+//ä»æ—¥å¿—æ¢å¤æ–‡ä»¶
 static void recover_from_log(void)
 {
 	read_head();
-	install_trans(); // È·ÈÏºó£¬¼´½«Êı¾İÓÉÈÕÖ¾¿½Èë´ÅÅÌ
+	install_trans(); // ç¡®è®¤åï¼Œå³å°†æ•°æ®ç”±æ—¥å¿—æ‹·å…¥ç£ç›˜
 	log.lh.n = 0;
-	write_head(); // Çå¿Õ¸ÃÈÕÖ¾¿é
+	write_head(); // æ¸…ç©ºè¯¥æ—¥å¿—å—
 }
 
-// ÔÚÃ¿Ò»´ÎÏµÍ³µ÷ÓÃ¿ªÊ¼Ê±µ÷ÓÃ¸Ã³ÌĞò
+// åœ¨æ¯ä¸€æ¬¡ç³»ç»Ÿè°ƒç”¨å¼€å§‹æ—¶è°ƒç”¨è¯¥ç¨‹åº
 void begin_op(void)
 {
 	while (1) {
@@ -99,23 +99,23 @@ void begin_op(void)
 			sleep(&log);
 		}
 		else if (log.lh.n + (log.outstanding + 1)*MAXOPBLOCKS > LOGSIZE) {
-			// ´Ë´Î²Ù×÷¿ÉÄÜ»áºÄ¾¡ÈÕÖ¾¿Õ¼ä; µÈ´ıÌá½».
+			// æ­¤æ¬¡æ“ä½œå¯èƒ½ä¼šè€—å°½æ—¥å¿—ç©ºé—´; ç­‰å¾…æäº¤.
 			sleep(&log);
 		}
 		else {
-			log.outstanding += 1;
+			log.outstanding += 1;//å¢åŠ æ“ä½œæ¬¡æ•°
 			break;
 		}
 	}
 }
 
-// ÏµÍ³µ÷ÓÃÖÕÖ¹Ê±±»µ÷ÓÃ
-// È·ÈÏÕâ´Îµ÷ÓÃÊÇ·ñÎª×îºóÒ»´Î²Ù×÷
+// ç³»ç»Ÿè°ƒç”¨ç»ˆæ­¢æ—¶è¢«è°ƒç”¨
+// ç¡®è®¤è¿™æ¬¡è°ƒç”¨æ˜¯å¦ä¸ºæœ€åä¸€æ¬¡æ“ä½œ
 void end_op(void)
 {
 	int do_commit = 0;
 
-	log.outstanding -= 1;
+	log.outstanding -= 1;//å‡å°‘æ“ä½œæ¬¡æ•°
 	if (log.committing)
 		panic("log.committing");
 	if (log.outstanding == 0) {
@@ -123,46 +123,46 @@ void end_op(void)
 		log.committing = 1;
 	}
 	else {
-		// begin_op() ´ËÇ°ÔÚµÈ´ı¿ÕÏĞÈÕÖ¾¿Õ¼ä
+		// begin_op() æ­¤å‰åœ¨ç­‰å¾…ç©ºé—²æ—¥å¿—ç©ºé—´
 		wakeup(&log);
 	}
 
 	if (do_commit) {
-		// Ìá½»ÈÕÖ¾²Ù×÷
+		// æ²¡æœ‰ä»»ä½•è¿›ç¨‹æ—¶ï¼Œæäº¤æ—¥å¿—
 		commit();
-		log.committing = 0;
+		log.committing = 0;//è¡¨æ˜æ­¤é¡¹å†™æ“ä½œå®Œæˆï¼Œè¿›è¡Œä¸‹ä¸€é¡¹ï¼Œç›´è‡³outstandingä¸º0
 		wakeup(&log);
 	}
 }
 
-//´Ó»º³åÇø¸´ÖÆÊı¾İ¿éÖÁÈÕÖ¾
+//ä»ç¼“å†²åŒºå¤åˆ¶æ•°æ®å—è‡³æ—¥å¿—
 static void write_log(void)
 {
 	int tail;
 
 	for (tail = 0; tail < log.lh.n; tail++) {
-		struct buf *to = bread(log.dev, log.start + tail + 1); // ÈÕÖ¾¿é
-		struct buf *from = bread(log.dev, log.lh.block[tail]); // »º³åÇø
+		struct buf *to = bread(log.dev, log.start + tail + 1); // æ—¥å¿—å—
+		struct buf *from = bread(log.dev, log.lh.block[tail]); // ç¼“å†²åŒº
 		memmove(to->data, from->data, BSIZE);
-		bwrite(to);  //Ğ´ÈÕÖ¾
+		bwrite(to);  //å†™æ—¥å¿—
 		brelse(from);
 		brelse(to);
 	}
 }
 
-//Ìá½»ÈÕÖ¾
+//æäº¤æ—¥å¿—
 static void commit()
 {
 	if (log.lh.n > 0) {
-		write_log();     // ½«ĞŞ¸ÄºóµÄ¿é´Ó»º³åÇøĞ´ÈëÈÕÖ¾
-		write_head();    // ¸üĞÂ³õÊ¼¿é
-		install_trans(); // ÏÖÔÚÕıÊ½¿ªÊ¼¸üĞÂ´ÅÅÌÊı¾İ
+		write_log();     // å°†ä¿®æ”¹åçš„å—ä»ç¼“å†²åŒºå†™å…¥æ—¥å¿—
+		write_head();    // æ›´æ–°åˆå§‹å—
+		install_trans(); // ç°åœ¨æ­£å¼å¼€å§‹æ›´æ–°ç£ç›˜æ•°æ®
 		log.lh.n = 0;
-		write_head();    //´ÓÈÕÖ¾ÖĞ²Á³ı´Ë´Î¸üĞÂ
+		write_head();    //æ¸…ç©ºæ—¥å¿—åˆå§‹å—ï¼Œè¡¨æ˜æ­¤æ¬¡è¯»å†™æ“ä½œæˆåŠŸ
 	}
 }
 
-//¼ÇÂ¼ÈÕÖ¾²Ù×÷
+//è®°å½•æ—¥å¿—æ“ä½œ
 void log_write(struct buf *b)
 {
 	int i;
@@ -173,11 +173,11 @@ void log_write(struct buf *b)
 		panic("log_write outside of trans");
 
 	for (i = 0; i < log.lh.n; i++) {
-		if (log.lh.block[i] == b->blockno)   // ¼ÇÂ¼Ğ´Èë´ÅÅÌÖĞÄÄÒ»¿é
+		if (log.lh.block[i] == b->blockno)   // è®°å½•å†™å…¥ç£ç›˜ä¸­å“ªä¸€å—
 			break;
 	}
 	log.lh.block[i] = b->blockno;
 	if (i == log.lh.n)
 		log.lh.n++;
-	b->flags |= B_DIRTY; // Ô¤·À´ëÊ©
+	b->flags |= B_DIRTY; // é¢„é˜²æªæ–½
 }
