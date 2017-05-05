@@ -3,7 +3,7 @@
 #include "user.h"
 
 #define NUM_THREADS 10
-#define TIMES 6553
+#define TIMES 20000
 #define BASIC_THREAD_STACK_SZ 8192
 int kk=0;
 void calcula(void){
@@ -15,11 +15,11 @@ void calcula(void){
     }
   }
   kk=k; //防止编译器编译优化。
-  printf(1, "Child %d Calcula finish!\n", getpid());//TODO 添加一个系统调用，获得pid。
 }
 
 
 void thread_tsk(void *arg){
+  incnice(getpid()%2?5:-5);
   printf(1, "thread %d started.\n", *(int*)arg);
   calcula();
   printf(1, "thread %d finished.\n", *(int *)arg);

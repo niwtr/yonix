@@ -214,7 +214,7 @@ int fork(void)
 void exit(void){
 
   if(proc == initproc)
-    panic("init exiting");
+      panic("init exiting");
 
   /* close all opened files. */
   int fd;
@@ -329,7 +329,7 @@ void dbg_lstprocs(void){
     else
       state="UNKNOWN";
 
-    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d chan:%p\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_chan);
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d nice:%d chan:%p\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_nice, p->p_chan);
 
   }
 }
