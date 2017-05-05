@@ -4,8 +4,8 @@
 // user code, and calls into file.c and fs.c.
 //
 
-//ÎÄ¼şÃèÊö·û²ã
-//ÏµÍ³µ÷ÓÃÄ£¿é
+//æ–‡ä»¶æè¿°ç¬¦å±‚
+//ç³»ç»Ÿè°ƒç”¨æ¨¡å—
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -17,7 +17,7 @@
 #include "file.h"
 #include "fcntl.h"
 
-//´ÓÏµÍ³µ÷ÓÃµÄ²ÎÊıÌáÈ¡³öÎÄ¼şÃèÊö·û£¬²¢¸ù¾İÎÄ¼şÃèÊö·ûÕÒµ½¶ÔÓ¦ÎÄ¼ş½á¹¹
+//ä»ç³»ç»Ÿè°ƒç”¨çš„å‚æ•°æå–å‡ºæ–‡ä»¶æè¿°ç¬¦ï¼Œå¹¶æ ¹æ®æ–‡ä»¶æè¿°ç¬¦æ‰¾åˆ°å¯¹åº”æ–‡ä»¶ç»“æ„
 static int argfd(int n, int *pfd, struct file **pf)
 {
 	int fd;
@@ -34,7 +34,7 @@ static int argfd(int n, int *pfd, struct file **pf)
 	return 0;
 }
 
-//ÎªÎÄ¼ş·ÖÅäÎÄ¼şÃèÊö·û
+//ä¸ºæ–‡ä»¶åˆ†é…æ–‡ä»¶æè¿°ç¬¦
 static int fdalloc(struct file *f)
 {
 	int fd;
@@ -48,7 +48,7 @@ static int fdalloc(struct file *f)
 	return -1;
 }
 
-//ÊµÏÖÎÄ¼şÖØ¸´ÒıÓÃ
+//å®ç°æ–‡ä»¶é‡å¤å¼•ç”¨
 int sys_dup(void)
 {
 	struct file *f;
@@ -62,7 +62,7 @@ int sys_dup(void)
 	return fd;
 }
 
-//´ÓÎÄ¼şÃèÊö·û¶ÁÈ¡Êı¾İ
+//ä»æ–‡ä»¶æè¿°ç¬¦è¯»å–æ•°æ®
 int sys_read(void)
 {
 	struct file *f;
@@ -74,7 +74,7 @@ int sys_read(void)
 	return fileread(f, p, n);
 }
 
-//´ÓÎÄ¼şÃèÊö·û¶ÔÎÄ¼ş½á¹¹½øĞĞĞ´²Ù×÷
+//ä»æ–‡ä»¶æè¿°ç¬¦å¯¹æ–‡ä»¶ç»“æ„è¿›è¡Œå†™æ“ä½œ
 int sys_write(void)
 {
 	struct file *f;
@@ -86,7 +86,7 @@ int sys_write(void)
 	return filewrite(f, p, n);
 }
 
-//µ±ÎÄ¼ş±»ÒıÓÃÊıÎª0Ê±£¬ÊÍ·Åinode
+//å½“æ–‡ä»¶è¢«å¼•ç”¨æ•°ä¸º0æ—¶ï¼Œé‡Šæ”¾inode
 int sys_close(void)
 {
 	int fd;
@@ -109,7 +109,7 @@ int sys_fstat(void)
 	return filestat(f, st);
 }
 
-//½¨Á¢Ò»¸öÓ²Á´½Ó£¬ÊµÏÖ¶à¸öÄ¿Â¼¿ÉÖ¸ÏòÒ»¸öinode£¨ÒÑ´æÔÚ£©
+//å»ºç«‹ä¸€ä¸ªç¡¬é“¾æ¥ï¼Œå®ç°å¤šä¸ªç›®å½•å¯æŒ‡å‘ä¸€ä¸ªinodeï¼ˆå·²å­˜åœ¨ï¼‰
 int sys_link(void)
 {
 	char name[DIRSIZ], *new, *old;
@@ -172,7 +172,7 @@ static int isdirempty(struct inode *dp)
 	return 1;
 }
 
-//È¡ÏûÒ»¸öÓ²Á´½Ó
+//å–æ¶ˆä¸€ä¸ªç¡¬é“¾æ¥
 int sys_unlink(void)
 {
 	struct inode *ip, *dp;
@@ -229,7 +229,7 @@ bad:
 	return -1;
 }
 
-//´´½¨Ò»¸öĞÂµÄinode²¢³õÊ¼»¯
+//åˆ›å»ºä¸€ä¸ªæ–°çš„inodeå¹¶åˆå§‹åŒ–
 static struct inode* create(char *path, short type, short major, short minor)
 {
 	uint off;
@@ -274,7 +274,7 @@ static struct inode* create(char *path, short type, short major, short minor)
 	return ip;
 }
 
-//Îªinode·ÖÅäÎÄ¼şºÍÎÄ¼şÃèÊö·û£¬²¢Ìî³äÎÄ¼ş
+//ä¸ºinodeåˆ†é…æ–‡ä»¶å’Œæ–‡ä»¶æè¿°ç¬¦ï¼Œå¹¶å¡«å……æ–‡ä»¶
 int sys_open(void)
 {
 
