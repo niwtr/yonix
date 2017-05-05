@@ -2,8 +2,8 @@
 #include "stat.h"
 #include "user.h"
 
-#define NUM_THREADS 10
-#define TIMES 20000
+#define NUM_THREADS 7
+#define TIMES 50000
 #define BASIC_THREAD_STACK_SZ 8192
 int kk=0;
 void calcula(void){
@@ -15,19 +15,48 @@ void calcula(void){
     }
   }
   kk=k; //防止编译器编译优化。
+  printf(1, "Child %d Calcula finish!\n", getpid());//TODO 添加一个系统调用，获得pid。
 }
 
-
-void thread_tsk(void *arg){
-  incnice(getpid()%2?5:-5);
-  printf(1, "thread %d started.\n", *(int*)arg);
+void slp(void){
+  sleep(800);
+  printf(1, "Child %d Sleep finish!\n", getpid());
+}
+void thread_tsk_c(void *arg){
+  printf(1, "active thread %d started.\n", *(int*)arg);
+  incnice(*(int*)arg);
   calcula();
-  printf(1, "thread %d finished.\n", *(int *)arg);
+  printf(1, "active thread %d finished.\n", *(int *)arg);
+  exit();
+}
+
+void thread_tsk_s(void * arg){
+  printf(1, "lazy thread %d started.\n", *(int*)arg);
+  calcula();
+  printf(1, "lazy thread %d finished.\n", *(int *)arg);
+  exit();
+}
+int times = 0;
+void thread_tsk_z(void * arg){
+  printf(1, "setsched thread %d started.\n", *(int*)arg);
+  sleep(200);
+  printf(1, "Set scheme to PRIORITY\n");
+  sched(2);
+  sleep(200);
+  printf(1, "Set scheme to RR\n");
+  sched(1);
+  sleep(200);
+  printf(1, "Set scheme to FIFO\n");
+  sched(0);
+  printf(1, "setsched thread %d finished.\n", *(int *)arg);
   exit();
 }
 
 
+
+
 int main(void){
+  toggle_debug();
   int i,j;
   // Stacks
 	void *stacks[NUM_THREADS];
@@ -53,7 +82,12 @@ int main(void){
 	}
 
 	for (i=0; i<NUM_THREADS; i++) {
-		int pid = lwp_create(thread_tsk, args[i], stacks[i], BASIC_THREAD_STACK_SZ);
+    void (*p) (void*);
+    if(i < 3) p=thread_tsk_c;
+    else if(i>=3 && i<6)
+      p=thread_tsk_s;
+    else p=thread_tsk_z;
+		int pid = lwp_create(p, args[i], stacks[i], BASIC_THREAD_STACK_SZ);
 		printf(1, "main: created thread with pid %d\n", pid);
 	}
 
@@ -72,5 +106,7 @@ int main(void){
 		}
 	}
   printf(1, "hacks and glory awaits.\n");
+  toggle_debug();
+  sched(1);
   exit();
 }

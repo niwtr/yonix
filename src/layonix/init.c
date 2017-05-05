@@ -20,7 +20,7 @@ main(void)
   dup(0);  // stderr
 
   for(;;){
-    printf(1, "init: starting sh\n");
+    printf(1, "YONIX: starting shell...\n");
     pid = fork();
 
     if(pid < 0){
@@ -32,10 +32,11 @@ main(void)
       printf(1, "init: exec sh failed\n");
       exit();
     }
-    printf(1,"init: forked:%d\n", pid);
+    //printf(1,"init: forked:%d\n", pid);
+    printf(1,"YONIX: shell ready on PID %d\n", pid);
 
     while((wpid=wait()) >= 0 && wpid != pid){
-      printf(1, "here, I caught a zombie!%d %d \n", wpid, pid);
+      printf(1, "YONIX: I caught a zombie! PID: %d\n", wpid);
     }
   }
 }

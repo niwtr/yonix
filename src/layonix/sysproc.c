@@ -349,3 +349,8 @@ sys_mut_v(void)
     return -1;
   return mutex_V((sem*)s);
 }
+int sys_toggle_debug(void)
+{
+  __debug = __debug?0:1;
+  return 0;
+}

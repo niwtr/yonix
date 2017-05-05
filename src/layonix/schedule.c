@@ -12,6 +12,7 @@ void switch_to (struct proc * p)
 {
   /* set current in-cpu proc to p*/
   proc = p;
+  
   switchuvm(p);
   p->p_stat = SRUN;
   /* switch the kernel-state context. */
@@ -98,10 +99,10 @@ void timeslice_yield(){
 
 /* sleep a proc on specific event and sched away.
  * the event s of which the proc is sleep on is called "chan". */
-void sleep(void * s)
+void sleep(void * e)
 {
   uint tick0 = ticks;
-  proc->p_chan=s;
+  proc->p_chan=e;
   proc->p_stat=SSLEEPING;
   transform(); /* swtch away.*/
   proc->p_chan=0; /* when sched back (return from wakeup), tidy up. */

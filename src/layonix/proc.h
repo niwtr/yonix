@@ -190,5 +190,5 @@ typedef Q_HEAD(ready_list, slot_entry) rdy_qhead;
 
 
 rdy_qhead rdyqueue; // ready队列
-
+rdy_qhead rdy_q_dy[40];//动态优先级调度算法的优先级队列,0-39对应优先级100 to 139,
 

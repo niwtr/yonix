@@ -249,9 +249,65 @@ void consoleintr(int (*getc)(void))
       dokill = 1;
       break;
     case C('L'): //list procs.
-      dbg_lstprocs();
-      while ((q = getc()) != C('L'))
-        ;
+        dbg_lstprocs();
+        int status=0, pid=0;
+        //0 init
+        //1 k ok
+        //2 reading
+        //3 finish
+        while((q=getc())!=C('L'))
+          {
+            if(q==-1)continue;
+            switch(q){
+            case 'k':
+              status = 1;
+              break;
+            case '\n':
+              if(status==2)
+                status = 3;
+              break;
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '0':
+              if(status==2){
+                pid=pid*10+q-'0';
+                consputc(q);
+              }
+              break;
+            default:
+              break;
+            }
+
+          if(status == 1)
+          {
+            cprintf("kill: ");
+            status=2;
+          }
+          if(status == 3)
+          {
+
+              cprintf("\nkilled: %d\n", pid);
+              kill(pid);
+
+              status=0;
+          }
+        }
+
+      break;
+    case C('R'):
+      dbg_lstrdy();
+      while((q=getc())!=C('R'));
+      break;
+    case C('S'):
+      dbg_lstslp();
+      while((q=getc())!=C('S'));
       break;
 
     case KEY_UP: // last command
@@ -274,6 +330,8 @@ void consoleintr(int (*getc)(void))
       }
       break;
 
+    case C('Z'):
+      while((q=getc())!=C('Z'));
     default:
       if (c != 0 && input.e - input.r < INPUT_BUF)
       {
@@ -388,4 +446,8 @@ void prtwelcome()
   cprintf(" __/  / /      \\ \\_______\\ \\__\\\\ \\__\\ \\__\\/  /\\   \\  \n");
   cprintf("|\\___/ /        \\|_______|\\|__| \\|__|\\|__/__/ /\\ __\\ \n");
   cprintf("\\|___|/                                  |__|/ \\|__| \n");
+  cprintf("Welcome to YONIX, a simple yet complete operating system.\n");
+  cprintf("Author: Tianrui Niu, Han Liu, Lingxuan Li, \n        Zhongyuan Zhou, Linghuan Zhu, Zhenjie yu\n");
+
+
 }

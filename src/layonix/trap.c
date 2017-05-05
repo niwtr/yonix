@@ -82,7 +82,6 @@ void trap (struct trapframe * tf)
 	{
 	case T_IRQ0+IRQ_TIMER://时钟中断 处理过程不懂
 		//cpunum()获取cpu自身的编号
-
       ticks++;//一个ticks就是一个10ms
 			wakeup(&ticks);
 		break;
