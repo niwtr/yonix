@@ -41,4 +41,5 @@
 #define SYS_mut_init 40
 #define SYS_mut_p    41
 #define SYS_mut_v    42
+#define SYS_toggle_debug 43
 

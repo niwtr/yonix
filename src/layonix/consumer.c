@@ -131,13 +131,13 @@ void producerFun(void *param)
     tid=getpid();
     for(int i=0;i<10;i++)
     {
-        sem_p(1,&empty);    //wait empty
+        sem_p(2,&empty);    //wait empty
         mut_p(&mutex);      //wait mutex
 
         //add item to buffer
 
-        //buffer[tail]=1;     //produce
-        //tail=(tail+1)%BUFFERSIZE;
+        buffer[tail]=1;     //produce
+        tail=(tail+1)%BUFFERSIZE;
         buffer[tail]=1;
         tail=(tail+1)%BUFFERSIZE;
         printf(1,"tid:%d,producer----buffer status:\n",tid);
@@ -149,7 +149,7 @@ void producerFun(void *param)
         printf(1,"\n");
 
         mut_v(&mutex);      //signal mutex
-        sem_v(1,&full);     //signal full
+        sem_v(2,&full);     //signal full
         printf(1,"full %d,empty %d\n",full,empty);
         sleep(20);
     }
@@ -160,7 +160,7 @@ void consumerFun(void *param)
 {
     int tid;
     tid=getpid();
-    for(int i=0;i<10;i++)
+    for(int i=0;i<20;i++)
     {
 
         sem_p(1,&full);     //wait full

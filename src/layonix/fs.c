@@ -89,7 +89,7 @@ void iinit(int dev)
 	}
   
 	readsb(dev, &sb);
-	cprintf("sb: size %d nblocks %d ninodes %d nlog %d logstart %d inodestart %d bmap start %d\n", sb.size, sb.nblocks,sb.ninodes, sb.nlog, sb.logstart, sb.inodestart,sb.bmapstart);
+	//cprintf("sb: size %d nblocks %d ninodes %d nlog %d logstart %d inodestart %d bmap start %d\n", sb.size, sb.nblocks,sb.ninodes, sb.nlog, sb.logstart, sb.inodestart,sb.bmapstart);
 }
 //根据设备号，inode号，申请inode指针
 static struct inode* iget(uint dev, uint inum)

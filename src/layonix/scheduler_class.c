@@ -6,7 +6,7 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
-
+int __debug = 0;
 
 /* Define a scheduler method (scheme)
  * We hold the view that a scheduler method can be described by five distinct functions:
@@ -48,6 +48,8 @@ DEFSHED(fifo, //name: fifo
           /* ok, get the first one and dequeue. */
           struct slot_entry * e = Q_FIRST(&rdyqueue);
           Q_REMOVE(&rdyqueue, e, lnk);
+          if(__debug)
+          cprintf("YONIX: Sched (FIFO) to PID %d\n", e->slotptr->p_pid);
           switch_to(e->slotptr);
           free_slab((char*) e);
           return 1;
@@ -102,6 +104,8 @@ DEFSHED(rr,
               p++;
               continue;
             }
+            if(__debug)
+            cprintf("YONIX: Sched (RR) to PID %d\n", p->p_pid);
             switch_to(p);
             p++;
             return 1;
@@ -128,7 +132,91 @@ DEFSHED(rr,
         }
         )
 
+DEFSHED(priority,
+        //priority body
+        {
 
+            for (int i=0;i<40;i++)
+            {
+                if(!Q_EMPTY(&rdy_q_dy[i]))
+                {
+                    struct slot_entry * e = Q_FIRST(&rdy_q_dy[i]);
+                    Q_REMOVE(&rdy_q_dy[i], e, lnk);
+                    switch_to(e->slotptr);
+                    free_slab((char*) e);
+                    return 1;
+                }
+            }
+            return 0;
+
+        },
+
+         //after
+        {
+            struct slot_entry * e;
+
+            //find the node of current process
+            Q_FOREACH(e, &rdy_q_dy[proc->p_dpri-100], lnk)
+            {
+                if(e->slotptr==proc)
+                    break;
+            }
+            Q_REMOVE(&rdy_q_dy[proc->p_dpri-100], e, lnk);
+
+            sched_priority_timeslice(proc);//重新计算timeslice
+            proc->p_dpri = DYNAMIC_PRI(proc->p_spri, BONUS(proc->p_avgslp));
+            //调整队列
+            Q_INSERT_TAIL(&rdy_q_dy[proc->p_dpri-100], e, lnk);
+            if(__debug)
+            cprintf("YONIX: PID %d change priority to %d\n",proc->p_pid, proc->p_dpri);
+        },
+        //timeslice
+        {
+            P->p_spri = STATIC_PRI(P->p_nice);
+            P->p_time_slice = TIME_SLICE(P->p_spri);
+        },
+        //init
+        {
+            struct slot_entry * e;
+            //find the ready queue corresponse to the current process dynamic priority
+            if(!Q_EMPTY(&rdy_q_dy[proc->p_dpri-100]))
+                //clear
+                Q_FOREACH(e, &rdyqueue, lnk)
+                {
+                  
+                    Q_REMOVE(&rdyqueue, e, lnk);
+                    free_slab((char *) e);
+                }
+            //rebuild the dynamic queue
+            search_through_ptablef(p)
+            if(p->p_stat==READY)
+            {
+                struct slot_entry * e = (struct slot_entry *)alloc_slab();
+                e->slotptr = p;
+                Q_INSERT_TAIL(&rdy_q_dy[p->p_dpri-100], e, lnk);    //插入尾部
+            }
+        },
+        //enqueue
+        {
+            struct slot_entry * e = (struct slot_entry *)alloc_slab();
+            e->slotptr = P;
+            Q_INSERT_TAIL(&rdy_q_dy[P->p_dpri-100], e, lnk);
+            //cprintf("dynamic enqueue\n");
+        }
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 DEFSHED(priority,
         //priority body
         {
@@ -138,13 +226,15 @@ DEFSHED(priority,
               if(p_primax == 0)
                 p_primax = p;
               else
-                if(p_primax->p_dpri > p->p_dpri) // 找到了一个优先级更高的。注意dpri越低，优先级越高。
+                if(p_primax->p_dpri < p->p_dpri) // 找到了一个优先级更高的。注意dpri越低，优先级越高。
                   p_primax = p;
             }
           }
 
           if(p_primax) //找到了进程 to swtich
           {
+            if(__debug)
+            cprintf("YONIX: Sched (PRI) to PID %d\n", p_primax->p_pid);
             switch_to(p_primax);
             return 1;
           } else {return 0;}
@@ -171,6 +261,7 @@ DEFSHED(priority,
 
         }
         )
+*/
 
 
 struct sched_class
