@@ -12,13 +12,13 @@
 //日志初始块
 struct logheader {
 	int n;//当前有效数据块的计数
-	int block[LOGSIZE];//数组的值为对应数据块的内容应该写入文件系统中的哪一块
+	int block[LOGSIZE];//数组的值为对应数据块的内容应该写入文件中的哪一块
 };
 
 //日志数据块
 struct log {
 	int start;       //起始位置
-	int size;		 //该日志所占大小
+	int size;	 //该日志所占大小
 	int outstanding; // 正在被执行的文件系统系统调用个数
 	int committing;  // 状态：是否正在提交
 	int dev;
@@ -26,10 +26,10 @@ struct log {
 };
 struct log log;
 
-static void recover_from_log(void);//从日志中恢复
+static void recover_from_log(void);//从日志中恢复数据
 static void commit();//提交日志
 
-//初始日志块
+//初始化日志
 void initlog(int dev){
 	if (sizeof(struct logheader) >= BSIZE)
 		panic("initlog: too big logheader");
@@ -39,10 +39,10 @@ void initlog(int dev){
 	log.start = sb.logstart;
 	log.size = sb.nlog;
 	log.dev = dev;
-	recover_from_log();
+	recover_from_log();//判断上次写操作是否成功，不成功则从日志恢复文件数据
 }
 
-// 将数据从日志覆盖到对应磁盘块
+// 正式更新磁盘数据
 static void install_trans(void){
 	int tail;
 	for (tail = 0; tail < log.lh.n; tail++) {
@@ -55,7 +55,7 @@ static void install_trans(void){
 	}
 }
 
-// 从磁盘日志区提取日志初始块至内存
+// 读取日志初始块至内存，通常用来检验前次操作是否崩溃
 static void read_head(void)
 {
 	struct buf *buf = bread(log.dev, log.start);
@@ -88,10 +88,10 @@ static void recover_from_log(void)
 	read_head();
 	install_trans(); // 确认后，即将数据由日志拷入磁盘
 	log.lh.n = 0;
-	write_head(); // 清空该日志块
+	write_head(); // 清空该日志初始块
 }
 
-// 在每一次系统调用开始时调用该程序
+// 在每一次系统调用队列开始时调用该程序
 void begin_op(void)
 {
 	while (1) {
@@ -109,7 +109,7 @@ void begin_op(void)
 	}
 }
 
-// 系统调用终止时被调用
+// 系统调用队列终止时被调用
 // 确认这次调用是否为最后一次操作
 void end_op(void)
 {
@@ -158,7 +158,7 @@ static void commit()
 		write_head();    // 更新初始块
 		install_trans(); // 现在正式开始更新磁盘数据
 		log.lh.n = 0;
-		write_head();    //从日志中擦除此次更新
+		write_head();    //清空日志初始块
 	}
 }
 
