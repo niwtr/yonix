@@ -101,7 +101,7 @@ void timeslice_yield(){
 void sleep(void * s)
 {
   uint tick0 = ticks;
-  proc->p_chan=e;
+  proc->p_chan=s;
   proc->p_stat=SSLEEPING;
   transform(); /* swtch away.*/
   proc->p_chan=0; /* when sched back (return from wakeup), tidy up. */

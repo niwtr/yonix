@@ -15,8 +15,8 @@
 #include "proc.h"
 #include "x86.h"
 
-
-
+#define KEY_UP 0xE2
+#define KEY_DN 0xE3
 
 static void consputc(int);
 
@@ -30,46 +30,48 @@ printint(int xx, int base, int sign)
   int i;
   uint x;
 
-  if(sign && (sign = xx < 0))
+  if (sign && (sign = xx < 0))
     x = -xx;
   else
     x = xx;
 
   i = 0;
-  do{
+  do
+  {
     buf[i++] = digits[x % base];
-  }while((x /= base) != 0);
+  } while ((x /= base) != 0);
 
-  if(sign)
+  if (sign)
     buf[i++] = '-';
 
-  while(--i >= 0)
+  while (--i >= 0)
     consputc(buf[i]);
 }
 //PAGEBREAK: 50
 
 // Print to the console. only understands %d, %x, %p, %s.
-void
-cprintf(char *fmt, ...)
+void cprintf(char *fmt, ...)
 {
   int i, c;
   uint *argp;
   char *s;
 
-
   if (fmt == 0)
     panic("null fmt");
 
-  argp = (uint*)(void*)(&fmt + 1);
-  for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
-    if(c != '%'){
+  argp = (uint *)(void *)(&fmt + 1);
+  for (i = 0; (c = fmt[i] & 0xff) != 0; i++)
+  {
+    if (c != '%')
+    {
       consputc(c);
       continue;
     }
     c = fmt[++i] & 0xff;
-    if(c == 0)
+    if (c == 0)
       break;
-    switch(c){
+    switch (c)
+    {
     case 'd':
       printint(*argp++, 10, 1);
       break;
@@ -78,9 +80,9 @@ cprintf(char *fmt, ...)
       printint(*argp++, 16, 0);
       break;
     case 's':
-      if((s = (char*)*argp++) == 0)
+      if ((s = (char *)*argp++) == 0)
         s = "(null)";
-      for(; *s; s++)
+      for (; *s; s++)
         consputc(*s);
       break;
     case '%':
@@ -93,11 +95,9 @@ cprintf(char *fmt, ...)
       break;
     }
   }
-
 }
 
-void
-panic(char *s)
+void panic(char *s)
 {
   int i;
   uint pcs[10];
@@ -107,17 +107,17 @@ panic(char *s)
   cprintf(s);
   cprintf("\n");
   getcallerpcs(&s, pcs);
-  for(i=0; i<10; i++)
+  for (i = 0; i < 10; i++)
     cprintf(" %p", pcs[i]);
   panicked = 1; // freeze other CPU
-  for(;;)
+  for (;;)
     ;
 }
 
 //PAGEBREAK: 50
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
-static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+static ushort *crt = (ushort *)P2V(0xb8000); // CGA memory
 
 static void
 cgaputc(int c)
@@ -126,80 +126,121 @@ cgaputc(int c)
 
   // Cursor position: col + 80*row.
   outb(CRTPORT, 14);
-  pos = inb(CRTPORT+1) << 8;
+  pos = inb(CRTPORT + 1) << 8;
   outb(CRTPORT, 15);
-  pos |= inb(CRTPORT+1);
+  pos |= inb(CRTPORT + 1);
 
-  if(c == '\n')
-    pos += 80 - pos%80;
-  else if(c == BACKSPACE){
-    if(pos > 0) --pos;
-  } else
-    crt[pos++] = (c&0xff) | 0x0700;  // black on white
+  if (c == '\n')
+    pos += 80 - pos % 80;
+  else if (c == BACKSPACE)
+  {
+    if (pos > 0)
+      --pos;
+  }
+  else
+    crt[pos++] = (c & 0xff) | 0x0700; // black on white
 
-  if(pos < 0 || pos > 25*80)
+  if (pos < 0 || pos > 25 * 80)
     panic("pos under/overflow");
 
-  if((pos/80) >= 24){  // Scroll up.
-    memmove(crt, crt+80, sizeof(crt[0])*23*80);
+  if ((pos / 80) >= 24)
+  { // Scroll up.
+    memmove(crt, crt + 80, sizeof(crt[0]) * 23 * 80);
     pos -= 80;
-    memset(crt+pos, 0, sizeof(crt[0])*(24*80 - pos));
+    memset(crt + pos, 0, sizeof(crt[0]) * (24 * 80 - pos));
   }
 
   outb(CRTPORT, 14);
-  outb(CRTPORT+1, pos>>8);
+  outb(CRTPORT + 1, pos >> 8);
   outb(CRTPORT, 15);
-  outb(CRTPORT+1, pos);
+  outb(CRTPORT + 1, pos);
   crt[pos] = ' ' | 0x0700;
 }
 
-void
-consputc(int c)
+void consputc(int c)
 {
-  if(panicked){
+  if (panicked)
+  {
     cli();
-    for(;;)
+    for (;;)
       ;
   }
 
-  if(c == BACKSPACE){
-    uartputc('\b'); uartputc(' '); uartputc('\b');
-  } else
+  if (c == BACKSPACE)
+  {
+    uartputc('\b');
+    uartputc(' ');
+    uartputc('\b');
+  }
+  else
     uartputc(c);
   cgaputc(c);
 }
 
 #define INPUT_BUF 128
-struct {
+struct
+{
   char buf[INPUT_BUF];
-  uint r;  // Read index
-  uint w;  // Write index
-  uint e;  // Edit index
+  uint r; // Read index
+  uint w; // Write index
+  uint e; // Edit index
 } input;
 
-#define C(x)  ((x)-'@')  // Control-x
-
-int pausing =1;
-void
-consoleintr(int (*getc)(void))
+#define CMD_BUF 30
+struct
 {
-  int c, doprocdump = 0, dokill=0, dolistproc=0;
+  char cmd[CMD_BUF][INPUT_BUF];
+  uint n; // number of command
+  uint c; // current display index
+} cmd_histy;
+
+#define C(x) ((x) - '@') // Control-x
+
+int histy_flag = 0;
+int pausing = 1;
+
+void clear_line()
+{
+  while (input.e != input.w &&
+         input.buf[(input.e - 1) % INPUT_BUF] != '\n')
+  {
+    input.e--;
+    consputc(BACKSPACE);
+  }
+}
+
+void put_histy()
+{
+  for (int i = 0; i < strlen(cmd_histy.cmd[(cmd_histy.c - 1) % CMD_BUF]); i++)
+  {
+    char c = cmd_histy.cmd[(cmd_histy.c - 1) % CMD_BUF][i];
+    if (c == '\n')
+      break;
+
+    input.buf[input.e++ % INPUT_BUF] = c;
+    consputc(c);
+  }
+}
+
+void consoleintr(int (*getc)(void))
+{
+  int c, doprocdump = 0, dokill = 0, dolistproc = 0;
   int q;
-  while((c = getc()) >= 0){
-    switch(c){
-    case C('P'):  // Process listing.
+  while ((c = getc()) >= 0)
+  {
+    switch (c)
+    {
+    case C('P'): // Process listing.
       // procdump() locks cons.lock indirectly; invoke later
       doprocdump = 1;
       break;
-    case C('U'):  // Kill line.
-      while(input.e != input.w &&
-            input.buf[(input.e-1) % INPUT_BUF] != '\n'){
-        input.e--;
-        consputc(BACKSPACE);
-      }
+    case C('U'): // Kill line.
+      clear_line();
       break;
-    case C('H'): case '\x7f':  // Backspace
-      if(input.e != input.w){
+    case C('H'):
+    case '\x7f': // Backspace
+      if (input.e != input.w)
+      {
         input.e--;
         consputc(BACKSPACE);
       }
@@ -208,60 +249,97 @@ consoleintr(int (*getc)(void))
       dokill = 1;
       break;
     case C('L'): //list procs.
-        dbg_lstprocs();
-        while((q=getc())!=C('L'));
+      dbg_lstprocs();
+      while ((q = getc()) != C('L'))
+        ;
+      break;
+
+    case KEY_UP: // last command
+      if (cmd_histy.c > 1)
+      {
+        clear_line();
+
+        cmd_histy.c--;
+        put_histy();
+      }
+      break;
+
+    case KEY_DN: // next command
+      if (cmd_histy.c < cmd_histy.n)
+      {
+        clear_line();
+
+        cmd_histy.c++;
+        put_histy();
+      }
       break;
 
     default:
-      if(c != 0 && input.e-input.r < INPUT_BUF){
+      if (c != 0 && input.e - input.r < INPUT_BUF)
+      {
         c = (c == '\r') ? '\n' : c;
+
         input.buf[input.e++ % INPUT_BUF] = c;
         consputc(c);
-        if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
+        if (c == '\n' || c == C('D') || input.e == input.r + INPUT_BUF)
+        {
           input.w = input.e;
+          if (strlen(&input.buf[input.r]) > 1 && strncmp(cmd_histy.cmd[(cmd_histy.n - 1) % CMD_BUF], &input.buf[input.r], strlen(&input.buf[input.r]) - 1))
+          {
+            safestrcpy(cmd_histy.cmd[cmd_histy.n++ % CMD_BUF], &input.buf[input.r], strlen(&input.buf[input.r]));
+          }
+          cmd_histy.c = cmd_histy.n + 1;
+
           wakeup(&input.r);
         }
       }
       break;
     }
   }
-  if(dokill){
-    if(proc && proc->p_pid > 2){
-      int pid=proc->p_pid;
+  if (dokill)
+  {
+    if (proc && proc->p_pid > 2)
+    {
+      int pid = proc->p_pid;
       kill(pid);
       cprintf("killed: %d\n", pid);
     }
   }
 
-  if(dolistproc){
+  if (dolistproc)
+  {
     dbg_lstprocs();
   }
 
-
-  if(doprocdump) {
-    dbg_procdump();  // now call procdump() wo. cons.lock held
+  if (doprocdump)
+  {
+    dbg_procdump(); // now call procdump() wo. cons.lock held
   }
 }
 
-int
-consoleread(struct inode *ip, char *dst, int n)
+int consoleread(struct inode *ip, char *dst, int n)
 {
   uint target;
   int c;
 
   iunlock(ip);
   target = n;
-  while(n > 0){
-    while(input.r == input.w){
-      if(proc->p_killed){
+  while (n > 0)
+  {
+    while (input.r == input.w)
+    {
+      if (proc->p_killed)
+      {
         ilock(ip);
         return -1;
       }
       sleep(&input.r);
     }
     c = input.buf[input.r++ % INPUT_BUF];
-    if(c == C('D')){  // EOF
-      if(n < target){
+    if (c == C('D'))
+    { // EOF
+      if (n < target)
+      {
         // Save ^D for next time, to make sure
         // caller gets a 0-byte result.
         input.r--;
@@ -270,7 +348,7 @@ consoleread(struct inode *ip, char *dst, int n)
     }
     *dst++ = c;
     --n;
-    if(c == '\n')
+    if (c == '\n')
       break;
   }
   ilock(ip);
@@ -278,21 +356,19 @@ consoleread(struct inode *ip, char *dst, int n)
   return target - n;
 }
 
-int
-consolewrite(struct inode *ip, char *buf, int n)
+int consolewrite(struct inode *ip, char *buf, int n)
 {
   int i;
 
   iunlock(ip);
-  for(i = 0; i < n; i++)
+  for (i = 0; i < n; i++)
     consputc(buf[i] & 0xff);
   ilock(ip);
 
   return n;
 }
 
-void
-consoleinit(void)
+void consoleinit(void)
 {
 
   devsw[CONSOLE].write = consolewrite;
@@ -302,7 +378,8 @@ consoleinit(void)
   //ioapicenable(IRQ_KBD, 0);//TODO warning
 }
 
-void prtwelcome(){
+void prtwelcome()
+{
   cprintf("  ___    ___ ________  ________   ___     ___    ___ \n");
   cprintf(" |\\  \\  /  /|\\   __  \\|\\   ___  \\|\\  \\   |\\  \\  /  /|\n");
   cprintf(" \\ \\  \\/  / | \\  \\|\\  \\ \\  \\\\ \\  \\ \\  \\  \\ \\  \\/  / /\n");
