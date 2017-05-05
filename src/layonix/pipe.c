@@ -13,13 +13,13 @@
 
 struct pipe {
 	char data[PIPESIZE];
-	uint nread;     // ´Ó»º³åÇø¶Á³öµÄ×Ö½ÚÊı
-	uint nwrite;    // ´Ó»º³åÇøĞ´ÈëµÄ×Ö½ÚÊı
-	int readopen;   // ´ò¿ª¶Á¶Ë¿Ú
-	int writeopen;  // ´ò¿ªĞ´¶Ë¿Ú
+	uint nread;     // ä»ç¼“å†²åŒºè¯»å‡ºçš„å­—èŠ‚æ•°
+	uint nwrite;    // ä»ç¼“å†²åŒºå†™å…¥çš„å­—èŠ‚æ•°
+	int readopen;   // æ‰“å¼€è¯»ç«¯å£
+	int writeopen;  // æ‰“å¼€å†™ç«¯å£
 };
 
-//·ÖÅäÒ»¸ö¹ÜµÀ
+//åˆ†é…ä¸€ä¸ªç®¡é“
 int pipealloc(struct file **f0, struct file **f1)
 {
 	struct pipe *p;
@@ -69,40 +69,40 @@ void pipeclose(struct pipe *p, int writable)
 	else
 		;
 }
-//Ğ´Êı¾İµ½pipe
+//å†™æ•°æ®åˆ°pipe
 int pipewrite(struct pipe *p, char *addr, int n)
 {
 	int i;
 
 	for (i = 0; i < n; i++) {
-		while (p->nwrite == p->nread + PIPESIZE) {  //»º³åÇøĞ´ÂúÁË
+		while (p->nwrite == p->nread + PIPESIZE) {  //ç¼“å†²åŒºå†™æ»¡äº†
 			if (p->readopen == 0 || proc->p_killed) {
 				return -1;
 			}
 			wakeup(&p->nread);
-			sleep(&p->nwrite);  //sleepĞ´Õß
+			sleep(&p->nwrite);  //sleepå†™è€…
 		}
 		p->data[p->nwrite++ % PIPESIZE] = addr[i];
 	}
-	wakeup(&p->nread);  //wakeup¶ÁÕß
+	wakeup(&p->nread);  //wakeupè¯»è€…
 	return n;
 }
-//´Ópipe¶ÁÈ¡Êı¾İ
+//ä»pipeè¯»å–æ•°æ®
 int piperead(struct pipe *p, char *addr, int n)
 {
 	int i;
 
-	while (p->nread == p->nwrite && p->writeopen) {  //¹ÜµÀÎª¿Õ
+	while (p->nread == p->nwrite && p->writeopen) {  //ç¼“å†²åŒºä¸ºç©º
 		if (proc->p_killed) {
 			return -1;
 		}
-		sleep(&p->nread); //sleep¶ÁÕß
+		sleep(&p->nread); //sleepè¯»è€…
 	}
-	for (i = 0; i < n; i++) {  //¿½±´¹ÜµÀÖĞµÄÊı¾İ
+	for (i = 0; i < n; i++) {  //æ‹·è´ç®¡é“ä¸­çš„æ•°æ®
 		if (p->nread == p->nwrite)
 			break;
 		addr[i] = p->data[p->nread++ % PIPESIZE];
 	}
-	wakeup(&p->nwrite);  //wakeupĞ´Õß
+	wakeup(&p->nwrite);  //wakeupå†™è€…
 	return i;
 }
