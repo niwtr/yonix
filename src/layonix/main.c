@@ -30,7 +30,7 @@ main(void)
   consoleinit();   // console hardware
   uartinit();      // serial port
 
-  prtwelcome();
+  prtwelcome(); // print welcome screen
 
 
   trapvecinit();        // trap vectors
