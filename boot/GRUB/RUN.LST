@@ -1,0 +1,162 @@
+﻿debug off
+checkrange 0x21 read 0x8280 && pxe keep
+call Fn.0 0x40000 "!BAT\necho -P:0000 $[0000]\t\t\t\t\t\t\t\t\t\0" && initscript (md)0x200+1
+font (ud)/ILMT/GRUB/FONT_CN.HEX
+graphicsmode -1 640:800 480:600 32
+splashimage /ILMT/GRUB/BACK.LZMA || splashimage /ILMT/GRUB/BACK.BMP || find --set-root /ILMT/GRUB/BACK.LZMA && splashimage /ILMT/GRUB/BACK.LZMA || find --set-root /ILMT/GRUB/BACK.BMP && splashimage /ILMT/GRUB/BACK.BMP
+terminal --font-spacing=0:3
+color normal=31 highlight=0x0D helptext=0x0D heading=0x0A standard=0x0F border=0x0E
+set com=/ILMT/GRUB/
+cat --length=0 %?_BOOT%%com%RUN && set root=%?_BOOT% ! cat --length=0 %@root%%com%RUN && set root=%@root% ! find --set-root %com%RUN
+set com= && set root= && command --set-path=%root%%com%
+command /ILMT/GRUB/menuset x=12 w=78 y=15 h=19 b=26 n=2
+
+default 2
+write 0x8274 0
+
+title      User Menu                                lllll     lll lllll \n
+clear
+
+title [01] 返回老毛桃U盘启动主菜单                  lllllllllllll llll \n 返回主菜单
+configfile (md)4+8
+
+title [02] 自动搜索并列出LMT目录下所有文件        lll  llll lll llll \n 需自备IMG/ISO/IMA文件，放在 /LMT/ 目录下
+command RUN /LMT/
+
+title [03] 自动搜索并列出LMT目录下所有文件        ll       lll lllll \n 需自备IMG/ISO/IMA文件，放在 /LMT/ 目录下
+command RUN --autolist /LMT/
+
+title [04] 自动搜索并列出LMT目录下所有文件               llll lllll \n 需自备IMG/ISO/IMA文件，放在 /LMT/ 目录下
+command RUN --automenu /LMT/
+
+title [05] 启动 NT6x/NT5x系统 （USB启动专用）            lllll llllll \n 仅适用于USB设备启动本地硬盘上的系统
+command RUN --nt /bootmgr /ntldr
+
+title [06] 启动 DOS时代菜鸟工具箱 中的低格工具      llllllllll llllll \n 需自备DTS.IMA文件，放在 /BOOT/IMGS/ 目录下
+command RUN DTS.IMA 2d
+
+title [07] 启动 DOS时代菜鸟工具箱 中的MHDD工具     ll   llllll lllll \n 需自备DTS.IMA文件，放在 /BOOT/IMGS/ 目录下
+command RUN DTS.IMA --dts-ext 2a
+
+title [08] 启动 MAXDOS工具箱 中的CHKDSK工具              lllll lllll \n 需自备MAXDOS.IMG文件，放在 /BOOT/IMGS/ 目录下
+command RUN MAXDOS.IMG CHKDSK
+
+title [09] 启动 MAXDOS工具箱 中的CMOS工具            lllllllll llll \n 需自备MAXDOS.IMG文件，放在 /BOOT/IMGS/ 目录下
+command RUN MAXDOS.IMG --max-ext call CMOS.BAT
+
+title [10] 启动第二菜单                                 llllll lll \n 自备 BOOT.LST 文件，放在 /BOOT/GRUB/ 目录下
+command RUN /BOOT/GRUB/BOOT.LST
+
+#以下为特色功能
+title [11] 将TEST.ISO文件作为IMG文件启动                 llll lll \n 仅为示例
+command RUN --as.img /TEST.ISO
+
+title [12] 将MENU文件作为菜单文件加载                    lllllll \n 仅为示例
+command RUN --as.lst /BOOT/GRUB/MENU
+
+title [12] 启动RAMOS                                     llllll lllllll \n 仅为示例
+command RUN --ramos /ramxp.img
+#或
+#command RUN --ramos /ramxp.img /ntldr
+
+title [13] 列出 DOS时代菜鸟工具箱 中所有工具            llllllllllllllllll lll \n 需自备DTS.IMA文件，放在 /BOOT/IMGS/ 目录下
+command RUN DTS.IMA --dts-list
+
+title [14] 列出默认目录/BOOT/IMGS/下的所有文件      llllllllllllllllllllll \n 自动菜单方式
+command RUN --automenu
+
+title [15] 列出/ISOS/目录下的所有ISO文件           lllllll        llllllll \n 自动菜单方式
+command RUN --automenu --show.iso /isos/
+
+title [16] 不列出/ISOS/目录下的所有IMG文件 \n 自动菜单方式
+command RUN --automenu --not-show.img /isos/
+
+title [17] 列出目前所有可用设备 \n 自动菜单方式
+command RUN --automenu-all
+
+title [18] 列出目前所有hdd类设备 \n 自动菜单方式
+command RUN --dev=h --automenu-all
+
+title [19] 列出默认目录/BOOT/IMGS/下的所有文件 \n 自动列表方式
+command RUN --autolist
+
+title [20] 列出/ISOS/目录下的所有ISO文件 \n 自动列表方式
+command RUN --autolist --show.iso /isos/
+
+title [21] 不列出/ISOS/目录下的所有IMG文件 \n 自动列表方式
+command RUN --autolist --not-show.img /isos/
+
+title [22] 列出目前所有可用设备 \n 自动列表方式
+command RUN --autolist-all
+
+title [23] 列出目前所有hdd类设备 \n 自动列表方式
+command RUN --dev=h --autolist-all
+
+title [24] 交换一次磁盘，等待用户输入文件名或目录名或命令 \n
+command RUN --swap
+
+title [25] 交换一次磁盘，然后返回 \n
+command RUN --swap --end
+
+title [26] 先给出当前磁盘分布情况，按 S 进行交换，回车结束交换，可交换多次 \n
+command RUN --swap-ext
+
+title [27] 先给出当前磁盘分布情况，按 S 进行交换，回车结束交换，进行返回操作，可交换多次 \n
+command RUN --swap-ext --end
+
+title [28] 使用firadisk驱动安装系统 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 /WIN$.ISO 文件
+command RUN --fira iso=/WIN$.ISO
+
+title [29] 使用firadisk驱动安装系统（载入内存） \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 /WIN$.ISO 文件
+command RUN --mem --fira iso=/WIN$.ISO
+
+title [30] 使用自备驱动安装系统 \n 需自备软盘镜像（本次以/USER.IMG为例） 以及 /WIN$.ISO 文件
+command RUN --fira:/USER.IMG iso=/WIN$.ISO
+
+title [31] 使用firadisk驱动安装系统至硬盘镜像中 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 /WIN$.ISO 以及 /RAMXP.IMG 文件
+command RUN --fira iso=/WIN$.ISO disk=/RAMXP.IMG
+
+title [32] 使用自备驱动安装系统至硬盘镜像中 \n 需自备软盘镜像（本次以/USER.IMG为例） 以及 /WIN$.ISO 以及 /RAMXP.IMG 文件
+command RUN --fira:/USER.IMG iso=/WIN$.ISO disk=/RAMXP.IMG
+
+title [33] 使用firadisk驱动启动制作好的硬盘镜像（类似ramos，但设置可保存） \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 /RAMXP.IMG 文件
+command RUN --fira disk=/RAMXP.IMG
+
+title [34] 使用firadisk驱动安装系统，同时加载默认位置的srs驱动 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动包 以及 /WIN$.ISO 文件，驱动包默认使用hotdll整理的驱动包，和RUN放在同目录的SRS目录下
+command RUN --fira srs iso=/WIN$.ISO
+
+title [35] 使用firadisk驱动安装系统，同时加载默认位置的DriverPack驱动 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动包 以及 /WIN$.ISO 文件，驱动包默认使用DriverPack驱动包，解压得到DriverPack.ini文件即目录D，放在RUN同目录下
+command RUN --fira dpms iso=/WIN$.ISO
+
+title [36] 使用firadisk驱动安装系统，同时加载指定位置的srs驱动 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动包 以及 /WIN$.ISO 文件，本次以放在根目录下的SRS目录为例
+command RUN --fira srs:/srs/ iso=/WIN$.ISO
+
+title [37] 使用firadisk驱动安装系统，同时加载指定位置的DriverPack驱动 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动包 以及 /WIN$.ISO 文件，本次以放在根目录下的SRS目录为例
+command RUN --fira dpms:/srs/ iso=/WIN$.ISO
+
+title [38] 使用firadisk驱动安装系统，同时加载默认位置的srs驱动以及无人值守安装应答文件 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动 以及 /WIN$.ISO 以及自应答winnt.sif文件，驱动包默认使用hotdll整理的驱动包，和RUN放在同目录的SRS目录下，自应答文件默认使用RUN同目录的名为winnt.sif的文件
+command RUN --fira srs sif iso=/WIN$.ISO
+
+title [39] 使用firadisk驱动安装系统，同时加载默认位置的DriverPack驱动以及无人值守安装应答文件 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动 以及 /WIN$.ISO 以及自应答winnt.sif文件，驱动包默认使用DriverPack驱动包，解压得到DriverPack.ini文件即目录D，放在RUN同目录下，自应答文件默认使用RUN同目录的名为winnt.sif的文件
+command RUN --fira dpms sif iso=/WIN$.ISO
+
+title [40] 使用firadisk驱动安装系统，同时加载指定位置的srs驱动以及指定的无人值守安装应答文件 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动 以及 /WIN$.ISO 以及自应答winnt.sif文件，本次以驱动包放在根目录下的SRS目录，自应答文件名为winnt.sif放在根目录下为例
+command RUN --fira srs:/srs/ sif:/winnt.sif iso=/WIN$.ISO
+
+title [41] 使用firadisk驱动安装系统，同时加载指定位置的DriverPack驱动以及指定的无人值守安装应答文件 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 驱动 以及 /WIN$.ISO 以及自应答winnt.sif文件，本次以驱动包放在根目录下的SRS目录，自应答文件名为winnt.sif放在根目录下为例
+command RUN --fira dpms:/srs/ sif:/winnt.sif iso=/WIN$.ISO
+
+title [42] 使用firadisk驱动直接启动iso镜像,通常用于启动PE镜像 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 以及 /PE.ISO 文件
+command RUN --fira-isonly iso=/PE.ISO
+
+title [43] 使用自备firadisk驱动直接启动iso镜像,通常用于启动PE镜像 \n 需自备 /IMGS/FIRA.IMG 以及 /PE.ISO 文件
+command RUN --fira-isonly:/IMGS/FIRA.IMG iso=/PE.ISO 
+
+title [44] 加载firadisk驱动后生成自动菜单 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 文件
+command RUN --fira --automenu
+
+title [45] 加载firadisk驱动以及SRS默认驱动包后生成自动菜单 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 文件以及驱动包
+command RUN --fira srs --automenu
+
+title [46] 加载firadisk驱动以及DPMS默认驱动包后生成自动列表 \n 需自备 /BOOT/IMGS/FIRADISK.IMG 文件以及驱动包
+command RUN --fira dpms --autolist
