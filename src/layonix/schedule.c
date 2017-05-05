@@ -7,40 +7,51 @@
 #include "x86.h"
 #include "proc.h"
 
-
-//non-private.
+/* switch to the proc specified. */
 void switch_to (struct proc * p)
 {
+  /* set current in-cpu proc to p*/
   proc = p;
   switchuvm(p);
   p->p_stat = SRUN;
+  /* switch the kernel-state context. */
   swtch(&cpu->scheduler, p->p_ctxt);
 }
 
+/* choose the schedule method (scheme) */
 void select_scheme (int schem){
   cpu->scheme = schem;
+  /* call the init process. */
   sched_reftable[cpu->scheme].init();
 }
+
+/* get the schedule method name. */
 void sched_name(char * name){
   const char * schedname =sched_reftable[cpu->scheme].scheme_method;
   safestrcpy(name, schedname, strlen(schedname)+1);
 }
 
+
+/* the body of scheduler.
+ * note there is only one scheduler in kernel
+ * but it can be assigned to different schedule method (scheme)
+ * the scheme is stored in a array for dynamic selection. */
 void scheduler(void)
 {
 
 	while (true)
     {
-      sti();
+      sti(); /* allow interruption. */
       if(!sched_reftable[cpu->scheme].scheme()) //sched
           continue;
-      //switch back.
+      /* switch back here in scheduler. */
       switchkvm();//FIXME
+      /* set the current proc to null */
       proc = 0;
     }
 }
 
-
+/* check the status and call switch() */
 void transform(void)
 {
 
@@ -52,24 +63,31 @@ void transform(void)
 
 
 
-
+/* once this function is called the current proc is
+ * doomed to be sched away. we call the enqueue()
+ * to move the proc to ready queue and call after()
+ * to update the timeslice (if in need) */
 void giveup_cpu(void)
 {
 	proc->p_stat = READY;
-
   sched_reftable[cpu->scheme].enqueue(proc);
   sched_reftable[cpu->scheme].after();
-
-	transform();
-
+	transform(); /* scheduling away, good luck. */
 }
 
-
+/* in each time interrupt the function is called
+ * it checks its timeslice remain and chk wether
+ * it is time-out. the avgslp slot is also updated
+ * which is used for dynamic priority scheduling. */
 void timeslice_yield(){
+  /* we never sched away unterminated proc in fifo. */
   if (proc->p_time_slice == ETERNAL)
     return ;
+  /* reduce the timeslice */
   proc->p_time_slice -= TIMER_INTERVAL;
+  /* update the average sleep time. */
   proc->p_avgslp = MAX(-50, proc->p_avgslp-1);
+  /* check the proc is(or not) timeout. */
   if(proc->p_time_slice<=0)
       giveup_cpu();
 }
@@ -78,16 +96,15 @@ void timeslice_yield(){
 
 
 
-/* sleep a proc on specific event and swtch away. */
-void sleep(void * e)
+/* sleep a proc on specific event and sched away.
+ * the event s of which the proc is sleep on is called "chan". */
+void sleep(void * s)
 {
-  //tell event.
-
   uint tick0 = ticks;
   proc->p_chan=e;
   proc->p_stat=SSLEEPING;
-  transform(); //swtch away.
-  proc->p_chan=0; // when sched back (return from wakeup), tidy up.
+  transform(); /* swtch away.*/
+  proc->p_chan=0; /* when sched back (return from wakeup), tidy up. */
   proc->p_avgslp = MIN(proc->p_avgslp+(tick0-ticks), MAX_AVGSLP);
 }
 

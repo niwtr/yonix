@@ -1,5 +1,3 @@
-
-
 #include "param_yonix.h"
 #include "yotypes.h"
 #include "defs.h"
@@ -46,9 +44,9 @@ void rdinit()
  *   +------------+        |      trapframe       |
  *                         |                      |
  *                         +----------------------+
- *                         |     trapret ptr      |
- *                         |                      |
- *                         +----------------------+
+ *                         |     trapret ptr      |<- the trapret pointer is placed here
+ *                         |                      |   so once the proc returns from trap() it
+ *                         +----------------------+   falls through to trapret.
  *                         |       context        |
  *                         |                      |
  *                         +----------------------+
@@ -72,7 +70,7 @@ void rdinit()
  *
  */
 
-
+/* update the timeslice of each proc. */
 void recalc_timeslice (void)
 {
   search_through_ptablef(p){
@@ -81,25 +79,28 @@ void recalc_timeslice (void)
   }
 }
 
-
+/* allocate a new proc. once the proc
+ * is ready it is in SEMBRYO state
+ * which cannot be scheduled directly.
+ * the fork, userinit and lwp_create is
+ * used to assemble the proc to sched-ready. */
 static struct proc* procalloc(void)
 {
 
 
-	char * sp;
+	char * sp; /* stack pointer. */
 
   if(Q_EMPTY(&esqueue))
     return 0;
 
-
+  /* remove from the empty slot queue. */
   struct slot_entry * ee = Q_FIRST(&esqueue);
   struct proc * p = ee->slotptr;
   Q_REMOVE(&esqueue, ee, lnk);
   free_slab((char *) ee);
+
   p->p_stat = SEMBRYO;
   p->p_pid = nextpid++;
-  //nextpid++;
-
   p->p_nice = 0;
   p->p_spri = STATIC_PRI(p->p_nice);
   p->p_creatime = ticks;
@@ -107,132 +108,113 @@ static struct proc* procalloc(void)
   sched_reftable[cpu->scheme].timeslice(p);
   p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
 
-
+  /* allocate the kernel stack. */
   p->p_kstack = kalloc();
 
 
   if (p->p_kstack==0)
-    {
+  {
       p->p_stat = SUNUSED;
-
       return 0;
-    }
-
-
-
+  }
   sp = p->p_kstack + K_STACKSZ;
-
-
+  /* set the tf position */
   sp = sp - sizeof(*p->p_tf);
   p->p_tf = (struct trapframe*) sp;
 
-
-  // Set up new context to start executing at forkret,
-  // which returns to trapret.
-
+  /* set the return position, trapret. */
   sp = sp - 4;
   *(uint*)sp = (uint)trapret;
-
+  /* set the context position */
   sp = sp - sizeof (*p->p_ctxt);
   p->p_ctxt = (struct context*)sp;
-  //TODO require API
+  /* clear the kernel context */
   memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
-
   return p;
-
 }
 
 
-/* ������ǰ���̷����������ڴ��ռ䡣 */
+
 int procgrow(int n){
   uint sz;
   sz = proc->p_size;
-  if(n > 0){ //���������ڴ�
-    //TODO require api allocuvm
+  if(n > 0){
     sz=allocuvm(proc->p_page,sz,sz+n);
     if(sz==0)
       return -1;
-  } else if(n<0){ //��С�����ڴ�
-    //TODO require api deallocuvm
+  } else if(n<0){
     sz = deallocuvm(proc->p_page, sz, sz+n, proc->p_pid);
     if(sz==0)
       return -1;
   }
-
   proc->p_size = sz;
-  switchuvm(proc); //FIXME ����ʲô��
+  switchuvm(proc);
   return 0;
 }
 
 
 
 
-
+/* fork a new proc. that is, clone the virtural memory space
+ * of parent proc. generate a proc that is sched-ready. */
 int fork(void)
 {
 
 	int i, pid;
 	struct proc *np;
-
-
 	np = procalloc();
-
 	if (np == 0)
 	{
-		return -1;
+		return -1; /* proc allocate fail. */
 	}
-
-
+  /* copy the parent vm */
 	np->p_page = copyuvm(proc->p_page, proc->p_size, np->p_pid);
+  /* copy failed. reset the state and collect rubbish. */
 	if (np->p_page == 0)
-
 	{
-
 		kfree(np->p_kstack);
 		np->p_kstack = 0;
 		np->p_stat = SUNUSED;
-
-
     struct slot_entry * ee = (struct slot_entry*) alloc_slab();
     ee->slotptr = np;
     Q_INSERT_TAIL(&esqueue, ee, lnk);
-
 		return -1;
 	}
 
 	np->p_size = proc->p_size;
 	np->p_prt = proc;
+  /* copu trapframe (user context) */
 	*(np->p_tf) = *(proc->p_tf);
-
-
+  /* clear the eax so that fork() returns zero in child */
 	np->p_tf->eax = 0;
+  /* set the entry where trap returns to. */
   np->p_ctxt->eip = (uint)forkret;
+  /* duplicate the open file. */
 	for (i = 0; i < P_NOFILE; i++)
 		if (proc->p_of[i])
 			np->p_of[i] = filedup(proc->p_of[i]);
 
-
+  /* duplicate current direction */
 	np->p_cdir = idup(proc->p_cdir);
-
-
+  /* inherent the parent name.  */
 	safestrcpy(np->p_name, proc->p_name, sizeof(proc->p_name));
 	pid = np->p_pid;
-  np->p_procp = 1; // this is, indeed, a proc.
+  np->p_procp = 1; /* this is, indeed, a proc. */
 	np->p_stat = READY;
+  /* enter ready queue specified on each scheme. */
   sched_reftable[cpu->scheme].enqueue(np);
-
-
 	return pid;
 }
 
+/* exit a proc. if there exists a parent waiting,
+ * the parent is waken to kill this proc. or else the
+ * proc become a zombie and is set to be cleaned by init. */
 void exit(void){
-
-
 
   if(proc == initproc)
     panic("init exiting");
 
-  // close all opened files.
+  /* close all opened files. */
   int fd;
   for(fd=0;fd< P_NOFILE;fd++){
     if(proc->p_of[fd]){
@@ -241,19 +223,19 @@ void exit(void){
     }
   }
 
-
-  //�ͷŵ�ǰ��������Ŀ¼
-  //TODO �ļ�ϵͳ
-  //TODO require api
   begin_op();
+  /* release the inode pointing
+   * to the current dir*/
   iput(proc->p_cdir);
   end_op();
   proc->p_cdir=0;
 
+  /* wake up the parent! */
+  wakeup(proc->p_prt);
 
-  wakeup(proc->p_prt); //���Ѹ����̡�
-
-  //TODO ��Щ����̫����
+  /* find its children and transfer
+   * their parent to init which,
+   * will peace them eventually. */
   search_through_ptablef(p){
     if(p->p_prt==proc){
       p->p_prt=initproc;
@@ -261,18 +243,17 @@ void exit(void){
         wakeup(initproc);
     }
   }
-
+  /* become a zombie */
   proc->p_stat=SZOMB;
+  /* sched away, good luck */
   transform();
 
-
-
+  /* a zombie proc never escape form here. */
   panic("zombie exit.");
 
 }
 
-//mark the proc to kill.
-//TODO ʲôʱ���������̱�����ɱ����
+/* kill some proc. */
 int kill(int pid)
 {
 
@@ -287,14 +268,12 @@ int kill(int pid)
 }
 
 
-
-
 void forkret(void){
   static int firstproc=1;
   if(firstproc){
     firstproc=0;
-    iinit(ROOTDEV);//FIXME
-    initlog(ROOTDEV);//FIXME
+    iinit(ROOTDEV);
+    initlog(ROOTDEV);
   }
 }
 
@@ -355,15 +334,15 @@ void dbg_lstprocs(void){
 
 
 
-//��һ���û�������
+
 void userinit(void)
 {
 	struct proc *p;
-	extern char _binary_initcode_start[], _binary_initcode_size[];//���Ǹ����ģ�
+	extern char _binary_initcode_start[], _binary_initcode_size[];
 	p = procalloc();
 
 	initproc = p;
-	//Ϊ�����������ڴ�ҳ�� ��ȡһ���µĶ���ҳ�����������ں�����ӳ��
+
 	p->p_page = setupkvm();
 	if (!p->p_page)
 		panic("userinit: setupkvm failed!");
