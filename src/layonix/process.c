@@ -331,7 +331,27 @@ void dbg_lstprocs(void){
 
   }
 }
+void dbg_lstslp(void){
+  search_through_ptablef(p){
+    if(p->p_stat != SSLEEPING)
+      continue;
+    cprintf("Sleeping %s PID: %d, chan: %p\n", p->p_procp?"proc":"thread", p->p_pid, p->p_chan);
+  }
+}
 
+
+void dbg_lstrdy(void){
+  int num=0;
+  search_through_ptablef(p){
+    if(p->p_stat != READY)
+      continue;
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d chan:%p\n", p->p_pid, p->p_name, "READY", p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_chan);
+    num++;
+  }
+  if(!num)
+    cprintf("No process is currently in READY status.\n");
+
+}
 
 
 

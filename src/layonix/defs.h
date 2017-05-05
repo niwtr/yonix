@@ -113,6 +113,8 @@ int             kill(int);
 
 void            dbg_procdump(void);
 void            dbg_lstprocs(void);
+void            dbg_lstrdy(void);
+void            dbg_lstslp(void);
 void            switch_to(struct proc *);
 void            select_scheme(int);
 void            sched_name(char *);
