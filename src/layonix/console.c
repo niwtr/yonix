@@ -251,10 +251,10 @@ consoleintr(int (*getc)(void))
           }
           if(status == 3)
           {
-            if(function == 0){
+
               cprintf("\nkilled: %d\n", pid);
               kill(pid);
-            }
+
               status=0;
           }
         }

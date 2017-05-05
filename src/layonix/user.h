@@ -48,7 +48,7 @@ int sem_v(int,sem * );
 int mut_init(sem *);
 int mut_p(sem *);
 int mut_v(sem *);
-
+int toggle_debug(void);
 
 
 

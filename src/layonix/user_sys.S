@@ -50,4 +50,4 @@ SYSCALL(sem_v)
 SYSCALL(mut_init)
 SYSCALL(mut_p)
 SYSCALL(mut_v)
-
+SYSCALL(toggle_debug)

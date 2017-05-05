@@ -237,7 +237,8 @@ argstr(int n, char **pp)
   X(sem_v)                                      \
   X(mut_init)                                   \
   X(mut_p)                                      \
-  X(mut_v)
+  X(mut_v)\
+  X(toggle_debug)
 
 
 

@@ -106,7 +106,7 @@ int             lwp_join(void **);
 void            dynamic_sstore(void * , struct trapframe *, int);
 void            dynamic_restart(void * , struct trapframe *, int);
 
-
+extern int __debug;
 int             procgrow(int);
 
 int             kill(int);

@@ -6,7 +6,7 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
-
+int __debug = 0;
 
 /* Define a scheduler method (scheme)
  * We hold the view that a scheduler method can be described by five distinct functions:
@@ -48,6 +48,8 @@ DEFSHED(fifo, //name: fifo
           /* ok, get the first one and dequeue. */
           struct slot_entry * e = Q_FIRST(&rdyqueue);
           Q_REMOVE(&rdyqueue, e, lnk);
+          if(__debug)
+          cprintf("YONIX: Sched (FIFO) to PID %d\n", e->slotptr->p_pid);
           switch_to(e->slotptr);
           free_slab((char*) e);
           return 1;
@@ -102,6 +104,8 @@ DEFSHED(rr,
               p++;
               continue;
             }
+            if(__debug)
+            cprintf("YONIX: Sched (RR) to PID %d\n", p->p_pid);
             switch_to(p);
             p++;
             return 1;
@@ -138,13 +142,15 @@ DEFSHED(priority,
               if(p_primax == 0)
                 p_primax = p;
               else
-                if(p_primax->p_dpri > p->p_dpri) // 找到了一个优先级更高的。注意dpri越低，优先级越高。
+                if(p_primax->p_dpri < p->p_dpri) // 找到了一个优先级更高的。注意dpri越低，优先级越高。
                   p_primax = p;
             }
           }
 
           if(p_primax) //找到了进程 to swtich
           {
+            if(__debug)
+            cprintf("YONIX: Sched (PRI) to PID %d\n", p_primax->p_pid);
             switch_to(p_primax);
             return 1;
           } else {return 0;}
