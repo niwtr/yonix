@@ -30,6 +30,7 @@ main(void)
   consoleinit();   // console hardware
   uartinit();      // serial port
 
+
   prtwelcome(); // print welcome screen
 
 
@@ -45,6 +46,9 @@ main(void)
   esinit();       // init proc slot queue
   rdinit();
   select_scheme(SCHEME_RR);    // init scheduler method (for time slice)
+  char name[16];
+  sched_name(name);
+  cprintf("YONIX: Current schedule mathod: %s\n", name);
   userinit();      // first user process
 
   idtinit();       // load idt register

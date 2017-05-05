@@ -31,7 +31,9 @@ void esinit()
 void rdinit()
 {
   Q_INIT(&rdyqueue);
-
+  //dynamic shed queue init
+  for (int i=0;i<40;i++)
+    Q_INIT(&rdy_q_dy[i]);
 }
 
 

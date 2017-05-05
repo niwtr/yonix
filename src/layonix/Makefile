@@ -178,6 +178,7 @@ UPROGS=\
 	_zombie\
 	_consumer\
 	_pritest\
+	_toggle_debug\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

@@ -268,6 +268,9 @@ consoleintr(int (*getc)(void))
       dbg_lstslp();
       while((q=getc())!=C('S'));
       break;
+
+    case C('Z'):
+      while((q=getc())!=C('Z'));
     default:
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
@@ -367,4 +370,8 @@ void prtwelcome(){
   cprintf(" __/  / /      \\ \\_______\\ \\__\\\\ \\__\\ \\__\\/  /\\   \\  \n");
   cprintf("|\\___/ /        \\|_______|\\|__| \\|__|\\|__/__/ /\\ __\\ \n");
   cprintf("\\|___|/                                  |__|/ \\|__| \n");
+  cprintf("Welcome to YONIX, a simple yet complete operating system.\n");
+  cprintf("Author: Tianrui Niu, Han Liu, Lingxuan Li, \n        Zhongyuan Zhou, Linghuan Zhu, Zhenjie yu\n");
+
+
 }
