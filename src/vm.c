@@ -609,13 +609,25 @@ void swapinit()
 // 调页进内存
 void page_in(uint va)
 {
+	if (!USE_SWAP)
+	{
+		cprintf("page_in: swap is denied"); // 没有开启swap功能
+		proc->p_killed = 1;
+	}
+
 	vaddr_t mem = kalloc();
 	if (mem == 0)
-		panic("page_in: no enough memory");
+	{
+		cprintf("page_in: no enough memory");
+		proc->p_killed = 1;
+	}
 
 	pte_t *p = walkpgdir(proc->p_page, (vaddr_t)va, 0);
 	if (p == 0)
-		panic("page_in: pte should exist");
+	{
+		cprintf("page_in: pte should exist");
+		proc->p_killed = 1;
+	}
 
 	// 从交换区读取对应slot
 	uint slotn = find_slot((proc->p_pid | va));
@@ -648,5 +660,5 @@ void page_out()
 	kfree(P2V(pa));
 	free_page(e->pn_pid, 0);
 
-	cprintf("page out %x\n", PTE_ADDR(e->pn_pid));
+	cprintf("page out %x of proc %x\n", PTE_ADDR(e->pn_pid), PTE_FLAGS(e->pn_pid));
 }

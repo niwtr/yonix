@@ -13,19 +13,19 @@
 #define SCHED_RR_TIMESLICE 100 // 设置RR调度的时间片为100ms
 #define SCHED_FIFO_TIMESLICE ETERNAL
 #define MIN_TIMESLICE 100 //最小的时间片就是RR的时间片。
-#define MAX_NICE 19
-#define MIN_NICE 20
+#define MAX_NICE 15
+#define MIN_NICE -15
 #define MAX_AVGSLP 100 // 100ticks
 
 #define private static
 
 #define MAX_PID 0xfff   // 进程最大pid号，页队列标识符限制
 
-#define MEMTOP 0xffffffff
 #define SLABSIZE 32     // 小内存池块大小
 #define SWAPSIZE 0x8000000  //128MB swap area
 #define SLOTSIZE SWAPSIZE/PGSIZE  // number of slots
 #define PR_FIFO 1
 #define PR_SCND 2
-#define PR_ALGO PR_FIFO
+#define PR_ALGO PR_SCND
+#define USE_SWAP 1      // 是否开启交换区
 

@@ -9,8 +9,6 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct page_entry;
-
-
 struct trapframe;
 typedef int sem;
 // bio.c
@@ -24,7 +22,7 @@ void            consoleinit(void);
 void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
-
+void            prtwelcome();
 // exec.c
 int             exec(char*, char**);
 
@@ -98,15 +96,25 @@ int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
+
+void            esinit(void);
+void            rdinit(void);
 void            exit(void);
 int             fork(void);
 int             lwp_create(void *, void *, void *, int);
 int             lwp_join(void **);
+void            dynamic_sstore(void * , struct trapframe *, int);
+void            dynamic_restart(void * , struct trapframe *, int);
 
+extern int __debug;
 int             procgrow(int);
+
 int             kill(int);
 
 void            dbg_procdump(void);
+void            dbg_lstprocs(void);
+void            dbg_lstrdy(void);
+void            dbg_lstslp(void);
 void            switch_to(struct proc *);
 void            select_scheme(int);
 void            sched_name(char *);
@@ -165,6 +173,7 @@ void            timerinit(void);
 // trap.c
 void            idtinit(void);
 extern uint     ticks;
+
 void            trapvecinit(void);
 
 // uart.c
@@ -194,12 +203,31 @@ uint            find_slot(uint);
 uint            alloc_slot(uint);
 void            free_slot(uint);
 void            free_page(uint, uint);
+void            free_page_slot(uint);
 void            add_page(uint *, char*, uint);
 struct page_entry *sel_page();
 int             pgflt_handle(uint);
 void            swapinit(void);
 void            page_out(void);
 void            page_in(uint);
+
+
+//atomic.c
+int             atomic_add(int a, int b, int * c);
+int             atomic_sub(int a, int b, int * c);
+int             atomic_multi(int a, int b, int * c);
+int             atomic_divide(int a, int b, int * c);
+int             atomic_mod(int a, int b, int * c);
+int             atomic_set(int * a,int b);
+int             atomic_swap(int * a,int *b);
+
+//semaphore.c
+int             sem_init(int num,sem * semaphore);
+int             sem_P(int step,sem * semaphore);
+int             sem_V(int step,sem * semaphore);
+int             mutex_init(sem * semaphore);
+int             mutex_P(sem * semaphore);
+int             mutex_V(sem * semaphore);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

@@ -42,7 +42,7 @@
 // various segment selectors.
 #define SEG_KCODE 1  // kernel code
 #define SEG_KDATA 2  // kernel data+stack
-#define SEG_KCPU  3  // kernel per-cpu data 每个CPU数据段选择符
+#define SEG_KCPU  3  // kernel per-cpu data
 #define SEG_UCODE 4  // user code
 #define SEG_UDATA 5  // user data+stack
 #define SEG_TSS   6  // this process's task state
@@ -81,7 +81,7 @@ struct segdesc {
 #endif
 
 #define DPL_USER    0x3     // User DPL
-#define DPL_KERNEL  0x0     // Kernel DPL, by NiwTR
+
 // Application segment type bits
 #define STA_X       0x8     // Executable segment
 #define STA_E       0x4     // Expand down (non-executable segments)
@@ -149,8 +149,8 @@ struct segdesc {
 #define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF)
 
 #ifndef __ASSEMBLER__
+typedef uint pte_t;
 
-/* 任务段描述符。*/
 // Task state segment format
 struct taskstate {
   uint link;         // Old ts selector
@@ -191,7 +191,6 @@ struct taskstate {
   ushort t;          // Trap on task switch
   ushort iomb;       // I/O map base address
 };
-
 
 // PAGEBREAK: 12
 // Gate descriptors for interrupts and traps

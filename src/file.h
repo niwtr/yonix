@@ -1,32 +1,36 @@
-/*ÄÚºËi½áµã*/
-struct inode{
-	uint dev; //Éè±¸ºÅ 
-	uint inum; //i½ÚµãºÅ
-	int ref; //Ö¸Ïò¸Ãi½ÚµãµÄÖ¸Õë
-	int flag ; //×´Ì¬£¨Õ¼ÓÃ£¬¿ÕÏĞ£© 
-	
-	short type;//ÎÄ¼şÀàĞÍ
-	short major;// Major device number (T_DEV only)
-	short minor;// Minor device number (T_DEV only)
-	short nlink;//Ö¸Ïò¸Ãi½ÚµãµÄÄ¿Â¼Ïî 
-	uint fsize;//ÎÄ¼ş´óĞ¡ 
-	uint addrs[NINDTRECT+1];//Êı¾İ¿éµØÖ· 
-};  
-
-/*ÎÄ¼ş½á¹¹*/ 
-struct file{
-	enum{fd,dfpipe,fdinode}type;
-	int ref;//Ó¦ÓÃ´ÎÊı 
-	char rable;
-	char wable;
+/*æ–‡ä»¶ç»“æ„*/
+struct file {
+	enum { FD_NONE, FD_PIPE, FD_INODE } type;//æ–‡ä»¶ç±»å‹pipe/inode
+	int ref; //åº”ç”¨æ¬¡æ•° 
+	char readable;//å¯è¯»
+	char writable;//å¯å†™
 	struct pipe *pipe;
 	struct inode *ip;
-}; 
+	uint off;
+};
 
-/*±íÓ³ÉäÖ÷Éè±¸º¯Êı£¿£¿*/
+/*å†…å­˜ä¸Šiç»“ç‚¹*/
+struct inode {
+	uint dev;           //è®¾å¤‡å· 
+	uint inum;          //ièŠ‚ç‚¹å·
+	int ref;            //åº”ç”¨æ•°ç›®
+	struct sleeplock lock;
+	int flags;          //çŠ¶æ€ï¼ˆå ç”¨ï¼Œç©ºé—²ï¼‰ 
+	short type;         //æ–‡ä»¶ç±»å‹
+	short major;		// ä¸»è®¾å¤‡å· 
+	short minor;		// æ¬¡è®¾å¤‡å· 
+	short nlink;		//æŒ‡å‘è¯¥ièŠ‚ç‚¹çš„æ•°ç›®
+	uint size;			//æ–‡ä»¶å¤§å° 
+	uint addrs[NDIRECT + 1];//æ•°æ®å—åœ°å€ï¼Œç›´æ¥å—/é—´æ¥å—
+};
+#define I_VALID 0x2
+
+/*è®¾å¤‡æ–‡ä»¶ç±»å‹*/
 struct devsw {
-  int (*read)(struct inode*, char*, int);
-  int (*write)(struct inode*, char*, int);
+	int(*read)(struct inode*, char*, int);
+	int(*write)(struct inode*, char*, int);
 };
 
 extern struct devsw devsw[];
+#define CONSOLE 1
+

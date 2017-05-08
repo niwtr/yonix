@@ -1,173 +1,129 @@
-#include "process.h"
-#include "lock.h"
-#include "queue.h"
+#include "param_yonix.h"
+#include "yotypes.h"
+#include "defs.h"
+#include "param.h"
+#include "memlayout.h"
+#include "mmu.h"
+#include "x86.h"
+#include "proc.h"
 
-
-bool queueInit()
+/* switch to the proc specified. */
+void switch_to (struct proc * p)
 {
-	
-	readyqueue = queue_create();
-	if (readyqueue == nullptr)
-		painc("queueInit:readyqueue failed!");
-	return true;
+  /* set current in-cpu proc to p*/
+  proc = p;
+  
+  switchuvm(p);
+  p->p_stat = SRUN;
+  /* switch the kernel-state context. */
+  swtch(&cpu->scheduler, p->p_ctxt);
 }
 
-//TODO proc=0中的0可能是指调度器本身。
-//调度器RRscheduler RR+FCFS
-//每个CPU在初始化后边调用该函数
-//从调度器状态切换到用户态
-void scheduler(bool preemptive)
+/* choose the schedule method (scheme) */
+void select_scheme (int schem){
+  cpu->scheme = schem;
+  /* call the init process. */
+  sched_reftable[cpu->scheme].init();
+}
+
+/* get the schedule method name. */
+void sched_name(char * name){
+  const char * schedname =sched_reftable[cpu->scheme].scheme_method;
+  safestrcpy(name, schedname, strlen(schedname)+1);
+}
+
+
+/* the body of scheduler.
+ * note there is only one scheduler in kernel
+ * but it can be assigned to different schedule method (scheme)
+ * the scheme is stored in a array for dynamic selection. */
+void scheduler(void)
 {
-	struct proc * p;
+
 	while (true)
-	{
-		if(preemptive)
-			sti();//允许时间片中断，中断后trap调用yeild()函数
-		if (!is_queue_empty(readyqueue))
-		{
-			//从就绪队列中取出第一个进程,因为进程在加入就绪队列时，已经根据不同的调度算法
-			//排好了顺序，所以，第一个进程即为下一个被调度的进程
-			p = readyqueue->head;
-
-			//切换其状态为RUNNING
-			proc = p;
-			switchvm(p);//交换虚拟内存
-			p->p_stat = SRUN;
-			//把进程移出就绪队列
-			out_queue(readyqueue);
-
-			swtch(&cpu->scheduler, p->p_ctxt);
-			switchvm();//
-
-			proc = 0;//
-		}
-	}
+    {
+      sti(); /* allow interruption. */
+      if(!sched_reftable[cpu->scheme].scheme()) //sched
+          continue;
+      /* switch back here in scheduler. */
+      switchkvm();//FIXME
+      /* set the current proc to null */
+      proc = 0;
+    }
 }
 
-//进程从用户态切换到cpu调度器xv6中的sched
+/* check the status and call switch() */
 void transform(void)
 {
-	/*
-	该函数检查了两次状态，这里的状态表明由于进程此时持有锁，所以 CPU 应该是在中断关闭的情况下运行的。
-	最后，调用 swtch 把当前上下文保存在 proc->context 中然后切换到调度器上下文即 cpu->scheduler 中
-	*/
+
 	if (proc->p_stat == SRUN)
 		panic("sched running");
-	swtch(&proc->context, cpu->scheduler);
-	//切换上下文，该上下文是在scheduler中切换时保存的
-	cpu->intena=intena;
+
+	swtch(&proc->p_ctxt, cpu->scheduler);
 }
 
-//放弃CUP的所有权——针对时间片到期后
+
+
+/* once this function is called the current proc is
+ * doomed to be sched away. we call the enqueue()
+ * to move the proc to ready queue and call after()
+ * to update the timeslice (if in need) */
 void giveup_cpu(void)
 {
-	//在所有状态改变的操作中，都需要先获得锁，以保证不会有冲突发生
 	proc->p_stat = READY;
+  sched_reftable[cpu->scheme].enqueue(proc);
+  sched_reftable[cpu->scheme].after();
+	transform(); /* scheduling away, good luck. */
+}
 
-	//加入就绪队列
-	qnode * qn;
-	qn = (qnode*)kmalloc(sizeof(qnode*));
-	qn->p = (void*)proc;
-	readyqueue = addtoqueue(qn, readyqueue,sched_al);
-
-	transform();
+/* in each time interrupt the function is called
+ * it checks its timeslice remain and chk wether
+ * it is time-out. the avgslp slot is also updated
+ * which is used for dynamic priority scheduling. */
+void timeslice_yield(){
+  /* we never sched away unterminated proc in fifo. */
+  if (proc->p_time_slice == ETERNAL)
+    return ;
+  /* reduce the timeslice */
+  proc->p_time_slice -= TIMER_INTERVAL;
+  /* update the average sleep time. */
+  proc->p_avgslp = MAX(-50, proc->p_avgslp-1);
+  /* check the proc is(or not) timeout. */
+  if(proc->p_time_slice<=0)
+      giveup_cpu();
 }
 
 
-/* sleep a proc on specific event and swtch away. */
+
+
+
+/* sleep a proc on specific event and sched away.
+ * the event s of which the proc is sleep on is called "chan". */
 void sleep(void * e)
 {
-  //TODO 为什么要检查是否为0？
-  //EXPLAIN：可能0是指调度器本身。
-  if(proc==0)
-    panic("sleep");
-  //tell event.
+  uint tick0 = ticks;
   proc->p_chan=e;
   proc->p_stat=SSLEEPING;
-
-  transform(); //swtch away.
-  proc->p_chan=0; // when sched back (return from wakeup), tidy up.
+  transform(); /* swtch away.*/
+  proc->p_chan=0; /* when sched back (return from wakeup), tidy up. */
+  proc->p_avgslp = MIN(proc->p_avgslp+(tick0-ticks), MAX_AVGSLP);
 }
 
 void wakeup(void * e)
 {
-	//find specific proc that is sleep on specific event e (or chan)
-	struct proc *p;
-	 search_through_ptablef(p)
-	{
-		if (p->p_stat == SSLEEPING && p->p_chan == e)
-		{
-			p->p_stat=READY;
-		
-			//将进程加入就绪队列
-			qnode * qn;
-			qn = (qnode*)kmalloc(sizeof(qnode*));
-			qn->p = (void*)p;
-			readyqueue = addtoqueue(qn, readyqueue, sched_al);
-		}
-      
-	}
-	  
-}
 
-//先来先服务的方法调度
-queue * inqueue_FCFS(qnode * qn, queue* q)
-{
-	return  inqueue(qn, q);
-}
-
-//按照进程优先级的方法
-queue * inqueue_PRI(qnode *qn, queue*q)
-{
-	//找到合适的位置插入就绪队列,插入后，队列已经有序
-	qnode * tmp;
-	//第一个插入队列的函数
-	if (q->head = nullptr)
-		inqueue(qn, q);
-	else
-	{
-		for (tmp = q->head; tmp != nullptr; tmp = tmp->next)
-		{
-			//优先级的值越小，优先级越高
-			if (qn->p->p_pir < tmp->p->p_pir)
-			{
-				//若该节点为头结点
-				if (tmp == q->head)
-				{
-					q->head = qn;
-					qn->next = tmp;
-					qn->pre = nullptr;
-					tmp->pre = qn;
-				}
-				//若该节点应放在尾部
-				else if (tmp == q->tail)
-				{
-					qn->next = nullptr;
-					qn->pre = tmp;
-					tmp->next = qn;
-					q->tail = qn;
-				}
-
-				else	//若该节点不在头结点的位置,也不在尾结点的位置
-				{
-					tmp->pre->next = qn;
-					qn->next = tmp;
-					qn->pre = tmp->pre;
-					tmp->pre = qn;
-				}
-			}
-		}
-	}
-	return q;
+  //find specific proc that is sleep on specific event e (or chan)
+  search_through_ptablef(p)
+    if(p->p_stat==SSLEEPING && p->p_chan==e)
+      {
+        p->p_stat=READY;
+        sched_reftable[cpu->scheme].enqueue(p);
+      }
 }
 
 
-queue * addtoqueue(qnode* qn, queue *q, sched_algorithm al)
-{
-	if (al == FCFS)
-		return inqueue_FCFS(qn, q);
-	if (al == PRIORITY)
-		return inqueue_PRI(qn, q);
-}
 
-void dy_sched()
+
+
+
+

@@ -1,6 +1,12 @@
-#include "process.h"
-#include "lock.h"
-
+#include "param_yonix.h"
+#include "yotypes.h"
+#include "defs.h"
+#include "param.h"
+#include "memlayout.h"
+#include "mmu.h"
+#include "x86.h"
+#include "proc.h"
+#include "queue_netbsd.h"
 int nextpid = 1;
 
 //fork return
@@ -8,54 +14,30 @@ extern void forkret(void);
 //trap return
 extern void trapret(void);
 
-//´Ó¿ÕÏÐ½ø³ÌÖÐÕÒµ½Ò»¸ö½ø³Ì
-static struct proc* procalloc(void)
+
+struct protab ptable;
+struct proc * initproc;
+struct proc * proc;
+
+void esinit()
 {
-
-	//Ö¸Ê¾Õ»¶¥Î»ÖÃ
-	char * sp;
-
-	//ÕÒµ½ÄÚ´æÖÐ´¦ÓÚSUNUSED×´Ì¬µÄ½ø³Ì
-    search_through_ptablef(p)
-	{
-		//Èç¹ûÕÒµ½ÁË£¬Ôò½«Æä×´Ì¬¸ÄÎªSEMBRYO
-		//ÇÒÔö¼Ó½ø³ÌµÄpidÖµ
-		if (p->p_stat == SUNUSED)
-		{
-			p->p_stat = SEMBRYO;
-			p->p_pid = nextpid;
-			nextpid++;
-
-
-			//Îª¸ÃÐÂ½ø³Ì·ÖÅäÄÚ´æÕ»¿Õ¼ä
-			p->p_kstack = kalloc();	//ÄÚºËÕ»·ÖÅäº¯Êý
-			//Èô·ÖÅäÊ§°Ü,½«Æä×´Ì¬¸Ä»ØSUNUSED
-			if (!p->p_kstack)
-			{
-				p->p_stat = SUNUSED;
-				return 0;
-			}
-
-			//ÐÞ¸ÄÕ»¶¥Î»ÖÃ
-			sp = p->p_kstack + K_STACKSZ;
-
-			//ÎªtarpframeÁô³öÎ»ÖÃ£¿£¿
-			sp = sp - sizeof(*p->p_tf);
-			p->p_tf = (struct trapframe*) sp;
+  Q_INIT(&esqueue);
+  search_through_ptablef(p){
+    struct slot_entry * e = (struct slot_entry *) alloc_slab();
+    e->slotptr=p;
+    Q_INSERT_TAIL(&esqueue, e, lnk);
+  }
+}
+void rdinit()
+{
+  Q_INIT(&rdyqueue);
+  //dynamic shed queue init
+  for (int i=0;i<40;i++)
+    Q_INIT(&rdy_q_dy[i]);
+}
 
 
-			// Set up new context to start executing at forkret,
-			// which returns to trapret.
-			sp = sp - 4;
-			*(uint*)sp = (uint)trapret;
 
-			sp = sp - sizeof (*p->p_ctxt);
-			p->p_ctxt = (struct context*)sp;
-			memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
-			p->p_ctxt->eip = (uint)forkret;
-
-			//·µ»ØÐÂ½¨µÄ½ø³Ì
-			return p;
 
 /*
  *   +------------+
@@ -64,13 +46,13 @@ static struct proc* procalloc(void)
  *   +------------+        |      trapframe       |
  *                         |                      |
  *                         +----------------------+
- *                         |     trapret ptr      |
+ *                         |     trapret ptr      |<- the trapret pointer is placed here
+ *                         |                      |   so once the proc returns from trap() it
+ *                         +----------------------+   falls through to trapret.
+ *                         |       context        |
  *                         |                      |
  *                         +----------------------+
- *                         |       context        |
- *                         |                      |          +------------+
- *                         +----------------------+--------->|eip=forkret |
- *                         |                      |          +------------+
+ *                         |                      |
  *                         |                      |
  *                         |                      |
  *                         |                      |
@@ -87,109 +69,154 @@ static struct proc* procalloc(void)
  *   |   kstack   |        |                      |
  *   |   bottom   | <------+----------------------+
  *   +------------+
+ *
  */
-      //TODO ÎªÊ²Ã´trapret»á³öÏÖÔÚÕâÀï£¿ËüÔÚÒÔºó»áÓÐÓÃÂð£¿
 
-		}
-
-	}
-	//Èç¹ûÕÒÁËÒ»È¦¶¼Ã»ÓÐÕÒµ½SUNUESDµÄ½ø³Ì£¬ÔòÖ±½Ó·µ»Ø
-
-	return 0;
+/* update the timeslice of each proc. */
+void recalc_timeslice (void)
+{
+  search_through_ptablef(p){
+    if(p->p_stat != SUNUSED)
+      sched_reftable[cpu->scheme].timeslice(p);
+  }
 }
+
+/* allocate a new proc. once the proc
+ * is ready it is in SEMBRYO state
+ * which cannot be scheduled directly.
+ * the fork, userinit and lwp_create is
+ * used to assemble the proc to sched-ready. */
+static struct proc* procalloc(void)
+{
+
+
+	char * sp; /* stack pointer. */
+
+  if(Q_EMPTY(&esqueue))
+    return 0;
+
+  /* remove from the empty slot queue. */
+  struct slot_entry * ee = Q_FIRST(&esqueue);
+  struct proc * p = ee->slotptr;
+  Q_REMOVE(&esqueue, ee, lnk);
+  free_slab((char *) ee);
+
+  p->p_stat = SEMBRYO;
+  p->p_pid = nextpid++;
+  p->p_nice = 0;
+  p->p_spri = STATIC_PRI(p->p_nice);
+  p->p_creatime = ticks;
+  p->p_avgslp = 0;
+  sched_reftable[cpu->scheme].timeslice(p);
+  p->p_dpri = DYNAMIC_PRI(p->p_spri, BONUS(p->p_avgslp));
+
+  /* allocate the kernel stack. */
+  p->p_kstack = kalloc();
+
+
+  if (p->p_kstack==0)
+  {
+      p->p_stat = SUNUSED;
+      return 0;
+  }
+  sp = p->p_kstack + K_STACKSZ;
+  /* set the tf position */
+  sp = sp - sizeof(*p->p_tf);
+  p->p_tf = (struct trapframe*) sp;
+
+  /* set the return position, trapret. */
+  sp = sp - 4;
+  *(uint*)sp = (uint)trapret;
+  /* set the context position */
+  sp = sp - sizeof (*p->p_ctxt);
+  p->p_ctxt = (struct context*)sp;
+  /* clear the kernel context */
+  memset(p->p_ctxt, 0, sizeof (*p->p_ctxt));
+  return p;
+}
+
+
 
 int procgrow(int n){
   uint sz;
-  sz = proc->sz;
+  sz = proc->p_size;
   if(n > 0){
-    //TODO require api allocuvm
-    sz=allocuvm(proc->pgdir,sz,sz+n);
+    sz=allocuvm(proc->p_page,sz,sz+n);
     if(sz==0)
       return -1;
   } else if(n<0){
-    //TODO require api deallocuvm
-    sz = deallocuvm(proc->pgdir, sz, sz+n);
+    sz = deallocuvm(proc->p_page, sz, sz+n, proc->p_pid);
     if(sz==0)
       return -1;
   }
-  proc->sz = sz;
+  proc->p_size = sz;
   switchuvm(proc);
   return 0;
 }
 
 
 
-//forkº¯Êý
+
+/* fork a new proc. that is, clone the virtural memory space
+ * of parent proc. generate a proc that is sched-ready. */
 int fork(void)
 {
+
 	int i, pid;
 	struct proc *np;
-
-	//Îª½ø³Ì·ÖÅäÄÚºË¿Õ¼ä
 	np = procalloc();
 	if (np == 0)
 	{
-		return -1;
+		return -1; /* proc allocate fail. */
 	}
-
-	//½«¸¸½ø³ÌµÄ×´Ì¬¿½±´Ò»·Ý vm.c
-    //TODO add api
-	np->p_cdir = copyuvm(, proc->sz);
-	if (np->p_cdir == 0)	//Ðé´æ·ÖÅäÊ§°Ü£¬ÔòÊÍ·Å½ø³ÌËùÕ¼ÄÚ´æ¿Õ¼ä£¿£¿
+  /* copy the parent vm */
+	np->p_page = copyuvm(proc->p_page, proc->p_size, np->p_pid);
+  /* copy failed. reset the state and collect rubbish. */
+	if (np->p_page == 0)
 	{
-    //TODO add api
-		kfree(np->kstack);
+		kfree(np->p_kstack);
 		np->p_kstack = 0;
 		np->p_stat = SUNUSED;
+    struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+    ee->slotptr = np;
+    Q_INSERT_TAIL(&esqueue, ee, lnk);
 		return -1;
 	}
 
-	//ÈôÒÔÉÏ²Ù×÷¶¼Ë³Àû½øÐÐ£¬½«¸¸½ø³ÌµÄ¸÷ÖÖÐÅÏ¢¸´ÖÆÒ»·Ýµ½×Ó½ø³ÌÉÏ
 	np->p_size = proc->p_size;
 	np->p_prt = proc;
+  /* copu trapframe (user context) */
 	*(np->p_tf) = *(proc->p_tf);
-
-	//Çå¿Õ¼Ä´æÆ÷eaxµÄÖµ ÒÔ±ãforkºó·µ»Ø¸ø×Ó½ø³ÌµÄÖµÎª0
+  /* clear the eax so that fork() returns zero in child */
 	np->p_tf->eax = 0;
-  //TODO ÕâÊÇÔõÃ´×öµ½µÄ£¿»¹ÊÇÃ»ÓÐ¿´Ã÷°×ÕâÊÇÊ²Ã´ÒâË¼¡£
-
-	//±éÀú¸¸½ø³ÌËø´ò¿ªµÄËùÓÐÎÄ¼þ,½«Æä¸´ÖÆÒ»·Ýµ½×Ó½ø³Ì
+  /* set the entry where trap returns to. */
+  np->p_ctxt->eip = (uint)forkret;
+  /* duplicate the open file. */
 	for (i = 0; i < P_NOFILE; i++)
 		if (proc->p_of[i])
 			np->p_of[i] = filedup(proc->p_of[i]);
 
-	//¿½±´¸¸½ø³ÌËùÔÚÄ¿Â¼
-  //TODO require api
-	np->p_cdir = dirdup(proc->p_cdir);
-
-	//¿½±´¸¸½ø³ÌµÄ½ø³ÌÃû
-  //TODO require api
-	safestrcpy(np->name, proc->name, sizeof(proc->name));
-
-	//±£´æ×Ó½ø³ÌµÄpidÖµ£¬ÒÔ±ã·µ»Ø¸ø¸¸½ø³Ì
+  /* duplicate current direction */
+	np->p_cdir = idup(proc->p_cdir);
+  /* inherent the parent name.  */
+	safestrcpy(np->p_name, proc->p_name, sizeof(proc->p_name));
 	pid = np->p_pid;
-
-	//ÐÞ¸ÄÐÂ½¨×Ó½ø³ÌµÄ×´Ì¬
+  np->p_procp = 1; /* this is, indeed, a proc. */
 	np->p_stat = READY;
-
-	//½«½ø³Ì¼ÓÈë¾ÍÐ÷¶ÓÁÐ
-	qnode * qn;
-	qn = (qnode*)kmalloc(sizeof(qnode*));
-	qn->p = (void*)np;
-
-	readyqueue = addtoqueue(qn, readyqueue, sched_al);
-	//½«×Ó½ø³ÌµÄpid·µ»Ø¸ø¸¸½ø³Ì
+  /* enter ready queue specified on each scheme. */
+  sched_reftable[cpu->scheme].enqueue(np);
 	return pid;
 }
 
+/* exit a proc. if there exists a parent waiting,
+ * the parent is waken to kill this proc. or else the
+ * proc become a zombie and is set to be cleaned by init. */
 void exit(void){
 
-
-  //initprocÊÇËùÓÐprocµÄ¸ù±¾¡£
   if(proc == initproc)
-    panic("init exiting");
+      panic("init exiting");
 
-  // close all opened files.
+  /* close all opened files. */
   int fd;
   for(fd=0;fd< P_NOFILE;fd++){
     if(proc->p_of[fd]){
@@ -198,19 +225,19 @@ void exit(void){
     }
   }
 
-
-  //TODO Åª¶®£¿
-  //LOGÏà¹Ø
   begin_op();
-  //fs.c
+  /* release the inode pointing
+   * to the current dir*/
   iput(proc->p_cdir);
   end_op();
   proc->p_cdir=0;
 
-
+  /* wake up the parent! */
   wakeup(proc->p_prt);
 
-  //TODO ÕâÐ©»¹²»Ì«¶®¡£
+  /* find its children and transfer
+   * their parent to init which,
+   * will peace them eventually. */
   search_through_ptablef(p){
     if(p->p_prt==proc){
       p->p_prt=initproc;
@@ -218,37 +245,37 @@ void exit(void){
         wakeup(initproc);
     }
   }
-
+  /* become a zombie */
   proc->p_stat=SZOMB;
+  /* sched away, good luck */
   transform();
+
+  /* a zombie proc never escape form here. */
   panic("zombie exit.");
 
 }
 
-//mark the proc to kill.
-//TODO Ê²Ã´Ê±ºòÕâ¸ö½ø³Ì±»³¹µ×É±µô£¿
+/* kill some proc. */
 int kill(int pid)
 {
 
   search_through_ptablef(p){
     if(p->p_pid==pid){
-      p->killed=1;
-      if(p->state==SSLEEPING)
-        p->state=READY;
+      p->p_killed=1;
+      if(p->p_stat==SSLEEPING)
+        p->p_stat=READY;
       return 0;
     }
   }return -1; //not found
 }
 
 
-
-
 void forkret(void){
   static int firstproc=1;
   if(firstproc){
     firstproc=0;
-    iinit(ROOTDEV);//FIXME
-    initlog(ROOTDEV);//FIXME
+    iinit(ROOTDEV);
+    initlog(ROOTDEV);
   }
 }
 
@@ -261,8 +288,8 @@ void dbg_procdump(void)
 #define X(name) [name] #name,
       __STAT_LOV__
 #undef X
-    }
-  int i;
+    };
+
   char * state;
   uint pc[10];
   search_through_ptablef(p){
@@ -285,78 +312,232 @@ void dbg_procdump(void)
 
 }
 
+void dbg_lstprocs(void){
+  static char * status [] =
+    {
+#define X(name) [name] #name,
+      __STAT_LOV__
+#undef X
+    };
+  char * state;
+  cprintf("\n");
+  search_through_ptablef(p){
+    if(p->p_stat == SUNUSED)
+      continue;
+    if(p->p_stat >= 0 && p->p_stat <sizeof(status))
+      state=status[p->p_stat];
+    else
+      state="UNKNOWN";
+
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d nice:%d chan:%p\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_nice, p->p_chan);
+
+  }
+}
+void dbg_lstslp(void){
+  search_through_ptablef(p){
+    if(p->p_stat != SSLEEPING)
+      continue;
+    cprintf("Sleeping %s PID: %d, chan: %p\n", p->p_procp?"proc":"thread", p->p_pid, p->p_chan);
+  }
+}
 
 
-//µÚÒ»¸öÓÃ»§¼¶½ø³Ì
+void dbg_lstrdy(void){
+  int num=0;
+  search_through_ptablef(p){
+    if(p->p_stat != READY)
+      continue;
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d chan:%p\n", p->p_pid, p->p_name, "READY", p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_chan);
+    num++;
+  }
+  if(!num)
+    cprintf("No process is currently in READY status.\n");
+
+}
+
+
+
 void userinit(void)
 {
 	struct proc *p;
-	extern char biInitcodeStart[], biInitcodeSz[];//ÕâÊÇ¸ÉÂïµÄ£¿
-	p = procalloc();	//ÔÚÒ³±íÖÐ·ÖÅäÒ»¸öproc,²¢³õÊ¼»¯½ø³Ì×´Ì¬ SUNUSED->SEMBRYO
-						//µÚÒ»¸öÓÃ»§½ø³Ì
-	initcode = p;
-	//ÎªÆä·ÖÅäÐéÄâÄÚ´æÒ³±í »ñÈ¡Ò»¸öÐÂµÄ¶þ¼¶Ò³±í£¬²¢°üº¬ÄÚºËËùÓÐÓ³Éä
+	extern char _binary_initcode_start[], _binary_initcode_size[];
+	p = procalloc();
+
+	initproc = p;
+
 	p->p_page = setupkvm();
 	if (!p->p_page)
 		panic("userinit: setupkvm failed!");
 
-	//³õÊ¼»¯ÓÃ»§½ø³ÌÐéÄâµØÖ·¿Õ¼ä
-	inituvm(p->p_cdir, biInitcodeStart, (int)biInitcodeSz);
 
-	//trapframeµÄÉèÖÃ
-	memset(p->tf, 0, sizeof(*p->tf));
-	p->tf->cs = (SEG_UCODE << 3) | DPL_USER;//%cs ¼Ä´æÆ÷±£´æ×ÅÒ»¸ö¶ÎÑ¡ÔñÆ÷£¬ Ö¸Ïò¶Î SEG_UCODE ²¢´¦ÓÚÌØÈ¨¼¶ DPL_USER£¨¼´ÔÚÓÃ»§Ä£Ê½¶ø·ÇÄÚºËÄ£Ê½£©
-	p->tf->ds = (SEG_UDATA << 3) | DPL_USER;//ds,es,ss¶ÎÑ¡ÔñÆ÷Ö¸Ïò¶Î SEG_UDATA ²¢´¦ÓÚÌØÈ¨¼¶ DPL_USER
-	p->tf->es = p->tf->ds;
-	p->tf->ss = p->tf->ds;
-	p->tf->eflags = FL_IF;// FL_IF Î»±»ÉèÖÃÎªÔÊÐíÓ²¼þÖÐ¶Ï
-	p->tf->esp = PGSIZE;//ÉèÎª½ø³ÌµÄ×î´óÓÐÐ§ÐéÄâÄÚ´æ
-	p->tf->eip = 0;  // beginning of initcode.SÖ¸Ïò³õÊ¼»¯´úÂëµÄÈë¿Úµã£¬¼´µØÖ·0
+	inituvm(p->p_page, _binary_initcode_start, (int) _binary_initcode_size);
+	memset(p->p_tf, 0, sizeof(*p->p_tf));
+	p->p_tf->cs = (SEG_UCODE << 3) | DPL_USER;
+	p->p_tf->ds = (SEG_UDATA << 3) | DPL_USER;
+	p->p_tf->es = p->p_tf->ds;
+	p->p_tf->ss = p->p_tf->ds;
+	p->p_tf->eflags = FL_IF;
+	p->p_tf->esp = PGSIZE;
+	p->p_tf->eip = 0;
 
 	p->p_size = PGSIZE;
-	safestrcpy(p->name, "initcode", sizeof(p->name));
-	//½ø³ÌËùÔÚÄ¿Â¼Îª¸ùÄ¿Â¼¡°/¡±
+	safestrcpy(p->p_name, "initcode", sizeof(p->p_name));
+
 	p->p_cdir = namei("/");
-	//½«½ø³Ì×´Ì¬ÉèÖÃÎªREADY
+  p->p_procp = 1;//this is indeed a proc.
+
 	p->p_stat = READY;
+
+  sched_reftable[cpu->scheme].enqueue(p);
+
+  p->p_ctxt->eip = (uint)forkret;
 }
 
-//wait¡ª¡ªµÈ´ý×Ó½ø³ÌÖ´ÐÐÍê±Ïexit,²¢·µ»ØÆä½ø³ÌIDºÅ
+
+
 int wait(void)
 {
-	int pid;		//×Ó½ø³Ìpid
-	bool isparent = false;	//ÅÐ¶Ï¸Ã½ø³ÌÊÇ·ñÊÇ¸¸½ø³Ì
-
+	int pid;		//ï¿½Ó½ï¿½ï¿½ï¿½pid
+  int have_kid;
 	while (true)
 	{
-		//±éÀú½ø³ÌÁÐ±í£¬ÕÒµ½µ±Ç°½ø³ÌÊÇ·ñÓÐ×Ó½ø³Ì
+    have_kid=0;
+
 		search_through_ptablef(p)
 		{
-			if (p->parent == proc)
+
+			if (p->p_prt == proc)
 			{
-				isparent = true;
-				//Èô¸Ã×Ó½ø³ÌÊÇÒ»¸ö½©Ê¬½ø³Ì¡ª¡ª×Ó½ø³ÌÒÑ¾­½áÊø£¬µ«¸¸½ø³ÌÒòÎªÌ«Ã¦¶øÃ»ÓÐµÈ´ýËü¡£¡£¡£¡£
-				//Ò»¸ö½ø³ÌÔÚµ÷ÓÃexitÃüÁî½áÊø×Ô¼ºµÄÉúÃüµÄÊ±ºò£¬ÆäÊµËü²¢Ã»ÓÐÕæÕýµÄ±»Ïú»Ù£¬
-				//¶øÊÇÁôÏÂÒ»¸ö³ÆÎª½©Ê¬½ø³Ì£¨Zombie£©µÄÊý¾Ý½á¹¹£¨ÏµÍ³µ÷ÓÃexit£¬ËüµÄ×÷ÓÃÊÇ Ê¹½ø³ÌÍË³ö£¬
-				//µ«Ò²½ö½öÏÞÓÚ½«Ò»¸öÕý³£µÄ½ø³Ì±ä³ÉÒ»¸ö½©Ê¬½ø³Ì£¬²¢²»ÄÜ½«ÆäÍêÈ«Ïú»Ù£©
+        have_kid=1;
 				if (p->p_stat == SZOMB)
 				{
-					//´¦Àí¸Ã½ø³ÌÐÅÏ¢
+
 					pid = p->p_pid;
-					kfree(p->p_kstack);	//ÊÍ·ÅÄÚºËÕ»
-					freevm(p->p_page);	//ÊÍ·ÅÐéÄâÄÚ´æ
+					kfree(p->p_kstack);
+          p->p_kstack=0;
+					freeuvm(p->p_page, pid);
 					p->p_pid = 0;
-					p->p_prt = 0;		//¸¸½ø³ÌÉèÎª0
-					p->name[0] = 0;
+					p->p_prt = 0;
+					p->p_name[0] = 0;
 					p->p_killed = 0;
-					p->p_stat = 0;
 					p->p_stat = SUNUSED;
+          struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+          ee->slotptr = p;
+          Q_INSERT_TAIL(&esqueue, ee, lnk);
+
 					return pid;
 				}
-				//ÈôÕÒµ½Ò»¸ö²»ÊÇ½©Ê¬½ø³ÌµÄ×Ó½ø³Ì£¬Ôò¸¸½ø³ÌÐÝÃß£¬µÈ´ý×Ó½ø³Ì±äÎª½©Ê¬½ø³Ì
-				sleep(proc);
-			}
-		}
-	}
+      }
+    }
+    if(!have_kid || proc->p_killed){
+      return -1;
+    }
+
+    sleep(proc);
+  }
 }
 
+
+
+
+/* create a light-weight proc. */
+int lwp_create (void * task, void * arg, void * stack, int stksz){
+  int i, pid;
+  struct proc * lwp;
+  lwp = procalloc();
+  if(lwp == 0) return -1;
+
+  lwp->p_page = proc->p_page;
+  lwp->p_size = proc->p_size;
+
+  if(lwp->p_page == 0) return -1;
+
+  if (proc->p_procp){
+    lwp->p_prt = proc;
+  } else {
+    lwp->p_prt = proc->p_prt;
+  }
+  *(lwp->p_tf) = *(proc->p_tf);
+
+	lwp->p_tf->eax = 0;
+  lwp->p_ctxt->eip=(uint)forkret;
+  lwp->p_tf->eip = (int)task;
+  lwp->p_stack = (int)stack;
+  lwp->p_tf->esp = lwp->p_stack + stksz - 4 ;
+  *((int *)(lwp->p_tf->esp)) = (int)arg;
+  *((int *)(lwp->p_tf->esp-4))=0xFFFFFFFF;
+  lwp->p_tf->esp -=4;
+
+	for (i = 0; i < P_NOFILE; i++)
+		if (proc->p_of[i])
+			lwp->p_of[i] = filedup(proc->p_of[i]);
+
+  lwp->p_cdir = idup(proc->p_cdir);
+
+  safestrcpy(lwp->p_name, proc->p_name, sizeof(proc->p_name));
+
+	pid = lwp->p_pid;
+  lwp->p_procp = 0; // this is,not a proc.
+
+	lwp->p_stat = READY;
+
+
+  sched_reftable[cpu->scheme].enqueue(lwp);
+
+	return pid;
+}
+
+int
+lwp_join(void **stack)
+{
+
+
+  int have_kid, pid;
+
+  for(;;){
+    // Scan through table looking for zombie children.
+    have_kid = 0;
+    search_through_ptablef(p){
+      // wait for the child thread, but not the child process
+      if(p->p_prt != proc || p->p_procp != 0)
+        continue;
+      have_kid = 1;
+      if(p->p_stat == SZOMB){
+        // Found one.
+        pid = p->p_pid;
+        kfree(p->p_kstack);
+        p->p_kstack = 0;
+        p->p_stat = SUNUSED;
+        p->p_pid = 0;
+        p->p_prt = 0;
+        p->p_name[0] = 0;
+        p->p_killed = 0;
+        *(int*)stack = p->p_stack; //mark the stack.
+        struct slot_entry * ee = (struct slot_entry*) alloc_slab();
+        ee->slotptr = p;
+        Q_INSERT_TAIL(&esqueue, ee, lnk);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children thread.
+    if(!have_kid || proc->p_killed)
+      return -1;
+
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc);  //DOC: wait-sleep
+  }
+}
+
+
+/* æä¾›äº†åŠ¨æ€è°ƒè½¬åŠŸèƒ½ */
+void dynamic_sstore(void * stack, struct trapframe * tf, int stksz){
+  memmove((char *)stack,(char *) proc->p_stack, stksz);
+  memmove((char *)tf, (char *)proc->p_tf, sizeof(*tf));
+}
+
+void dynamic_restart(void * stack, struct trapframe * tf, int stksz){
+  memmove((char *)proc->p_stack, (char *)stack, stksz);
+  memmove((char *)proc->p_tf, (char *)tf, sizeof(*tf));
+}

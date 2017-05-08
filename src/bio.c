@@ -1,118 +1,107 @@
-/*å—ç¼“å†²å±‚*/ 
+/*¿é»º³å²ã*/
 #include "types.h"
-#include "param.h"
 #include "defs.h"
+#include "param.h"
 #include "sleeplock.h"
-#include "buf.h" 
+#include "fs.h"
+#include "buf.h"
 
-struct bufcache{
-	struct buf cache[NBUF]; 
-	struct buf head; 
-}bcache;
 
-/*åˆ›å»ºä¸€ä¸ªåŒå‘é“¾è¡¨ç¼“å†²åŒº*/
-void binit()  
+struct {
+	struct buf buf[NBUF];//Á´±í»º³å¿é
+	struct buf head;
+} bcache;
+
+//´´½¨Ò»¸öË«ÏòÁ´±í»º³åÇø
+void binit()
 {
-	struct buf *p; 
-   
-    //åˆ›å»ºåªå«å¤´ç»“ç‚¹çš„åŒå‘é“¾è¡¨ 
-	bcache.head->pre = &bcache.head;  
-	bcache.head->next = &bcache.head;
-	
-    for(p = bcache.cache; p < bcache.cache+NBUF; p++)
+	struct buf *b;
+    //´´½¨Ö»º¬Í·½áµãµÄË«ÏòÁ´±í
+	bcache.head.prev = &bcache.head;
+	bcache.head.next = &bcache.head;
+
+    for(b = bcache.buf; b < bcache.buf+NBUF; b++)
     {
-    	p->dev=-1;
-    	p->next=bcache.head->next;
-    	p->pre=&bcache.head;
-    	 initsleeplock(&p->lock, "buffer");
-	bcache.head->next->pre=p;
-	bcache.head->next=p;
+    	b->dev=-1;
+    	b->next=bcache.head.next;
+    	b->prev=&bcache.head;
+    	 initsleeplock(&b->lock, "buffer");//½¨Á¢Ëø²¢ÃüÃûÎªbuffer 
+		bcache.head.next->prev=b;
+		bcache.head.next=b;
     }
 }
 
-/*æ ¹æ®å—ç¼–å·å’Œè®¾å¤‡å·èŽ·å–å—ç¼“å†²å—ç»“æž„*/
-static struct buf * bufget(uint dev,uint sector)
+//¸ù¾Ý¿é±àºÅºÍ¿é±àºÅ»ñÈ¡¿é»º³å¿é½á¹¹
+static struct buf* bget(uint dev, uint blockno)
 {
-	struct buf *p;
-	
+	struct buf *b;
 
-	/*ç¼“å†²å—ç©ºé—²åˆ™è®¾ç½®ä¸ºå¿™ç¢Œå¹¶è¿”å›žï¼Œå¿™ç¢Œåˆ™ç¡çœ ç­‰å¾…*/
-	loop:
-	for(p = bcache.cache->next; p!= &bcache.head; p = p->next)
-	{
-		if(p.dev == dev && p.sector == sector)
-		{
-			if(!(p->flags & b_busy))
-			{
-				p->flags = (p->flags | b_busy);
-				return p;
-			}
-			acquiresleep(&p->lock);
-			goto loop;//é¿å…ç«žäº‰çŽ°è±¡ 
+	//»º³å¿é¿ÕÏÐÔòÉèÖÃÎªÃ¦Âµ²¢·µ»Ø£¬Ã¦ÂµÔòË¯ÃßµÈ´ý
+	for (b = bcache.head.next; b != &bcache.head; b = b->next) {
+		if (b->dev == dev && b->blockno == blockno) {
+			b->refcnt++;
+			acquiresleep(&b->lock);
+			return b;
 		}
 	}
-	
-	/*ä¸ºæ‰‡åŒºåˆ†é…ç¼“å†²å—*/ 
-	for(p = bcache.head->pre; p!= &bcache.head; p = p->pre) 
-	{
-		if((p->flags & b_busy)==0 && (p->flags & b_dirty)==0)
-		{
-			p->dev=dev;
-			p->sector=sector;
-			p->flags=b_busy;
-			acquiresleep(&p->lock);
-			return p;
+
+	//Èô´ËÉÈÇøÎÞ»º³å¿é£¬ÎªÉÈÇø·ÖÅä»º³å¿é
+	for (b = bcache.head.prev; b != &bcache.head; b = b->prev) {
+		if (b->refcnt == 0 && (b->flags & B_DIRTY) == 0) {
+			b->dev = dev;
+			b->blockno = blockno;
+			b->flags = 0;
+			b->refcnt = 1;
+			acquiresleep(&b->lock);
+			return b;
 		}
 	}
-	
-	panic("bufget:no buffers");//ç¼“å†²åŒºæ»¡ 
-} 
+	panic("bget: no buffers");//»º³åÇøÂú 
+}
 
-/*ä»Žç£ç›˜å–èµ°ä¸€å—è¯»å…¥ç¼“å†²åŒº*/ 
-struct buf * bufread(uint dev,uint sector)
+//´Ó´ÅÅÌÈ¡×ßÒ»¿é¶ÁÈë»º³åÇø
+struct buf* bread(uint dev, uint blockno)
 {
-	struct buf *p;
-	
-	p=bufget(dev,sector);
-	if(!(p->flags & b_valid))
-	{
-		iderw(p); //æ— æ•ˆåŒºåŸŸå°†æ•°æ®è¯»å…¥å†…æ ¸ 
+	struct buf *b;
+
+	b = bget(dev, blockno);
+	if (!(b->flags & B_VALID)) {
+		iderw(b);//ÈôbufÎÞÐ§£¬°Ñ´ÅÅÌÄÚÈÝ¶Áµ½»º³å¿é
 	}
-	return p;
+	return b;
 }
 
-/*å°†ç¼“å†²åŒºå†…å®¹å†™åˆ°ç£ç›˜*/
-void bufwrite(struct buf *p)
+//½«»º³åÇøÄÚÈÝÐ´µ½´ÅÅÌ
+//ÔÚÊÍ·Å»º³åÇøÖ®Ç°½«ÆäÐ´Èë´ÅÅÌ
+void bwrite(struct buf *b)
 {
-	if(!(p->flags & b_busy))
-	{
-		panic("bwrite error");
-	} 
-	p->flags = (p->flags | b_busy);//çŠ¶æ€è®¾ç½®ä¸ºb_busy 
-	idrew(p);	
-} 
+	if (!holdingsleep(&b->lock))
+		panic("bwrite");
+	b->flags |= B_DIRTY;
+	iderw(b);
+}
 
-/*é‡Šæ”¾ç¼“å†²å—ä»¥åŠå—ç½®æ¢LRU*/
-void bufrelse(struct buf *p)
+//ÊÍ·Å»º³å¿éÒÔ¼°¿éÖÃ»»LRU
+void brelse(struct buf *b)
 {
-	if(!(p->flags & b_busy))
-	{
-		panic("brelse error");
-	} 
-		
-	//ç§»åŠ¨ç¼“å†²åŒº æŒ‰æœ€è¿‘è¢«ä½¿ç”¨æƒ…å†µæŽ’åº 
-	//ä»Žé˜Ÿåˆ—å–å‡ºpèŠ‚ç‚¹
-	p->next->pre = p->pre;
-	p->pre->next = p->next;
-	//å°†pèŠ‚ç‚¹æ’å…¥é“¾è¡¨å¤´ 
-     	p->next = bcache.head->next;
-    	p->pre = &bcache.head;
-    	bcache.head->next->pre = p;
-    	bcache.head->next = p; 
+	if (!holdingsleep(&b->lock))
+		panic("brelse");
 
-    	p->flags = (p->flags & ~b_busy);	
-    
-    	releasesleep(&p->lock);
+	releasesleep(&b->lock);
+
+	b->refcnt--;
+	if (b->refcnt == 0) {
+		//ÒÆ¶¯»º³åÇø °´×î½ü±»Ê¹ÓÃÇé¿öÅÅÐò
+		//´Ó¶ÓÁÐÈ¡³öp½Úµã
+		b->next->prev = b->prev;
+		b->prev->next = b->next;
+		//½«b½Úµã²åÈëÁ´±íÍ·
+		b->next = bcache.head.next;
+		b->prev = &bcache.head;
+		bcache.head.next->prev = b;
+		bcache.head.next = b;
+	}
 }
-}
- 
+
+
+
