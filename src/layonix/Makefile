@@ -85,15 +85,15 @@ swap.img:
 	dd if=/dev/zero of=swap.img bs=1M count=200
 	mkswap swap.img
 
-xv6.img: bootblock kernel fs.img
-	dd if=/dev/zero of=xv6.img count=10000
-	dd if=bootblock of=xv6.img conv=notrunc
-	dd if=kernel of=xv6.img seek=1 conv=notrunc
+yonix.img: bootblock kernel fs.img
+	dd if=/dev/zero of=yonix.img count=10000
+	dd if=bootblock of=yonix.img conv=notrunc
+	dd if=kernel of=yonix.img seek=1 conv=notrunc
 
-xv6memfs.img: bootblock kernelmemfs
-	dd if=/dev/zero of=xv6memfs.img count=10000
-	dd if=bootblock of=xv6memfs.img conv=notrunc
-	dd if=kernelmemfs of=xv6memfs.img seek=1 conv=notrunc
+yonixmemfs.img: bootblock kernelmemfs
+	dd if=/dev/zero of=yonixmemfs.img count=10000
+	dd if=bootblock of=yonixmemfs.img conv=notrunc
+	dd if=kernelmemfs of=yonixmemfs.img seek=1 conv=notrunc
 
 bootblock: bootasm.S bootmain.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -I. -c bootmain.c
@@ -189,14 +189,14 @@ fs.img: mkfs README $(UPROGS)
 clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
-	initcode initcode.out kernel xv6.img xv6memfs.img fs.img swap.img kernelmemfs mkfs \
+	initcode initcode.out kernel yonix.img yonixmemfs.img fs.img swap.img kernelmemfs mkfs \
 	.gdbinit \
 	$(UPROGS)
 
 
 # run in emulators
 
-bochs : fs.img xv6.img
+bochs : fs.img yonix.img
 	if [ ! -e .bochsrc ]; then ln -s dot-bochsrc .bochsrc; fi
 	bochs -q
 
@@ -208,25 +208,25 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 	else echo "-s -p $(GDBPORT)"; fi)
 
 CPUS:=1
-# QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA) -k en-us
-QEMUOPTS = -drive file=swap.img,index=2,format=raw -drive file=fs.img,index=1,format=raw -drive file=xv6.img,index=0,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
+# QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=yonix.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA) -k en-us
+QEMUOPTS = -drive file=swap.img,index=2,format=raw -drive file=fs.img,index=1,format=raw -drive file=yonix.img,index=0,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
 
-qemu: fs.img xv6.img swap.img
+qemu: fs.img yonix.img swap.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
-qemu-memfs: xv6memfs.img
-	$(QEMU) -drive file=xv6memfs.img,index=0,media=disk,format=raw -smp $(CPUS) -m 256
+qemu-memfs: yonixmemfs.img
+	$(QEMU) -drive file=yonixmemfs.img,index=0,media=disk,format=raw -smp $(CPUS) -m 256
 
-qemu-nox: fs.img xv6.img
+qemu-nox: fs.img yonix.img
 	$(QEMU) -nographic $(QEMUOPTS)
 
 .gdbinit: .gdbinit.tmpl
 	sed "s/localhost:1234/localhost:$(GDBPORT)/" < $^ > $@
 
-qemu-gdb: fs.img xv6.img swap.img .gdbinit
+qemu-gdb: fs.img yonix.img swap.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
 	$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB)
 
-qemu-nox-gdb: fs.img xv6.img .gdbinit
+qemu-nox-gdb: fs.img yonix.img .gdbinit
 	@echo "*** Now run 'gdb'." 1>&2
 	$(QEMU) -nographic $(QEMUOPTS) -S $(QEMUGDB)
