@@ -210,6 +210,8 @@ int             pgflt_handle(uint);
 void            swapinit(void);
 void            page_out(void);
 void            page_in(uint);
+uint            procmemsz(struct proc*);
+uint            procvmsz(struct proc*);
 
 
 //atomic.c

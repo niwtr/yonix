@@ -662,3 +662,38 @@ void page_out()
 
 	cprintf("page out %x of proc %x\n", PTE_ADDR(e->pn_pid), PTE_FLAGS(e->pn_pid));
 }
+
+// 获取对应进程占用虚拟内存大小
+uint procvmsz(struct proc* proc)
+{
+	uint pid = proc->p_pid;
+
+	uint i;
+	uint sum = 0;
+	for(i = 0; i < SLOTSIZE; i++)
+	{
+		if(swap_map[i] && PTE_FLAGS(swap_map[i]) == pid)
+			sum += PGSIZE;
+	}
+
+	return sum;
+}
+
+// 获取对应进程占用物理内存大小
+uint procmemsz(struct proc* proc)
+{
+	pde_t* pg = proc->p_page;
+	uint i;
+	uint sum = 0;
+	for(i = 0; i < KERNBASE; i += PGSIZE)
+	{
+		pte_t* pte = walkpgdir(pg, (vaddr_t)i, 0);
+		if(!pte)
+			return 0;
+
+		if(*pte & PTE_P)
+			sum += PGSIZE;
+	}
+
+	return sum;
+}
