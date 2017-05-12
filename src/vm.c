@@ -689,7 +689,7 @@ uint procmemsz(struct proc* proc)
 	{
 		pte_t* pte = walkpgdir(pg, (vaddr_t)i, 0);
 		if(!pte)
-			return 0;
+			continue;
 
 		if(*pte & PTE_P)
 			sum += PGSIZE;
