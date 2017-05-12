@@ -329,8 +329,7 @@ void dbg_lstprocs(void){
     else
       state="UNKNOWN";
 
-    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d nice:%d chan:%p\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_nice, p->p_chan);
-
+    cprintf("%d %s %s %s ts:%d avgslp:%d dpri:%d nice:%d chan:%p psz:%d msz: %d vsz: %d\n", p->p_pid, p->p_name, state, p->p_procp?"proc":"thread", p->p_time_slice, p->p_avgslp, p->p_dpri, p->p_nice, p->p_chan,p->p_size, (int)procmemsz(p), (int)procvmsz(p));
   }
 }
 void dbg_lstslp(void){
